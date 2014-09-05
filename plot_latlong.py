@@ -45,9 +45,17 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
     return arc
 
 
-latlong = open("latlong_plot.csv")
-df = pd.read_csv(latlong,header=None,names=['latitude', 'longitude'])
+# latlong = open("llgeo_overnight.csv")
+latlong = open("latlong_combined.csv")
 
+# old, only geo
+# latlong = open("latlong_plot.csv")
+
+print 'Reading locations...'
+# df = pd.read_csv(latlong,header=None,names=['latitude', 'longitude'])
+df = pd.read_csv(latlong,header=None,names=['id','datestr','latitude', 'longitude','text'])
+print 'Done.'
+latlong.close()
 
 # # calculate distance
 # sf_center = [-122.4167,37.7833]
@@ -59,7 +67,7 @@ df = pd.read_csv(latlong,header=None,names=['latitude', 'longitude'])
 # plot
 fig = plt.figure()
 # ax = plt.axis() # not sure if this works
-nbins = 2000
+nbins = 5000
 H,xedges,yedges = np.histogram2d(np.array(df.latitude),np.array(df.longitude),bins=nbins)
 H = np.rot90(H)
 H = np.flipud(H)
@@ -74,4 +82,4 @@ plt.show()
 
 
 if __name__ == '__main__':
-  main()
+    main()
