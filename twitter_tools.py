@@ -1,17 +1,16 @@
-'''
+"""
 twitter tools
-'''
+"""
 
 import tweepy
 # from twython import Twython
 from authent import twitauth
-# import pandas as pd
-# import numpy as np
-# import time
 import json
 from HTMLParser import HTMLParser
-import numpy as np
-import matplotlib.pyplot as plt
+# import time
+# import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
 
 # get your key and secret here: https://dev.twitter.com/apps
 
@@ -41,12 +40,14 @@ twitAPI = tweepy.API(auth)
 
 # http://stackoverflow.com/questions/25224692/getting-the-location-using-tweepy
 
+# mongodb: http://stackoverflow.com/questions/17213991/how-can-i-consume-tweets-from-twitters-streaming-api-and-store-them-in-mongodb
+
 # saving
 # http://stackoverflow.com/questions/23531608/how-do-i-save-streaming-tweets-in-json-via-tweepy
 
 # initialize blank list to contain latitude and longitude
 #latlong = []
-save_file = open('latlong.json', 'a')
+save_file = open('latlong.csv', 'a')
 
 class CustomStreamListener(tweepy.StreamListener):
     def __init__(self, api):
@@ -98,65 +99,6 @@ sapi.filter(locations=[-122.75,36.8,-121.75,37.8]) # SF bounding box lat,long
 # consider investigating trends http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.trends_location
 
 # POI could be found with http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.reverse_geocode
-
-# sf_center = [-122.4167,37.7833]
-# castro_muni = [-122.43533,37.76263]
-
-# # calculate distance
-# distance_to_user = compute miles(sf_center[0], sf_center[1], tweetlat, tweetlong)
-
-# # plot
-# fig = plt.figure()
-# ax = plt.axis() # not sure if this works
-# nbins = 200
-# H,xedges,yedges = np.histogram2d(np.array(-results['longitude']),np.array(-results['latitude']),bins=nbins)
-# H = np.rot90(H)
-# H = np.flipud(H)
-# Hmasked = np.ma.masked_where(H==0,H) # mask pixels
-
-# plt.pcolormesh(xedges,yedges,Hmasked)
-# plt.title('Counts')
-# pt.colorbar()
-# ax.get_xaxis().set_visible(False)
-# ax.get_yaxis().set_visible(False)
-# plt.show()
-
-
-def compute_miles(lat1, long1, lat2, long2):
-    R_earth = 3963.1676 # miles
-    return R_earth * distance_on_unit_sphere(lat1, long1, lat2, long2)
-
-
-def distance_on_unit_sphere(lat1, long1, lat2, long2):
-    'relative to a central point'
-
-    # Convert latitude and longitude to 
-    # spherical coordinates in radians.
-    degrees_to_radians = np.pi/180.0
-        
-    # phi = 90 - latitude
-    phi1 = (90.0 - lat1)*degrees_to_radians
-    phi2 = (90.0 - lat2)*degrees_to_radians
-        
-    # theta = longitude
-    theta1 = long1*degrees_to_radians
-    theta2 = long2*degrees_to_radians
-        
-    # Compute spherical distance from spherical coordinates.
-        
-    # For two locations in spherical coordinates 
-    # (1, theta, phi) and (1, theta, phi)
-    # cosine( arc length ) = 
-    #    sin phi sin phi' cos(theta-theta') + cos phi cos phi'
-    # distance = rho * arc length
-    
-    cos = (np.sin(phi1)*np.sin(phi2)*np.cos(theta1 - theta2) + 
-           np.cos(phi1)*np.cos(phi2))
-    arc = np.arcos( cos )
-
-    # Remember to multiply arc by the radius of the earth 
-    # in your favorite set of units to get length.
-    return arc
 
 
 if __name__ == '__main__':
