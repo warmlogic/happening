@@ -66,16 +66,19 @@ class CustomStreamListener(tweepy.StreamListener):
 
     def on_data(self, data):
         data = json.loads(HTMLParser().unescape(data))
+        # print the tweet and all metadata
         #print data
+        # print the tweet
         print data['text']
         if data['coordinates']:
+            # print data['coordinates']
             print data['coordinates']['coordinates']
-            #self.latlong.append(data['coordinates']['coordinates'])
+            # self.latlong.append(data['coordinates']['coordinates'])
             save_file.write('%.6f,%.6f\n' % (data['coordinates']['coordinates'][0],data['coordinates']['coordinates'][1]))
-        if data.get('place'):
-            print data['place']['full_name']
-        # return True
-        return data['coordinates']['coordinates']
+        # if data.get('place'):
+        #     print data['place']['full_name']
+        return True
+        # return data['coordinates']['coordinates']
 
     #on_event = on_status
     on_event = on_data
@@ -95,8 +98,6 @@ sapi.filter(locations=[-122.75,36.8,-121.75,37.8]) # SF bounding box lat,long
 # consider investigating trends http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.trends_location
 
 # POI could be found with http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.reverse_geocode
-
-# have to flip longitude's sign because we're west of the meridian
 
 # sf_center = [-122.4167,37.7833]
 # castro_muni = [-122.43533,37.76263]
