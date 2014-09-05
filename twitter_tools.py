@@ -2,6 +2,7 @@
 twitter tools
 """
 
+import sys
 import tweepy
 # from twython import Twython
 from authent import twitauth
@@ -47,7 +48,7 @@ twitAPI = tweepy.API(auth)
 
 # initialize blank list to contain latitude and longitude
 #latlong = []
-save_file = open('latlong.csv', 'a')
+save_file = open('latlong_geodate.csv', 'a')
 
 class CustomStreamListener(tweepy.StreamListener):
     def __init__(self, api):
@@ -67,15 +68,27 @@ class CustomStreamListener(tweepy.StreamListener):
 
     def on_data(self, data):
         data = json.loads(HTMLParser().unescape(data))
-        # print the tweet and all metadata
-        #print data
-        # print the tweet
-        print data['text']
         if data['coordinates']:
+            # print the tweet
+            print data['text']
+            # print the tweet and all metadata
+            #print data
             # print data['coordinates']
-            print data['coordinates']['coordinates']
+            # print data['coordinates']['coordinates']
+            # print data['created_at']
+            # print data['user']['id']
+            # print data['id']
+            # print data['id_str']
             # self.latlong.append(data['coordinates']['coordinates'])
-            save_file.write('%.6f,%.6f\n' % (data['coordinates']['coordinates'][0],data['coordinates']['coordinates'][1]))
+            # parsedTweet = data['text'].lower().strip().encode('ascii','replace')
+            # parsedTweet = data['text'].lower().encode('ascii','replace').strip()
+            parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
+            if len(parsedTweet) > 0:
+                print parsedTweet
+            else:
+                print '\tAll unicode removed, no text remaining'
+                parsedTweet = 'unicode_only'
+            save_file.write('%s,%s,%.6f,%.6f,%s\n' % (data['id_str'],data['created_at'],data['coordinates']['coordinates'][0],data['coordinates']['coordinates'][1],parsedTweet))
         # if data.get('place'):
         #     print data['place']['full_name']
         return True
@@ -94,7 +107,8 @@ class CustomStreamListener(tweepy.StreamListener):
 
 # get data from streaming api
 sapi = tweepy.streaming.Stream(auth, CustomStreamListener(save_file))    
-sapi.filter(locations=[-122.75,36.8,-121.75,37.8]) # SF bounding box lat,long
+# sapi.filter(locations=[-122.75,36.8,-121.75,37.8]) # SF bounding box lat,long
+sapi.filter(locations=[-122.53,36.94,-121.8,38.0]) # better SF bounding box lat,long
 
 # consider investigating trends http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.trends_location
 
@@ -102,4 +116,4 @@ sapi.filter(locations=[-122.75,36.8,-121.75,37.8]) # SF bounding box lat,long
 
 
 if __name__ == '__main__':
-  main()
+    main()
