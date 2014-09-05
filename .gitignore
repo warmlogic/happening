@@ -2,4 +2,4 @@
 *.pyc
 *.cfg
 
-latlong.json
+latlong*.csv
