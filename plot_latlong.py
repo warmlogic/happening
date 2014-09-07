@@ -5,6 +5,8 @@ plot latitude and longitudes
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.mlab as mlab
 import pdb
 
 def compute_miles(lat1, long1, lat2, long2):
@@ -45,11 +47,7 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
     return arc
 
 
-# latlong = open("llgeo_overnight.csv")
-latlong = open("latlong_combined.csv")
-
-# old, only geo
-# latlong = open("latlong_plot.csv")
+latlong = open("data/latlong_combined.csv")
 
 print 'Reading locations...'
 # df = pd.read_csv(latlong,header=None,names=['latitude', 'longitude'])
@@ -64,21 +62,52 @@ latlong.close()
 
 # pdb.set_trace()
 
-# plot
-fig = plt.figure()
-# ax = plt.axis() # not sure if this works
-nbins = 5000
-H,xedges,yedges = np.histogram2d(np.array(df.latitude),np.array(df.longitude),bins=nbins)
-H = np.rot90(H)
-H = np.flipud(H)
-Hmasked = np.ma.masked_where(H==0,H) # mask pixels
+n = 1e5
+x = y = np.linspace(-5, 5, 100)
 
-plt.pcolormesh(xedges,yedges,Hmasked)
-plt.title('Counts')
-plt.colorbar()
-# ax.get_xaxis().set_visible(False)
-# ax.get_yaxis().set_visible(False)
+x = np.array(df.latitude)
+y = np.array(df.longitude)
+
+X, Y = np.meshgrid(x, y)
+Z1 = mlab.bivariate_normal(X, Y, 2, 2, 0, 0)
+Z2 = mlab.bivariate_normal(X, Y, 4, 1, 1, 1)
+ZD = Z2 - Z1
+x = X.ravel()
+y = Y.ravel()
+z = ZD.ravel()
+gridsize=30
+plt.subplot(111)
+
+# if 'bins=None', then color of each hexagon corresponds directly to its count
+# 'C' is optional--it maps values to x-y coordinates; if 'C' is None (default) then 
+# the result is a pure 2D histogram 
+
+plt.hexbin(x, y, C=z, gridsize=gridsize, cmap=CM.jet, bins=1000)
+plt.axis([x.min(), x.max(), y.min(), y.max()])
+
+cb = plt.colorbar()
+cb.set_label('mean value')
 plt.show()
+
+
+# # plot
+# fig = plt.figure()
+# # ax = plt.axis() # not sure if this works
+# nbins = 5000
+# H,xedges,yedges = np.histogram2d(np.array(df.latitude),np.array(df.longitude),bins=nbins)
+# H = np.rot90(H)
+# H = np.flipud(H)
+# Hmasked = np.ma.masked_where(H==0,H) # mask pixels
+
+# plt.pcolormesh(xedges,yedges,Hmasked)
+# plt.title('Counts')
+# plt.colorbar()
+# # ax.get_xaxis().set_visible(False)
+# # ax.get_yaxis().set_visible(False)
+# plt.show()
+
+# plt.savefig('latlong_plot.png')
+
 
 
 if __name__ == '__main__':
