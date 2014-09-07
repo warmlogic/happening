@@ -48,7 +48,7 @@ twitAPI = tweepy.API(auth)
 
 # initialize blank list to contain latitude and longitude
 #latlong = []
-save_file = open('latlong_geodate.csv', 'a')
+save_file = open('latlong_user_geodate.csv', 'a')
 
 class CustomStreamListener(tweepy.StreamListener):
     def __init__(self, api):
@@ -70,7 +70,7 @@ class CustomStreamListener(tweepy.StreamListener):
         data = json.loads(HTMLParser().unescape(data))
         if data['coordinates']:
             # print the tweet
-            print data['text']
+            print data['user']['screen_name'] + ' ' + data['text']
             # print the tweet and all metadata
             #print data
             # print data['coordinates']
@@ -84,11 +84,11 @@ class CustomStreamListener(tweepy.StreamListener):
             # parsedTweet = data['text'].lower().encode('ascii','replace').strip()
             parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
             if len(parsedTweet) > 0:
-                print parsedTweet
+                print data['user']['screen_name'] + ' ' + parsedTweet
             else:
-                print '\tAll unicode removed, no text remaining'
+                print data['user']['screen_name'] + ' ' + '\tAll unicode removed, no text remaining'
                 parsedTweet = 'unicode_only'
-            save_file.write('%s,%s,%.6f,%.6f,%s\n' % (data['id_str'],data['created_at'],data['coordinates']['coordinates'][0],data['coordinates']['coordinates'][1],parsedTweet))
+            save_file.write('%d,%s,%s,%.6f,%.6f,%s\n' % (data['user']['id'],data['id_str'],data['created_at'],data['coordinates']['coordinates'][0],data['coordinates']['coordinates'][1],parsedTweet))
         # if data.get('place'):
         #     print data['place']['full_name']
         return True
