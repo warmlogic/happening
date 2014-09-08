@@ -55,7 +55,7 @@ def selectSpace(df,this_lat=[-180,180],this_lon=[-90,90]):
     df = df[withinBoundingBox]
     return df
 
-def selectTime(df,sinceDatetime='2007-01-01 00:00:00',untilDatetime=pd.datetime.now(),rmnull=False):
+def selectTime(df,sinceDatetime='2007-01-01 00:00:00',untilDatetime=pd.datetime.now(),rmnull=True):
     if rmnull:
         hasDatestr = ~df.datestr.isnull()
         print 'Time: Removing %d null entries (out of %d)' % (sum(~hasDatestr),len(df))
@@ -125,11 +125,10 @@ df = selectSpace(df,this_lat,this_lon)
 ############
 
 # set the start and end datetimes
-sinceDatetime = '2014-09-05 09:00:00'
-untilDatetime = '2014-09-05 17:00:00'
+# sinceDatetime = '2014-09-05 09:00:00'
+# untilDatetime = '2014-09-05 17:00:00'
 
-df = selectTime(df,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime,rmnull=True)
-# df = selectTime(df,rmnull=True)
+# df = selectTime(df,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
 
 # # calculate distance
 # sf_center = [-122.4167,37.7833]
