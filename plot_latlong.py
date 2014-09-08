@@ -62,6 +62,9 @@ def selectTime(df,sinceDatetime=pd.datetime.min,untilDatetime=pd.datetime.now(),
         df = df[hasDatestr]
 
     # convert to datetime format
+    # pdb.set_trace()
+    # datestr = df.ix[:,'datestr'].copy()
+    # df.datestr = pd.to_datetime(datestr,format='%a %b %d %H:%M:%S +0000 %Y')
     df.datestr = pd.to_datetime(df.datestr,format='%a %b %d %H:%M:%S +0000 %Y')
 
     # select the data in time
@@ -139,7 +142,7 @@ selectTime(df,sinceDatetime='2007-01-01 00:00:00',untilDatetime=pd.datetime.now(
 # Plot
 ############
 
-nbins = 200
+nbins = 50
 plot_hist(df,nbins)
 
 # plt.savefig('latlong_plot.png')
