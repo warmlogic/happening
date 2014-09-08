@@ -9,6 +9,7 @@ from authent import twitauth
 import json
 from HTMLParser import HTMLParser
 import time
+import datetime
 # import pandas as pd
 # import numpy as np
 # import matplotlib.pyplot as plt
@@ -48,40 +49,42 @@ def parseTweet(tweet):
     # get rid of unicode characters, newlines, commas, trailing whitespace
     parsedTweet = tweet.text.encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
 
-    print tweet.user.screen_name + ' ' + tweet.text
-    if len(parsedTweet) > 0:
-        print tweet.user.screen_name + ' ' + parsedTweet
-    else:
-        # if we lost everything
-        print tweet.user.screen_name + ' ' + '\tAll unicode removed, no text remaining'
-        parsedTweet = 'unicode_only'
-    pdb.set_trace()
     # parse user info, time, location, text from tweet into dict
     #if tweet.created_at.utcoffset() == None:
     if tweet.created_at.strftime("%z") == '':
         created_at = tweet.created_at.strftime("%a %b %d %T") + ' +0000 ' + tweet.created_at.strftime("%Y")
     else:
         created_at = tweet.created_at.strftime("%a %b %d %T %z %Y")
+
+    # print created_at + ' ' + tweet.user.screen_name + ' ' + + tweet.text
+    if len(parsedTweet) > 0:
+        print created_at + ' ' + tweet.user.screen_name + ' ' + parsedTweet
+    else:
+        # if we lost everything
+        print created_at + ' ' + tweet.user.screen_name + ' ' + '\tAll unicode removed, no text remaining'
+        parsedTweet = 'unicode_only'
+    
     pt= {'user_id':tweet.user.id,'user_name':tweet.user.screen_name,\
     'tweet_id':tweet.id_str,'datetime':created_at,'text_full':tweet.text,'text':parsedTweet,\
     'latitude':tweet.coordinates['coordinates'][0],'longitude':tweet.coordinates['coordinates'][1]}
 
     return pt
 
-# def TwitSearchGeo(keywords,geo,API=twitAPI,searchopts={'lang':'en'}):
-def TwitSearchGeo(keywords,geo,API=twitAPI,searchopts={}):
+# def TwitSearchGeo(keywords,geo,count=count,API=twitAPI,searchopts={'lang':'en'}):
+def TwitSearchGeoOld(keywords,geo,count,API=twitAPI,searchopts={}):
     # search twitter for keywords through full timeline available
-    searchresult = API.search(q=keywords,geocode=geo,count=100,**searchopts)
-    parsedresults=[parseTweet(x) for x in searchresult if x.coordinates]
-    print 'Searching for %s'%keywords
-    if len(parsedresults)<100: # not even 100 results, so return
-        print 'Found %i results'%len(parsedresults)
-        if len(parsedresults)>0:
-            print 'Last tweet at %s'%parsedresults[-1]['time']
+    # searchresult = API.search(q=keywords,geocode=geo,count=count,**searchopts)
+    searchresult = API.search(q=keywords,geocode=geo,count=count)
+    parsedresults = [parseTweet(x) for x in searchresult if x.coordinates]
+    print 'Searching for %s %s' % (keywords,geo)
+    if len(parsedresults) < 100: # not even 100 results, so return
+        print 'Found %i results' % len(parsedresults)
+        if len(parsedresults) > 0:
+            print 'Last tweet at %s' % (parsedresults[-1]['datetime'])
         time.sleep(5.1)
         return parsedresults
     else:
-        maxdepth=1000
+        maxdepth = 1000
         
         while True:
             try:
@@ -96,14 +99,61 @@ def TwitSearchGeo(keywords,geo,API=twitAPI,searchopts={}):
             # update keyword arguments for next round of searches
             
             searchresult = API.search(**kwargs)
-            print 'Found %i more results'%len(searchresult)
-            parsedresults+=[parseTweet(x) for x in searchresult]
+            print 'Found %i more results' % len(searchresult)
+            parsedresults+=[parseTweet(x) for x in searchresult if x.coordinates]
             if len(parsedresults)>maxdepth:
                 break
             time.sleep(5.1)
-        print 'Oldest tweet at %s'%parsedresults[-1]['time']
-        print 'Found %i results'%len(parsedresults)
+        print 'Oldest tweet at %s' % parsedresults[-1]['datetime']
+        print 'Found %i results' % len(parsedresults)
         return parsedresults
+
+def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
+    'http://stackoverflow.com/questions/22469713/managing-tweepy-api-search'
+    # only allowed to make 180 searches per user in a 15-minute sliding window
+    searchCount = 0
+    searchLimit = 180
+    searchLimitMin = 15
+    searchTimeStart = datetime.datetime.now()
+
+    parsedresults = []
+    # searched_tweets = []
+    last_id = -1
+    while len(parsedresults) < max_tweets:
+        # # will only return 100 tweets, I don't know why the example did this
+        # count = max_tweets - len(parsedresults)
+        if searchCount == searchLimit:
+            elapsed = searchTimePrev - searchTimeStart
+            if elapsed > datetime.timedelta(minutes=searchLimitMin):
+                timeToSleep = datetime.timedelta(minutes=searchLimitMin) - elapsed
+                print 'Made %d requests in %dmin %dsec, sleeping for %dmin %dsec' % (searchCount,elapsed.seconds / 60, elapsed.seconds % 60,timeToSleep.seconds / 60, timeToSleep.seconds % 60)
+                time.sleep(timeToSleep.seconds)
+                searchCount -= 1
+        try:
+            searchCount += 1
+            searchTimePrev = datetime.datetime.now()
+            new_tweets = API.search(q=keywords, geocode=geo, count=count, max_id=str(last_id - 1))
+            print '%d searches done' % searchCount
+            if not new_tweets:
+                break
+            # searched_tweets.extend(new_tweets)
+            parsedresults_new = [parseTweet(x) for x in new_tweets if x.coordinates]
+            parsedresults.extend(parsedresults_new)
+            last_id = new_tweets[-1].id
+        except tweepy.TweepError as e:
+            pdb.set_trace()
+            # depending on TweepError.code, one may want to retry or wait
+            # to keep things simple, we will give up on an error
+            break
+    # parsedresults=[parseTweet(x) for x in searched_tweets if x.coordinates]
+    print 'Found %i results' % len(parsedresults)
+    if len(parsedresults) > 1:
+        print 'Newest tweet at %s' % parsedresults[0]['datetime']
+    if len(parsedresults) > 2:
+        print 'Oldest tweet at %s' % parsedresults[-1]['datetime']
+    else:
+        print 'Only one tweet found!'
+    return parsedresults
 
 class StreamLogger(tweepy.StreamListener):
     def __init__(self, fileToWrite):
@@ -144,12 +194,12 @@ class StreamLogger(tweepy.StreamListener):
         # get rid of unicode characters, newlines, commas, trailing whitespace
         parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
 
-        print data['user']['screen_name'] + ' ' + data['text']
+        # print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' + data['text']
         if len(parsedTweet) > 0:
-            print data['user']['screen_name'] + ' ' + parsedTweet
+            print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
         else:
             # if we lost everything
-            print data['user']['screen_name'] + ' ' + '\tAll unicode removed, no text remaining'
+            print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' + '\tAll unicode removed, no text remaining'
             parsedTweet = 'unicode_only'
 
         # parse user info, time, location, text from tweet into dict
