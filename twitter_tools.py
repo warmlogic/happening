@@ -224,5 +224,5 @@ def TwitStreamGeo(boundingBox,save_file,creds=auth):
     print 'Starting stream, ctrl-c to exit'
     stream.filter(locations=boundingBox)
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     import streamFromGeo_twitter

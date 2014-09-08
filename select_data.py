@@ -86,5 +86,5 @@ def plot_hist(df,nbins=200):
     # ax.get_yaxis().set_visible(False)
     return plt
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     import plot_data
