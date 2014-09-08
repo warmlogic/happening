@@ -12,6 +12,8 @@ from HTMLParser import HTMLParser
 # import pandas as pd
 # import numpy as np
 # import matplotlib.pyplot as plt
+# import pdb
+
 
 # get your key and secret here: https://dev.twitter.com/apps
 
@@ -43,12 +45,11 @@ twitAPI = tweepy.API(auth)
 # POI could be found with http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.reverse_geocode
 
 
-class CustomStreamListener(tweepy.StreamListener):
-    def __init__(self, api):
-        self.api = api
+class StreamLogger(tweepy.StreamListener):
+    def __init__(self, fileToWrite):
+        self.fileToWrite = fileToWrite
+        # self.dbcon = dbcon
         super(tweepy.StreamListener, self).__init__()
-
-        #self.list_of_tweets = []
 
     def on_status(self, status):
         print status.text
@@ -65,7 +66,7 @@ class CustomStreamListener(tweepy.StreamListener):
             # if we have latitude and longitude, parse it
             pt = self.parseTweet(data)
             # write it to disk
-            save_file.write('%d,%s,%s,%.6f,%.6f,%s\n' % (pt['user_id'],pt['tweet_id'],pt['datetime'],pt['latitude'],pt['longitude'],pt['text']))
+            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' % (pt['user_id'],pt['tweet_id'],pt['datetime'],pt['latitude'],pt['longitude'],pt['text']))
         return True
 
     #on_event = on_status
@@ -98,16 +99,18 @@ class CustomStreamListener(tweepy.StreamListener):
 
         return pt
 
-# append to file where we want to save tweets
-save_file = open('latlong_user_geodate.csv', 'a')
+# def TwitStreamGeo(boundingBox,dbcon,creds=auth):
+def TwitStreamGeo(boundingBox,save_file,creds=auth):
+    # append to file where we want to save tweets
+    fileToWrite = open(save_file, 'a')
 
-# NB: tweets seem to come in from outside bounding box
-bayArea_bb_twit = [-122.75,36.8,-121.75,37.8]
-bayArea_bb_me = [-122.53,36.94,-121.8,38.0]
-
-# get data from streaming api
-sapi = tweepy.streaming.Stream(auth, CustomStreamListener(save_file))    
-sapi.filter(locations=bayArea_bb_me)
+    # get data from streaming api
+    # listener = StreamLogger(dbcon)
+    listener = StreamLogger(fileToWrite)
+    print listener
+    stream = tweepy.streaming.Stream(creds, listener)    
+    print 'Starting stream, ctrl-c to exit'
+    stream.filter(locations=boundingBox)
 
 if __name__ == '__main__':
     main()
