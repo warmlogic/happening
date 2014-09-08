@@ -1,17 +1,12 @@
 '''
 select data: specified by latitude and longitude bounding box and datetime strings
 
-also plots
+also plots density
 '''
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-# import matplotlib.cm as cm
-# import matplotlib.mlab as mlab
-# import time
-# import datetime
-# import pdb
 
 def compute_miles(lat1, long1, lat2, long2):
     print 'computing distance from San Francisco\n'
@@ -89,7 +84,6 @@ def plot_hist(df,nbins=200):
     cb.set_label('Count')
     # ax.get_xaxis().set_visible(False)
     # ax.get_yaxis().set_visible(False)
-    plt.show()
     return plt
 
 if __name__ == '__main__':

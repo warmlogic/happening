@@ -3,11 +3,7 @@ check out the data
 '''
 
 import pandas as pd
-# import numpy as np
-# import matplotlib.pyplot as plt
-
 import select_data
-
 
 ############
 # Read the data
@@ -72,7 +68,12 @@ df = select_data.selectSpace(df,this_lat,this_lon)
 nbins = 50
 plt = select_data.plot_hist(df,nbins)
 
-# plt.savefig('latlong_plot.png')
+savefig = True
+if savefig:
+    figname = 'latlong_plot.png'
+    print 'saving figure to ' + figname
+    plt.savefig(figname)
+plt.show()
 
 
 
