@@ -1,6 +1,6 @@
-"""
+'''
 twitter tools
-"""
+'''
 
 import sys
 import tweepy
@@ -18,7 +18,7 @@ import pdb
 
 # get your key and secret here: https://dev.twitter.com/apps
 
-# Keep the "API secret" a secret!
+# Keep the API secret a secret!
 apikey = twitauth['apikey']
 apikeysecret = twitauth['apikeysecret']
 
@@ -51,10 +51,10 @@ def parseTweet(tweet):
 
     # parse user info, time, location, text from tweet into dict
     #if tweet.created_at.utcoffset() == None:
-    if tweet.created_at.strftime("%z") == '':
-        created_at = tweet.created_at.strftime("%a %b %d %T") + ' +0000 ' + tweet.created_at.strftime("%Y")
+    if tweet.created_at.strftime('%z') == '':
+        created_at = tweet.created_at.strftime('%a %b %d %T') + ' +0000 ' + tweet.created_at.strftime('%Y')
     else:
-        created_at = tweet.created_at.strftime("%a %b %d %T %z %Y")
+        created_at = tweet.created_at.strftime('%a %b %d %T %z %Y')
 
     # print created_at + ' ' + tweet.user.screen_name + ' ' + + tweet.text
     if len(parsedTweet) > 0:
@@ -65,7 +65,7 @@ def parseTweet(tweet):
         parsedTweet = 'unicode_only'
     
     pt= {'user_id':tweet.user.id,'user_name':tweet.user.screen_name,\
-    'tweet_id':tweet.id_str,'datetime':created_at,'text_full':tweet.text,'text':parsedTweet,\
+    'tweet_id':tweet.id_str,'tweettime':created_at,'text_full':tweet.text,'text':parsedTweet,\
     'latitude':tweet.coordinates['coordinates'][0],'longitude':tweet.coordinates['coordinates'][1]}
 
     return pt
@@ -80,7 +80,7 @@ def TwitSearchGeoOld(keywords,geo,count,API=twitAPI,searchopts={}):
     if len(parsedresults) < 100: # not even 100 results, so return
         print 'Found %i results' % len(parsedresults)
         if len(parsedresults) > 0:
-            print 'Last tweet at %s' % (parsedresults[-1]['datetime'])
+            print 'Last tweet at %s' % (parsedresults[-1]['tweettime'])
         time.sleep(5.1)
         return parsedresults
     else:
@@ -104,7 +104,7 @@ def TwitSearchGeoOld(keywords,geo,count,API=twitAPI,searchopts={}):
             if len(parsedresults)>maxdepth:
                 break
             time.sleep(5.1)
-        print 'Oldest tweet at %s' % parsedresults[-1]['datetime']
+        print 'Oldest tweet at %s' % parsedresults[-1]['tweettime']
         print 'Found %i results' % len(parsedresults)
         return parsedresults
 
@@ -148,9 +148,9 @@ def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
     # parsedresults=[parseTweet(x) for x in searched_tweets if x.coordinates]
     print 'Found %i results' % len(parsedresults)
     if len(parsedresults) > 1:
-        print 'Newest tweet at %s' % parsedresults[0]['datetime']
+        print 'Newest tweet at %s' % parsedresults[0]['tweettime']
     if len(parsedresults) > 2:
-        print 'Oldest tweet at %s' % parsedresults[-1]['datetime']
+        print 'Oldest tweet at %s' % parsedresults[-1]['tweettime']
     else:
         print 'Only one tweet found!'
     return parsedresults
@@ -176,7 +176,7 @@ class StreamLogger(tweepy.StreamListener):
             # if we have latitude and longitude, parse it
             pt = self.parseStreamTweet(data)
             # write it to disk
-            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' % (pt['user_id'],pt['tweet_id'],pt['datetime'],pt['latitude'],pt['longitude'],pt['text']))
+            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' % (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['latitude'],pt['longitude'],pt['text']))
         return True
 
     #on_event = on_status
@@ -204,7 +204,7 @@ class StreamLogger(tweepy.StreamListener):
 
         # parse user info, time, location, text from tweet into dict
         pt= {'user_id':data['user']['id'],'user_name':data['user']['screen_name'],\
-        'tweet_id':data['id_str'],'datetime':data['created_at'],'text_full':data['text'],'text':parsedTweet,\
+        'tweet_id':data['id_str'],'tweettime':data['created_at'],'text_full':data['text'],'text':parsedTweet,\
         'latitude':data['coordinates']['coordinates'][0],'longitude':data['coordinates']['coordinates'][1]}
 
         return pt
