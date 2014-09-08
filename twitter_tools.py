@@ -114,7 +114,7 @@ def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
     searchCount = 0
     searchLimit = 180
     searchLimitMin = 15
-    searchTimeStart = datetime.datetime.now()
+    searchTimes = []
 
     parsedresults = []
     # searched_tweets = []
@@ -122,18 +122,21 @@ def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
     while len(parsedresults) < max_tweets:
         # # will only return 100 tweets, I don't know why the example did this
         # count = max_tweets - len(parsedresults)
-        if searchCount == searchLimit:
-            elapsed = searchTimePrev - searchTimeStart
-            if elapsed > datetime.timedelta(minutes=searchLimitMin):
+        if len(searchTimes) >= searchLimit:
+            elapsed = searchTimes[-1] - searchTimes[0]
+            print 'first search in mem ' + str(searchTimes[0])
+            print 'last search in mem  ' + str(searchTimes[-1])
+            print 'elapsed ' + str(elapsed)
+            if elapsed < datetime.timedelta(minutes=searchLimitMin):
                 timeToSleep = datetime.timedelta(minutes=searchLimitMin) - elapsed
-                print 'Made %d requests in %dmin %dsec, sleeping for %dmin %dsec' % (searchCount,elapsed.seconds / 60, elapsed.seconds % 60,timeToSleep.seconds / 60, timeToSleep.seconds % 60)
+                print 'Made %d requests in last %dmin %dsec, sleeping for %dmin %dsec' % (len(searchTimes),elapsed.seconds / 60, elapsed.seconds % 60,timeToSleep.seconds / 60, timeToSleep.seconds % 60)
                 time.sleep(timeToSleep.seconds)
-                searchCount -= 1
+            searchTimes.pop(0)
         try:
             searchCount += 1
-            searchTimePrev = datetime.datetime.now()
+            searchTimes.append(datetime.datetime.now())
             new_tweets = API.search(q=keywords, geocode=geo, count=count, max_id=str(last_id - 1))
-            print '%d searches done' % searchCount
+            print '%d searches' % searchCount
             if not new_tweets:
                 break
             # searched_tweets.extend(new_tweets)
