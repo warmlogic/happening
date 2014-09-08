@@ -31,14 +31,6 @@ auth.set_access_token(accesstoken, accesstokensecret)
 
 twitAPI = tweepy.API(auth)
 
-# # Twython: authenticate to API
-# twitter = Twython(APP_KEY, APP_SECRET, oauth_version=2)
-# # Twython: Obtain an OAuth 2 Access Token (only request once and save it somewhere)
-# ACCESS_TOKEN = twitter.obtain_access_token()
-#
-# # Twython: Use the ACCESS_TOKEN
-# twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
-
 # http://stackoverflow.com/questions/25224692/getting-the-location-using-tweepy
 
 # mongodb: http://stackoverflow.com/questions/17213991/how-can-i-consume-tweets-from-twitters-streaming-api-and-store-them-in-mongodb
@@ -46,9 +38,10 @@ twitAPI = tweepy.API(auth)
 # saving
 # http://stackoverflow.com/questions/23531608/how-do-i-save-streaming-tweets-in-json-via-tweepy
 
-# initialize blank list to contain latitude and longitude
-#latlong = []
-save_file = open('latlong_user_geodate.csv', 'a')
+# consider investigating trends http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.trends_location
+
+# POI could be found with http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.reverse_geocode
+
 
 class CustomStreamListener(tweepy.StreamListener):
     def __init__(self, api):
@@ -69,30 +62,11 @@ class CustomStreamListener(tweepy.StreamListener):
     def on_data(self, data):
         data = json.loads(HTMLParser().unescape(data))
         if data['coordinates']:
-            # print the tweet
-            print data['user']['screen_name'] + ' ' + data['text']
-            # print the tweet and all metadata
-            #print data
-            # print data['coordinates']
-            # print data['coordinates']['coordinates']
-            # print data['created_at']
-            # print data['user']['id']
-            # print data['id']
-            # print data['id_str']
-            # self.latlong.append(data['coordinates']['coordinates'])
-            # parsedTweet = data['text'].lower().strip().encode('ascii','replace')
-            # parsedTweet = data['text'].lower().encode('ascii','replace').strip()
-            parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
-            if len(parsedTweet) > 0:
-                print data['user']['screen_name'] + ' ' + parsedTweet
-            else:
-                print data['user']['screen_name'] + ' ' + '\tAll unicode removed, no text remaining'
-                parsedTweet = 'unicode_only'
-            save_file.write('%d,%s,%s,%.6f,%.6f,%s\n' % (data['user']['id'],data['id_str'],data['created_at'],data['coordinates']['coordinates'][0],data['coordinates']['coordinates'][1],parsedTweet))
-        # if data.get('place'):
-        #     print data['place']['full_name']
+            # if we have latitude and longitude, parse it
+            pt = self.parseTweet(data)
+            # write it to disk
+            save_file.write('%d,%s,%s,%.6f,%.6f,%s\n' % (pt['user_id'],pt['tweet_id'],pt['datetime'],pt['latitude'],pt['longitude'],pt['text']))
         return True
-        # return data['coordinates']['coordinates']
 
     #on_event = on_status
     on_event = on_data
@@ -105,15 +79,35 @@ class CustomStreamListener(tweepy.StreamListener):
         print >> sys.stderr, 'Timeout...'
         return True # Don't kill the stream
 
+    def parseTweet(self, data):
+        # get rid of unicode characters, newlines, commas, trailing whitespace
+        parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
+
+        print data['user']['screen_name'] + ' ' + data['text']
+        if len(parsedTweet) > 0:
+            print data['user']['screen_name'] + ' ' + parsedTweet
+        else:
+            # if we lost everything
+            print data['user']['screen_name'] + ' ' + '\tAll unicode removed, no text remaining'
+            parsedTweet = 'unicode_only'
+
+        # parse user info, time, location, text from tweet into dict
+        pt= {'user_id':data['user']['id'],'user_name':data['user']['screen_name'],\
+        'tweet_id':data['id_str'],'datetime':data['created_at'],'text_full':data['text'],'text':parsedTweet,\
+        'latitude':data['coordinates']['coordinates'][0],'longitude':data['coordinates']['coordinates'][1]}
+
+        return pt
+
+# append to file where we want to save tweets
+save_file = open('latlong_user_geodate.csv', 'a')
+
+# NB: tweets seem to come in from outside bounding box
+bayArea_bb_twit = [-122.75,36.8,-121.75,37.8]
+bayArea_bb_me = [-122.53,36.94,-121.8,38.0]
+
 # get data from streaming api
 sapi = tweepy.streaming.Stream(auth, CustomStreamListener(save_file))    
-# sapi.filter(locations=[-122.75,36.8,-121.75,37.8]) # SF bounding box lat,long
-sapi.filter(locations=[-122.53,36.94,-121.8,38.0]) # better SF bounding box lat,long
-
-# consider investigating trends http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.trends_location
-
-# POI could be found with http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.reverse_geocode
-
+sapi.filter(locations=bayArea_bb_me)
 
 if __name__ == '__main__':
     main()
