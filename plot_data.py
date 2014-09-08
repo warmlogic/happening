@@ -70,7 +70,7 @@ plt = select_data.plot_hist(df,nbins)
 
 savefig = True
 if savefig:
-    figname = 'latlong_plot.png'
+    figname = 'data/latlong_plot.png'
     print 'saving figure to ' + figname
     plt.savefig(figname)
 plt.show()
