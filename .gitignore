@@ -4,3 +4,5 @@
 mockup
 data
 latlong*.csv
+.ipynb_checkpoints
+*.ipynb
