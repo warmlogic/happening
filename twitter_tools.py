@@ -8,11 +8,11 @@ import tweepy
 from authent import twitauth
 import json
 from HTMLParser import HTMLParser
-# import time
+import time
 # import pandas as pd
 # import numpy as np
 # import matplotlib.pyplot as plt
-# import pdb
+import pdb
 
 
 # get your key and secret here: https://dev.twitter.com/apps
@@ -44,6 +44,66 @@ twitAPI = tweepy.API(auth)
 
 # POI could be found with http://tweepy.readthedocs.org/en/v2.3.0/api.html#API.reverse_geocode
 
+def parseTweet(tweet):
+    # get rid of unicode characters, newlines, commas, trailing whitespace
+    parsedTweet = tweet.text.encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
+
+    print tweet.user.screen_name + ' ' + tweet.text
+    if len(parsedTweet) > 0:
+        print tweet.user.screen_name + ' ' + parsedTweet
+    else:
+        # if we lost everything
+        print tweet.user.screen_name + ' ' + '\tAll unicode removed, no text remaining'
+        parsedTweet = 'unicode_only'
+    pdb.set_trace()
+    # parse user info, time, location, text from tweet into dict
+    #if tweet.created_at.utcoffset() == None:
+    if tweet.created_at.strftime("%z") == '':
+        created_at = tweet.created_at.strftime("%a %b %d %T") + ' +0000 ' + tweet.created_at.strftime("%Y")
+    else:
+        created_at = tweet.created_at.strftime("%a %b %d %T %z %Y")
+    pt= {'user_id':tweet.user.id,'user_name':tweet.user.screen_name,\
+    'tweet_id':tweet.id_str,'datetime':created_at,'text_full':tweet.text,'text':parsedTweet,\
+    'latitude':tweet.coordinates['coordinates'][0],'longitude':tweet.coordinates['coordinates'][1]}
+
+    return pt
+
+# def TwitSearchGeo(keywords,geo,API=twitAPI,searchopts={'lang':'en'}):
+def TwitSearchGeo(keywords,geo,API=twitAPI,searchopts={}):
+    # search twitter for keywords through full timeline available
+    searchresult = API.search(q=keywords,geocode=geo,count=100,**searchopts)
+    parsedresults=[parseTweet(x) for x in searchresult if x.coordinates]
+    print 'Searching for %s'%keywords
+    if len(parsedresults)<100: # not even 100 results, so return
+        print 'Found %i results'%len(parsedresults)
+        if len(parsedresults)>0:
+            print 'Last tweet at %s'%parsedresults[-1]['time']
+        time.sleep(5.1)
+        return parsedresults
+    else:
+        maxdepth=1000
+        
+        while True:
+            try:
+                nextresults=searchresult.next_results
+                print nextresults
+                kwargs= dict([kv.split('=') for kv in nextresults[1:].split('&')])
+                print 'still digging...'
+            except:
+                print 'Out of results'
+                time.sleep(5.1)
+                break
+            # update keyword arguments for next round of searches
+            
+            searchresult = API.search(**kwargs)
+            print 'Found %i more results'%len(searchresult)
+            parsedresults+=[parseTweet(x) for x in searchresult]
+            if len(parsedresults)>maxdepth:
+                break
+            time.sleep(5.1)
+        print 'Oldest tweet at %s'%parsedresults[-1]['time']
+        print 'Found %i results'%len(parsedresults)
+        return parsedresults
 
 class StreamLogger(tweepy.StreamListener):
     def __init__(self, fileToWrite):
@@ -64,7 +124,7 @@ class StreamLogger(tweepy.StreamListener):
         data = json.loads(HTMLParser().unescape(data))
         if data['coordinates']:
             # if we have latitude and longitude, parse it
-            pt = self.parseTweet(data)
+            pt = self.parseStreamTweet(data)
             # write it to disk
             self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' % (pt['user_id'],pt['tweet_id'],pt['datetime'],pt['latitude'],pt['longitude'],pt['text']))
         return True
@@ -80,7 +140,7 @@ class StreamLogger(tweepy.StreamListener):
         print >> sys.stderr, 'Timeout...'
         return True # Don't kill the stream
 
-    def parseTweet(self, data):
+    def parseStreamTweet(self, data):
         # get rid of unicode characters, newlines, commas, trailing whitespace
         parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
 
