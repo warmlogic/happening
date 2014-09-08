@@ -34,6 +34,7 @@ import pdb
 # bayArea_bb_twit = [-122.75,36.8,-121.75,37.8] # from twitter's dev site
 # bayArea_bb_me = [-122.53,36.94,-121.8,38.0] # I made this one
 
+# searches twitter backwards in time
 query = "since:2014-09-02 until:2014-09-03"
 sf_center = "37.75,-122.44,4mi"
 
