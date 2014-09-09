@@ -19,13 +19,21 @@ plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 # Read the data
 ############
 
-latlong = open("data/latlong_combined.csv")
+# latlong = open("data/latlong_combined.csv")
+latlong = open("data/latlong_userdategeo_combined.csv")
 
 print 'Reading locations...'
 # df = pd.read_csv(latlong,header=None,names=['longitude', 'latitude'])
-df = pd.read_csv(latlong,header=None,names=['id','datestr', 'longitude','latitude','text'])
+# df = pd.read_csv(latlong,header=None,names=['tweet_id','datestr', 'longitude','latitude','text'])
+df = pd.read_csv(latlong,header=None,names=['user_id','tweet_id','datestr', 'longitude','latitude','text'])
 print 'Done.'
 latlong.close()
+
+############
+# User
+############
+
+# df = sd.selectUser(df,rmnull=True)
 
 ############
 # Space
@@ -67,7 +75,7 @@ df = sd.selectSpace(df,this_lon,this_lat)
 # Plot
 ############
 
-nbins = 50
+nbins = 200
 plt = sd.plot_hist(df,nbins)
 
 savefig = True
@@ -106,7 +114,7 @@ X = np.vstack((df.longitude, df.latitude)).T
 # scatter(xx,yy)
 # show()
 
-db = DBSCAN(eps=0.0002, min_samples=30).fit(X)
+db = DBSCAN(eps=0.0002, min_samples=100).fit(X)
 core_samples = db.core_sample_indices_
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
