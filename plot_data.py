@@ -3,10 +3,17 @@ check out the data
 '''
 
 import pandas as pd
-import select_data
+import select_data as sd
+import matplotlib.pyplot as plt
 
 # %load_ext autoreload
 # %autoreload 2
+
+%matplotlib inline
+import matplotlib.pyplot as plt
+from IPython.display import Image
+import numpy as np
+plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 
 ############
 # Read the data
@@ -15,8 +22,8 @@ import select_data
 latlong = open("data/latlong_combined.csv")
 
 print 'Reading locations...'
-# df = pd.read_csv(latlong,header=None,names=['latitude', 'longitude'])
-df = pd.read_csv(latlong,header=None,names=['id','datestr','latitude', 'longitude','text'])
+# df = pd.read_csv(latlong,header=None,names=['longitude', 'latitude'])
+df = pd.read_csv(latlong,header=None,names=['id','datestr', 'longitude','latitude','text'])
 print 'Done.'
 latlong.close()
 
@@ -26,25 +33,25 @@ latlong.close()
 
 # choose only coordinates in our bounding box of interest
 
-bayarea_lat = [-122.53,-121.8]
-bayarea_lon = [36.94,38.0]
+bayarea_lon = [-122.53,-121.8]
+bayarea_lat = [36.94,38.0]
 
-sf_lat = [-122.5686,-122.375]
-sf_lon = [37.6681,37.8258]
+sf_lon = [-122.5686,-122.375]
+sf_lat = [37.6681,37.8258]
 
-nob_lat = [-122.4322,-122.3976]
-nob_lon = [37.7845,37.8042]
+nob_lon = [-122.4322,-122.3976]
+nob_lat = [37.7845,37.8042]
 
+# this_lon = bayarea_lon;
 # this_lat = bayarea_lat;
-# this_lon = bayarea_long;
 
-# this_lat = sf_lat
-# this_lon = sf_lon
+this_lon = sf_lon
+this_lat = sf_lat
 
-this_lat = nob_lat
-this_lon = nob_lon
+# this_lon = nob_lon
+# this_lat = nob_lat
 
-df = select_data.selectSpace(df,this_lat,this_lon)
+df = sd.selectSpace(df,this_lon,this_lat)
 
 ############
 # Time
@@ -54,7 +61,21 @@ df = select_data.selectSpace(df,this_lat,this_lon)
 # sinceDatetime = '2014-09-05 09:00:00'
 # untilDatetime = '2014-09-05 17:00:00'
 
-# df = select_data.selectTime(df,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
+# df = sd.selectTime(df,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
+
+############
+# Plot
+############
+
+nbins = 50
+plt = sd.plot_hist(df,nbins)
+
+savefig = True
+if savefig:
+    figname = 'data/latlong_plot.png'
+    print 'saving figure to ' + figname
+    plt.savefig(figname)
+# plt.show()
 
 ############
 # Distance
@@ -63,7 +84,7 @@ df = select_data.selectSpace(df,this_lat,this_lon)
 # # calculate distance
 # sf_center = [-122.4167,37.7833]
 # # castro_muni = [-122.43533,37.76263]
-# distance_to_user = select_data.compute_distance_from_point(sf_center[0], sf_center[1], df.latitude, df.longitude, 'meters')
+# distance_to_user = sd.compute_distance_from_point(sf_center[0], sf_center[1], df.longitude, df.latitude, 'meters')
 
 ############
 # Cluster
@@ -78,14 +99,14 @@ from sklearn.cluster import DBSCAN
 
 # Use DBSCAN
 
-X = np.vstack((df.latitude, df.longitude)).T
+X = np.vstack((df.longitude, df.latitude)).T
 # X = StandardScaler().fit_transform(X)
 
 # xx, yy = zip(*X)
 # scatter(xx,yy)
 # show()
 
-db = DBSCAN(eps=0.0002, min_samples=20).fit(X)
+db = DBSCAN(eps=0.0002, min_samples=30).fit(X)
 core_samples = db.core_sample_indices_
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
@@ -104,8 +125,11 @@ print('Estimated number of clusters: %d' % n_clusters_)
 # print("Silhouette Coefficient: %0.3f"
 #       % metrics.silhouette_score(X, labels))
 
+###############
+# Plot clusters
+###############
+
 # Plot result
-import matplotlib.pyplot as plt
 unique_labels = set(labels)
 colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
 for k, col in zip(unique_labels, colors):
@@ -117,35 +141,14 @@ for k, col in zip(unique_labels, colors):
 
     xy = X[class_member_mask & ~core_samples_mask]
     plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
-             markeredgecolor='k', markersize=1)
+             markeredgecolor='k', markersize=2)
 
     xy = X[class_member_mask & core_samples_mask]
     plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
              markeredgecolor='k', markersize=14)
 
-
 plt.title('Estimated number of clusters: %d' % n_clusters_)
-plt.show()
-
-############
-# Plot
-############
-
-# %matplotlib inline
-# import matplotlib.pyplot as plt
-# from IPython.display import Image
-# import numpy as np
-# plt.rcParams['figure.figsize'] = 12, 8 # plotsize
-
-nbins = 50
-plt = select_data.plot_hist(df,nbins)
-
-savefig = True
-if savefig:
-    figname = 'data/latlong_plot.png'
-    print 'saving figure to ' + figname
-    plt.savefig(figname)
-plt.show()
+# plt.show()
 
 
 

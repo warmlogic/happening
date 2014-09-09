@@ -66,7 +66,7 @@ def parseTweet(tweet):
     
     pt= {'user_id':tweet.user.id,'user_name':tweet.user.screen_name,\
     'tweet_id':tweet.id_str,'tweettime':created_at,'text_full':tweet.text,'text':parsedTweet,\
-    'latitude':tweet.coordinates['coordinates'][0],'longitude':tweet.coordinates['coordinates'][1]}
+    'longitude':tweet.coordinates['coordinates'][0],'latitude':tweet.coordinates['coordinates'][1]}
 
     return pt
 
@@ -179,7 +179,8 @@ class StreamLogger(tweepy.StreamListener):
             # if we have latitude and longitude, parse it
             pt = self.parseStreamTweet(data)
             # write it to disk
-            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' % (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['latitude'],pt['longitude'],pt['text']))
+            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' %\
+                (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text']))
         return True
 
     #on_event = on_status
@@ -202,13 +203,14 @@ class StreamLogger(tweepy.StreamListener):
             print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
         else:
             # if we lost everything
-            print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' + '\tAll unicode removed, no text remaining'
+            print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' +\
+            '\tAll unicode removed, no text remaining'
             parsedTweet = 'unicode_only'
 
         # parse user info, time, location, text from tweet into dict
         pt= {'user_id':data['user']['id'],'user_name':data['user']['screen_name'],\
         'tweet_id':data['id_str'],'tweettime':data['created_at'],'text_full':data['text'],'text':parsedTweet,\
-        'latitude':data['coordinates']['coordinates'][0],'longitude':data['coordinates']['coordinates'][1]}
+        'longitude':data['coordinates']['coordinates'][0],'latitude':data['coordinates']['coordinates'][1]}
 
         return pt
 

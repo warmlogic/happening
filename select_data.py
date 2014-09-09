@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def compute_distance_from_point(lat1, long1, lat2, long2, unit='meters'):
+def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
     print 'computing distance from San Francisco in meters\n'
     if unit == 'meters':
         R_earth = 6378137.0 # meters
@@ -21,9 +21,9 @@ def compute_distance_from_point(lat1, long1, lat2, long2, unit='meters'):
     else:
         print 'unit "%s" not support' % unit
         return
-    return R_earth * distance_on_unit_sphere(lat1, long1, lat2, long2)    
+    return R_earth * distance_on_unit_sphere(lon1, lat1, lon2, lat2)    
 
-def distance_on_unit_sphere(lat1, long1, lat2, long2):
+def distance_on_unit_sphere(lon1, lat1, lon2, lat2):
     'relative to a central point'
 
     # Convert latitude and longitude to 
@@ -35,8 +35,8 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
     phi2 = (90.0 - lat2)*degrees_to_radians
         
     # theta = longitude
-    theta1 = long1*degrees_to_radians
-    theta2 = long2*degrees_to_radians
+    theta1 = lon1*degrees_to_radians
+    theta2 = lon2*degrees_to_radians
         
     # Compute spherical distance from spherical coordinates.
         
@@ -54,9 +54,9 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
     # in your favorite set of units to get length.
     return arc
 
-def selectSpace(df,this_lat=[-180,180],this_lon=[-90,90]):
+def selectSpace(df,this_lon=[-180,180],this_lat=[-90,90]):
     # select the data in space
-    withinBoundingBox = (df.latitude >= this_lat[0]) & (df.latitude <= this_lat[1]) & (df.longitude >= this_lon[0]) & (df.longitude <= this_lon[1])
+    withinBoundingBox = (df.longitude >= this_lon[0]) & (df.longitude <= this_lon[1]) & (df.latitude >= this_lat[0]) & (df.latitude <= this_lat[1])
     print 'Space: Selecting %d entries (out of %d)' % (sum(withinBoundingBox),len(df))
     df = df[withinBoundingBox]
     return df
@@ -79,7 +79,7 @@ def selectTime(df,sinceDatetime='2007-01-01 00:00:00',untilDatetime=pd.datetime.
 def plot_hist(df,nbins=200):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    H,xedges,yedges = np.histogram2d(np.array(df.latitude),np.array(df.longitude),bins=nbins)
+    H,xedges,yedges = np.histogram2d(np.array(df.longitude),np.array(df.latitude),bins=nbins)
     H = np.rot90(H)
     H = np.flipud(H)
     Hmasked = np.ma.masked_where(H==0,H) # mask pixels
@@ -87,8 +87,8 @@ def plot_hist(df,nbins=200):
     plt.pcolormesh(xedges,yedges,Hmasked)
     # plt.title('Density of tweets (%d bins)' % nbins)
     ax.set_title('Density of tweets (%d bins)' % nbins)
-    ax.set_xlabel('Latitude')
-    ax.set_ylabel('Longitude')
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
     cb = plt.colorbar()
     cb.set_label('Count')
     # ax.get_xaxis().set_visible(False)
