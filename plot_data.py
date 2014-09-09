@@ -5,14 +5,18 @@ check out the data
 import pandas as pd
 import select_data as sd
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.cluster import DBSCAN
+# from sklearn.preprocessing import StandardScaler
+# from sklearn import metrics
+# from scipy.spatial.distance import pdist
 
-# %load_ext autoreload
-# %autoreload 2
+%load_ext autoreload
+%autoreload 2
 
 %matplotlib inline
 import matplotlib.pyplot as plt
 from IPython.display import Image
-import numpy as np
 plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 
 ############
@@ -26,11 +30,15 @@ print 'Reading locations...'
 # df = pd.read_csv(latlong,header=None,names=['longitude', 'latitude'])
 # df = pd.read_csv(latlong,header=None,names=['tweet_id','datestr', 'longitude','latitude','text'])
 df = pd.read_csv(latlong,header=None,parse_dates=[2],\
-    names=['user_id','tweet_id','datetime','longitude','latitude','text'])
+    names=['user_id','tweet_id','datetime','longitude','latitude','text'],index_col='datetime')
 print 'Done.'
 latlong.close()
+
 # twitter times are in UTC
-df.datetime = df.datetime.apply(lambda x: x.tz_localize('UTC'), convert_dtype=False)
+# df.datetime = df.datetime.apply(lambda x: x.tz_localize('UTC'), convert_dtype=False)
+df = df.tz_localize('UTC').tz_convert('US/Pacific')
+
+# df['point'] = df.apply(lambda row: pd.Point(df['latitude'], df['longitude']))
 
 ############
 # User
@@ -50,6 +58,15 @@ bayarea_lat = [36.94,38.0]
 sf_lon = [-122.5686,-122.375]
 sf_lat = [37.6681,37.8258]
 
+attpark_lon = [-122.3977,-122.3838]
+attpark_lat = [37.7733,37.7840]
+
+fishwharf_lon = [-122.4231,-122.4076]
+fishwharf_lat = [37.8040,37.8116]
+
+sf_concerts_lon = [-122.4258,-122.4000]
+sf_concerts_lat = [37.7693,37.7926]
+
 nobhill_lon = [-122.4322,-122.3976]
 nobhill_lat = [37.7845,37.8042]
 
@@ -62,8 +79,17 @@ mtview_caltrain_lat = [37.3897,37.3953]
 # this_lon = sf_lon
 # this_lat = sf_lat
 
-this_lon = nobhill_lon
-this_lat = nobhill_lat
+# this_lon = attpark_lon
+# this_lat = attpark_lat
+
+# this_lon = fishwharf_lon
+# this_lat = fishwharf_lat
+
+this_lon = sf_concerts_lon
+this_lat = sf_concerts_lat
+
+# this_lon = nobhill_lon
+# this_lat = nobhill_lat
 
 # this_lon = mtview_caltrain_lon
 # this_lat = mtview_caltrain_lat
@@ -75,27 +101,39 @@ df = sd.selectSpace(df,this_lon,this_lat)
 ############
 
 # # set the start and end datetimes
+
 # sinceDatetime = '2014-09-05 09:00:00'
 # untilDatetime = '2014-09-05 17:00:00'
-sinceDatetime = ''
-untilDatetime = ''
+# sinceDatetime = ''
+# untilDatetime = ''
 
-tz = 'US/Pacific'
+# tz = 'US/Pacific'
+# df = sd.selectTime(df,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
 
-df = sd.selectTime(df,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
+sinceDatetime = '2014-09-05 17:00:00'
+untilDatetime = '2014-09-06 05:00:00'
+fri_pm = df.ix[sinceDatetime:untilDatetime]
+
+sinceDatetime = '2014-09-08 17:00:00'
+untilDatetime = '2014-09-09 05:00:00'
+mon_pm = df.ix[sinceDatetime:untilDatetime]
+
+
 
 ############
 # Plot
 ############
 
-nbins = 50
-plt = sd.plot_hist(df,nbins)
+nbins = 25
+# plt = sd.plot_hist(df,nbins)
+plt = sd.plot_hist(fri_pm,nbins)
+plt = sd.plot_hist(mon_pm,nbins)
 
 savefig = True
 if savefig:
     figname = 'data/latlong_plot.png'
     print 'saving figure to ' + figname
-    plt.savefig(figname)
+    plt.savefig(figname, bbox_inches='tight')
 # plt.show()
 
 ############
@@ -107,12 +145,44 @@ if savefig:
 # # castro_muni = [-122.43533,37.76263]
 # distance_to_user = sd.compute_distance_from_point(sf_center[0], sf_center[1], df.longitude, df.latitude, 'meters')
 
+# distance_to_user = sd.compute_distance_from_point(df.longitude, df.latitude, df.longitude, df.latitude, 'meters')
+
+############
+# Distance matrix
+############
+
+# X = np.vstack((df.longitude, df.latitude)).T
+# dist_matrix=(sd.spherical_dist_matrix(np.hstack([X,]*X.shape[0]).reshape(-1,2).T, np.vstack([X,]*X.shape[0]).T)).reshape(X.shape[0],X.shape[0])
+
+# X = np.vstack((df.longitude, df.latitude)).T
+# dist_matrix = (pdist(X,'euclidean')).reshape(X.shape[0],X.shape[0])
+
+###########
+# plot over time
+###########
+
+# tweetlocs = df.ix[:, ['longitude','latitude']]
+tweetlocs_fri = fri_pm.ix[:, ['longitude','latitude']].resample('60min', how='count')
+tweetlocs_mon = mon_pm.ix[:, ['longitude','latitude']].resample('60min', how='count')
+
+# volume = df.resample('60min', how='count')
+fig, ax = plt.subplots()
+tweetlocs_fri.plot(kind='line',style='b')
+tweetlocs_mon.plot(kind='line',style='r')
+fig.autofmt_xdate()
+# ax.set_xlim(['17:00:00','05:00:00'])
+
+fig, ax = subplots()
+volume.plot(ax=ax, kind='bar', legend=False)
+fig.autofmt_xdate()
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
 ############
 # Cluster
 ############
 
-import numpy as np
-from sklearn.cluster import DBSCAN
+# import numpy as np
+# from sklearn.cluster import DBSCAN
 # from sklearn.preprocessing import StandardScaler
 # from sklearn import metrics
 
