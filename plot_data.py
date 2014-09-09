@@ -5,6 +5,9 @@ check out the data
 import pandas as pd
 import select_data
 
+# %load_ext autoreload
+# %autoreload 2
+
 ############
 # Read the data
 ############
@@ -35,8 +38,11 @@ nob_lon = [37.7845,37.8042]
 # this_lat = bayarea_lat;
 # this_lon = bayarea_long;
 
-this_lat = sf_lat
-this_lon = sf_lon
+# this_lat = sf_lat
+# this_lon = sf_lon
+
+this_lat = nob_lat
+this_lon = nob_lon
 
 df = select_data.selectSpace(df,this_lat,this_lon)
 
@@ -57,13 +63,79 @@ df = select_data.selectSpace(df,this_lat,this_lon)
 # # calculate distance
 # sf_center = [-122.4167,37.7833]
 # # castro_muni = [-122.43533,37.76263]
-# distance_to_user = select_data.compute_miles(sf_center[0], sf_center[1], df.latitude, df.longitude)
+# distance_to_user = select_data.compute_distance_from_point(sf_center[0], sf_center[1], df.latitude, df.longitude, 'meters')
+
+############
+# Cluster
+############
+
+import numpy as np
+from sklearn.cluster import DBSCAN
+# from sklearn.preprocessing import StandardScaler
+# from sklearn import metrics
+
+# concert lat/lon coordinates to UTM?
+
+# Use DBSCAN
+
+X = np.vstack((df.latitude, df.longitude)).T
+# X = StandardScaler().fit_transform(X)
+
+# xx, yy = zip(*X)
+# scatter(xx,yy)
+# show()
+
+db = DBSCAN(eps=0.0002, min_samples=20).fit(X)
+core_samples = db.core_sample_indices_
+core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+core_samples_mask[db.core_sample_indices_] = True
+
+labels = db.labels_
+n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+print('Estimated number of clusters: %d' % n_clusters_)
+
+# print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
+# print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
+# print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
+# print("Adjusted Rand Index: %0.3f"
+#       % metrics.adjusted_rand_score(labels_true, labels))
+# print("Adjusted Mutual Information: %0.3f"
+#       % metrics.adjusted_mutual_info_score(labels_true, labels))
+# print("Silhouette Coefficient: %0.3f"
+#       % metrics.silhouette_score(X, labels))
+
+# Plot result
+import matplotlib.pyplot as plt
+unique_labels = set(labels)
+colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+for k, col in zip(unique_labels, colors):
+    if k == -1:
+        # Black used for noise.
+        col = 'k'
+
+    class_member_mask = (labels == k)
+
+    xy = X[class_member_mask & ~core_samples_mask]
+    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+             markeredgecolor='k', markersize=1)
+
+    xy = X[class_member_mask & core_samples_mask]
+    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+             markeredgecolor='k', markersize=14)
+
+
+plt.title('Estimated number of clusters: %d' % n_clusters_)
+plt.show()
 
 ############
 # Plot
 ############
 
 # %matplotlib inline
+# import matplotlib.pyplot as plt
+# from IPython.display import Image
+# import numpy as np
+# plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 
 nbins = 50
 plt = select_data.plot_hist(df,nbins)
