@@ -8,11 +8,20 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def compute_miles(lat1, long1, lat2, long2):
-    print 'computing distance from San Francisco\n'
-    R_earth = 3963.1676 # miles
-    return R_earth * distance_on_unit_sphere(lat1, long1, lat2, long2)
-
+def compute_distance_from_point(lat1, long1, lat2, long2, unit='meters'):
+    print 'computing distance from San Francisco in meters\n'
+    if unit == 'meters':
+        R_earth = 6378137.0 # meters
+    elif unit == 'kilometers':
+        R_earth = 6378.137 # kilometers
+    elif unit == 'feet':
+        R_earth = 20925524.9 # feet
+    elif unit == 'miles':
+        R_earth = 3963.1676 # miles
+    else:
+        print 'unit "%s" not support' % unit
+        return
+    return R_earth * distance_on_unit_sphere(lat1, long1, lat2, long2)    
 
 def distance_on_unit_sphere(lat1, long1, lat2, long2):
     'relative to a central point'
