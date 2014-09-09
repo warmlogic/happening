@@ -10,6 +10,7 @@ import json
 from HTMLParser import HTMLParser
 import time
 import datetime
+import dateutil.parser as parser
 # import pandas as pd
 # import numpy as np
 # import matplotlib.pyplot as plt
@@ -50,11 +51,11 @@ def parseTweet(tweet):
     parsedTweet = tweet.text.encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
 
     # parse user info, time, location, text from tweet into dict
-    #if tweet.created_at.utcoffset() == None:
-    if tweet.created_at.strftime('%z') == '':
-        created_at = tweet.created_at.strftime('%a %b %d %T') + ' +0000 ' + tweet.created_at.strftime('%Y')
-    else:
-        created_at = tweet.created_at.strftime('%a %b %d %T %z %Y')
+
+    # dates are UTC; store in ISO 8601 format
+    created_at = tweet.created_at.isoformat()
+    if tweet.created_at.utcoffset() is None:
+        created_at += '+00:00'
 
     # print created_at + ' ' + tweet.user.screen_name + ' ' + + tweet.text
     if len(parsedTweet) > 0:
@@ -198,18 +199,19 @@ class StreamLogger(tweepy.StreamListener):
         # get rid of unicode characters, newlines, commas, trailing whitespace
         parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
 
-        # print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' + data['text']
+        created_at = parser.parse(data['created_at']).isoformat()
+        # print created_at + ' ' + data['user']['screen_name'] + ' ' + data['text']
         if len(parsedTweet) > 0:
-            print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
+            print created_at + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
         else:
             # if we lost everything
-            print data['created_at'] + ' ' + data['user']['screen_name'] + ' ' +\
+            print created_at + ' ' + data['user']['screen_name'] + ' ' +\
             '\tAll unicode removed, no text remaining'
             parsedTweet = 'unicode_only'
 
         # parse user info, time, location, text from tweet into dict
         pt= {'user_id':data['user']['id'],'user_name':data['user']['screen_name'],\
-        'tweet_id':data['id_str'],'tweettime':data['created_at'],'text_full':data['text'],'text':parsedTweet,\
+        'tweet_id':data['id_str'],'tweettime':created_at,'text_full':data['text'],'text':parsedTweet,\
         'longitude':data['coordinates']['coordinates'][0],'latitude':data['coordinates']['coordinates'][1]}
 
         return pt
