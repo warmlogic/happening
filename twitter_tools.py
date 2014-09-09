@@ -197,7 +197,7 @@ class StreamLogger(tweepy.StreamListener):
 
     def parseStreamTweet(self, data):
         # get rid of unicode characters, newlines, commas, trailing whitespace
-        parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace(',','').strip()
+        parsedTweet = data['text'].encode('ascii','ignore').replace('\n',' ').replace('\r', ' ').replace(',','').strip()
 
         created_at = parser.parse(data['created_at']).isoformat()
         # print created_at + ' ' + data['user']['screen_name'] + ' ' + data['text']
