@@ -76,6 +76,13 @@ def selectTime(df,sinceDatetime='2007-01-01 00:00:00',untilDatetime=pd.datetime.
     df = df[withinDates]
     return df
 
+def selectUser(df,rmnull=True):
+    if rmnull:
+        hasUser = ~df.user_id.isnull()
+        print 'Time: Removing %d null entries (out of %d)' % (sum(~hasUser),len(df))
+        df = df[hasUser]
+    return df
+
 def plot_hist(df,nbins=200):
     fig = plt.figure()
     ax = fig.add_subplot(111)
