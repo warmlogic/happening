@@ -7,6 +7,7 @@ also plots density
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import pdb
 
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
     print 'computing distance from San Francisco in meters\n'
@@ -53,6 +54,40 @@ def distance_on_unit_sphere(lon1, lat1, lon2, lat2):
     # Remember to multiply arc by the radius of the earth 
     # in your favorite set of units to get length.
     return arc
+
+def spherical_dist_matrix(pos1, pos2, unit='meters'):
+    '''
+    http://stackoverflow.com/questions/19413259/efficient-way-to-calculate-distance-matrix-given-latitude-and-longitude-data-in
+    http://stackoverflow.com/questions/20654918/python-how-to-speed-up-calculation-of-distances-between-cities
+    '''
+    if unit == 'meters':
+        R_earth = 6378137.0 # meters
+    elif unit == 'kilometers':
+        R_earth = 6378.137 # kilometers
+    elif unit == 'feet':
+        R_earth = 20925524.9 # feet
+    elif unit == 'miles':
+        R_earth = 3963.1676 # miles
+    else:
+        print 'unit "%s" not support' % unit
+        return
+    # # convert to radians
+    # pos1 = pos1 * np.pi / 180
+    # pos2 = pos2 * np.pi / 180
+    # cos_lat1 = np.cos(pos1[..., 1])
+    # cos_lat2 = np.cos(pos2[..., 1])
+    # cos_lat_d = np.cos(pos1[..., 1] - pos2[..., 1])
+    # cos_lon_d = np.cos(pos1[..., 0] - pos2[..., 0])
+    # return R_earth * np.arccos(cos_lat_d - cos_lat1 * cos_lat2 * (1 - cos_lon_d))
+
+    # based on Spherical Law of Cosines
+    pos1 = pos1/180*np.pi
+    pos2 = pos2/180*np.pi
+    lg1=pos1[0] #data format, (longitude, latitude)
+    la1=pos1[1]
+    lg2=pos2[0]
+    la2=pos2[1]
+    return R_earth * np.arccos(np.sin(la1)*np.sin(la2)+np.cos(la1)*np.cos(la2)*np.cos(lg1-lg2))
 
 def selectSpace(df,this_lon=[-180,180],this_lat=[-90,90]):
     # select the data in space
