@@ -96,6 +96,8 @@ def plot_hist(df,nbins=200):
     ax.set_title('Density of tweets (%d bins)' % nbins)
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
+    ax.get_xaxis().get_major_formatter().set_useOffset(False)
+    ax.get_yaxis().get_major_formatter().set_useOffset(False)
     cb = plt.colorbar()
     cb.set_label('Count')
     # ax.get_xaxis().set_visible(False)

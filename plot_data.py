@@ -140,6 +140,8 @@ print('Estimated number of clusters: %d' % n_clusters_)
 # Plot result
 unique_labels = set(labels)
 colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+fig = plt.figure()
+ax = fig.add_subplot(111)
 for k, col in zip(unique_labels, colors):
     if k == -1:
         # Black used for noise.
@@ -155,7 +157,11 @@ for k, col in zip(unique_labels, colors):
     plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
              markeredgecolor='k', markersize=14)
 
+ax.get_xaxis().get_major_formatter().set_useOffset(False)
+ax.get_yaxis().get_major_formatter().set_useOffset(False)
 plt.title('Estimated number of clusters: %d' % n_clusters_)
+ax.set_xlabel('Longitude')
+ax.set_ylabel('Latitude')
 # plt.show()
 
 
