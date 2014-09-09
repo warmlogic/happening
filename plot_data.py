@@ -47,17 +47,23 @@ bayarea_lat = [36.94,38.0]
 sf_lon = [-122.5686,-122.375]
 sf_lat = [37.6681,37.8258]
 
-nob_lon = [-122.4322,-122.3976]
-nob_lat = [37.7845,37.8042]
+nobhill_lon = [-122.4322,-122.3976]
+nobhill_lat = [37.7845,37.8042]
+
+mtview_caltrain_lon = [-122.0832,-122.0743]
+mtview_caltrain_lat = [37.3897,37.3953]
 
 # this_lon = bayarea_lon;
 # this_lat = bayarea_lat;
 
-this_lon = sf_lon
-this_lat = sf_lat
+# this_lon = sf_lon
+# this_lat = sf_lat
 
-# this_lon = nob_lon
-# this_lat = nob_lat
+this_lon = nobhill_lon
+this_lat = nobhill_lat
+
+# this_lon = mtview_caltrain_lon
+# this_lat = mtview_caltrain_lat
 
 df = sd.selectSpace(df,this_lon,this_lat)
 
@@ -69,13 +75,14 @@ df = sd.selectSpace(df,this_lon,this_lat)
 # sinceDatetime = '2014-09-05 09:00:00'
 # untilDatetime = '2014-09-05 17:00:00'
 
+df = sd.selectTime(df)
 # df = sd.selectTime(df,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
 
 ############
 # Plot
 ############
 
-nbins = 200
+nbins = 10
 plt = sd.plot_hist(df,nbins)
 
 savefig = True
