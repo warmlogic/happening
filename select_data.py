@@ -61,18 +61,27 @@ def selectSpace(df,this_lon=[-180,180],this_lat=[-90,90]):
     df = df[withinBoundingBox]
     return df
 
-def selectTime(df,sinceDatetime='2007-01-01 00:00:00',untilDatetime=pd.datetime.now(),rmnull=True):
+def selectTime(df,tz='UTC',sinceDatetime=None,untilDatetime=None,rmnull=False):
     if rmnull:
-        hasDatestr = ~df.datestr.isnull()
-        print 'Time: Removing %d null entries (out of %d)' % (sum(~hasDatestr),len(df))
-        df = df[hasDatestr]
+        hasDatetime = ~df.datetime.isnull()
+        print 'Time: Removing %d null entries (out of %d)' % (sum(~hasDatetime),len(df))
+        df = df[hasDatetime]
 
-    # convert to datetime format
-    df.datestr[:] = pd.to_datetime(df.datestr,format='%a %b %d %H:%M:%S +0000 %Y')
+    if sinceDatetime is None or sinceDatetime is '':
+        # sinceDatetime = '2007-01-01 00:00:00'
+        sinceDatetime = '1970-01-01 00:00:00'
+    sinceDatetime = pd.to_datetime(sinceDatetime,utc=False)
+    sinceDatetime = sinceDatetime.tz_localize(tz)
+    if untilDatetime is None or untilDatetime is '':
+        untilDatetime = str(pd.datetime.now())
+    untilDatetime = pd.to_datetime(untilDatetime,utc=False)
+    untilDatetime = untilDatetime.tz_localize(tz)
+    if tz != 'UTC':
+        df.datetime = df.datetime.apply(lambda x: x.tz_convert(tz), convert_dtype=False)
 
     # select the data in time
-    withinDates = (df.datestr >= sinceDatetime) & (df.datestr <= untilDatetime)
-    print 'Time: Selecting %d entries (out of %d)' % (sum(withinDates),len(df))
+    withinDates = (df.datetime >= sinceDatetime) & (df.datetime <= untilDatetime)
+    print 'Time: Selecting %d entries (out of %d) from %s to %s' % (sum(withinDates),len(df),str(sinceDatetime),str(untilDatetime))
     df = df[withinDates]
     return df
 

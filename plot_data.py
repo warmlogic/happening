@@ -25,9 +25,12 @@ latlong = open("data/latlong_userdategeo_combined.csv")
 print 'Reading locations...'
 # df = pd.read_csv(latlong,header=None,names=['longitude', 'latitude'])
 # df = pd.read_csv(latlong,header=None,names=['tweet_id','datestr', 'longitude','latitude','text'])
-df = pd.read_csv(latlong,header=None,names=['user_id','tweet_id','datestr', 'longitude','latitude','text'])
+df = pd.read_csv(latlong,header=None,parse_dates=[2],\
+    names=['user_id','tweet_id','datetime','longitude','latitude','text'])
 print 'Done.'
 latlong.close()
+# twitter times are in UTC
+df.datetime = df.datetime.apply(lambda x: x.tz_localize('UTC'), convert_dtype=False)
 
 ############
 # User
@@ -71,18 +74,21 @@ df = sd.selectSpace(df,this_lon,this_lat)
 # Time
 ############
 
-# # # set the start and end datetimes
+# # set the start and end datetimes
 # sinceDatetime = '2014-09-05 09:00:00'
 # untilDatetime = '2014-09-05 17:00:00'
+sinceDatetime = ''
+untilDatetime = ''
 
-df = sd.selectTime(df)
-# df = sd.selectTime(df,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
+tz = 'US/Pacific'
+
+df = sd.selectTime(df,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
 
 ############
 # Plot
 ############
 
-nbins = 10
+nbins = 50
 plt = sd.plot_hist(df,nbins)
 
 savefig = True
