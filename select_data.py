@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import pdb
 
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
-    print 'computing distance from San Francisco in meters\n'
     if unit == 'meters':
         R_earth = 6378137.0 # meters
     elif unit == 'kilometers':
@@ -22,6 +21,7 @@ def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
     else:
         print 'unit "%s" not support' % unit
         return
+    print 'computing distance from X in ' + unit
     return R_earth * distance_on_unit_sphere(lon1, lat1, lon2, lat2)    
 
 def distance_on_unit_sphere(lon1, lat1, lon2, lat2):
@@ -89,12 +89,33 @@ def spherical_dist_matrix(pos1, pos2, unit='meters'):
     la2=pos2[1]
     return R_earth * np.arccos(np.sin(la1)*np.sin(la2)+np.cos(la1)*np.cos(la2)*np.cos(lg1-lg2))
 
-def selectSpace(df,this_lon=[-180,180],this_lat=[-90,90]):
-    # select the data in space
+def selectSpaceBB(df,this_lon=[-180,180],this_lat=[-90,90]):
+    '''
+    select the data in space using a lon/lat bounding box
+    '''
     withinBoundingBox = (df.longitude >= this_lon[0]) & (df.longitude <= this_lon[1]) & (df.latitude >= this_lat[0]) & (df.latitude <= this_lat[1])
     print 'Space: Selecting %d entries (out of %d)' % (sum(withinBoundingBox),len(df))
     df = df[withinBoundingBox]
     return df
+
+def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius_increment=50,radius_max=200,min_activity=10):
+    # select the data in space
+    nFound = 0
+    while nFound <= min_activity:
+        distance_to_user = compute_distance_from_point(this_lon, this_lat, df.longitude, df.latitude, unit)
+        # df['distance'] = distance_to_user
+        df.loc[:,'distance'] = distance_to_user
+        found_activity = df[(df.distance <= radius)]
+        nFound += found_activity.shape[0]
+        if nFound < min_activity:
+            radius += radius_increment
+            print 'Only found %d tweets, increasing radius by %d to %d %s and searching again' % (nFound,radius_increment,radius,unit)
+        if radius > radius_max:
+            print 'Radius larger than %d %s, stopping' % (radius_max,unit)
+            radius -= radius_increment
+            break
+    print 'returning %d tweets from a radius of %d %s.' % (nFound,radius,unit)
+    return found_activity
 
 def selectTime(df,tz='UTC',sinceDatetime=None,untilDatetime=None,rmnull=False):
     if rmnull:
@@ -127,26 +148,28 @@ def selectUser(df,rmnull=True):
         df = df[hasUser]
     return df
 
-def plot_hist(df,nbins=200):
+def make_hist(df,nbins=200,show_plot=False):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     H,xedges,yedges = np.histogram2d(np.array(df.longitude),np.array(df.latitude),bins=nbins)
     H = np.rot90(H)
     H = np.flipud(H)
-    Hmasked = np.ma.masked_where(H==0,H) # mask pixels
 
-    plt.pcolormesh(xedges,yedges,Hmasked)
-    # plt.title('Density of tweets (%d bins)' % nbins)
-    ax.set_title('Density of tweets (%d bins)' % nbins)
-    ax.set_xlabel('Longitude')
-    ax.set_ylabel('Latitude')
-    ax.get_xaxis().get_major_formatter().set_useOffset(False)
-    ax.get_yaxis().get_major_formatter().set_useOffset(False)
-    cb = plt.colorbar()
-    cb.set_label('Count')
-    # ax.get_xaxis().set_visible(False)
-    # ax.get_yaxis().set_visible(False)
-    return plt
+    if show_plot:
+        Hmasked = np.ma.masked_where(H==0,H) # mask pixels
+
+        plt.pcolormesh(xedges,yedges,Hmasked)
+        # plt.title('Density of tweets (%d bins)' % nbins)
+        ax.set_title('Density of tweets (%d bins)' % nbins)
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+        ax.get_xaxis().get_major_formatter().set_useOffset(False)
+        ax.get_yaxis().get_major_formatter().set_useOffset(False)
+        cb = plt.colorbar()
+        cb.set_label('Count')
+        # ax.get_xaxis().set_visible(False)
+        # ax.get_yaxis().set_visible(False)
+    return plt, H, xedges, yedges
 
 # if __name__ == '__main__':
 #     import plot_data
