@@ -119,7 +119,7 @@ apple_flint_center_lat = [37.3121,37.3347]
 this_lon = apple_flint_center_lon
 this_lat = apple_flint_center_lat
 
-df = sd.selectSpaceBB(df,this_lon,this_lat)
+geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 
 ############
 # Time
@@ -133,32 +133,49 @@ df = sd.selectSpaceBB(df,this_lon,this_lat)
 # untilDatetime = ''
 
 # tz = 'US/Pacific'
-# df = sd.selectTime(df,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
+# geo_activity = sd.selectTime(geo_activity,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
 
-sinceDatetime = '2014-09-05 17:00:00'
-untilDatetime = '2014-09-06 05:00:00'
-fri_pm = df.ix[sinceDatetime:untilDatetime]
+# # night life
+# sinceDatetime_now = '2014-09-05 17:00:00'
+# untilDatetime_now = '2014-09-06 05:00:00'
+# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
+# sinceDatetime_prev = '2014-09-08 17:00:00'
+# untilDatetime_prev = '2014-09-09 05:00:00'
+# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 
-sinceDatetime = '2014-09-08 17:00:00'
-untilDatetime = '2014-09-09 05:00:00'
-mon_pm = df.ix[sinceDatetime:untilDatetime]
+# apple keynote
+sinceDatetime_now = '2014-09-09 08:00:00'
+untilDatetime_now = '2014-09-09 15:00:00'
+activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
+sinceDatetime_prev = '2014-09-08 08:00:00'
+untilDatetime_prev = '2014-09-08 15:00:00'
+activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 
+# # giants vs diamondbacks
+# sinceDatetime_now = '2014-09-09 17:00:00'
+# untilDatetime_now = '2014-09-09 23:30:00'
+# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
+# sinceDatetime_prev = '2014-09-08 17:00:00'
+# untilDatetime_prev = '2014-09-08 23:30:00'
+# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 
 
 ############
-# Plot
+# Plot heat map and difference
 ############
 
 nbins = 50
 show_plot=True
-savefig = True
+savefig = False
 # plt = sd.make_hist(df,nbins,show_plot)
-plt, H1, xedges, yedges = sd.make_hist(fri_pm,nbins,show_plot)
-plt, H2, xedges, yedges = sd.make_hist(mon_pm,nbins,show_plot)
+plt, Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
+plt, Hprev, xedges, yedges = sd.make_hist(activity_prev,nbins,show_plot)
 
-Hdiff = H1 - H2
+Hdiff = Hnow - Hprev
 
 if show_plot:
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
     plt.pcolormesh(xedges,yedges,Hdiff)
     ax.set_title('Difference in tweets (%d bins)' % nbins)
     ax.set_xlabel('Longitude')
@@ -175,18 +192,27 @@ if show_plot:
     # plt.show()
 
 
-diffthresh = 15
+# diffthresh = 15
+diffthresh = 100
 diffmore = np.column_stack(np.where(Hdiff > diffthresh))
 diffless = np.column_stack(np.where(Hdiff < -diffthresh))
+# sort differences; most activity first
+
+# return the top x values
+maxvals,maxind = sd.choose_n_sorted(Hdiff, 5, min_val=100, srt='max', return_order='ascend')
+minvals,minind = sd.choose_n_sorted(Hdiff, 5, srt='min', return_order='ascend')
+
 # bigcoord = zip(xedges[bigdiff[:,0]], yedges[bigdiff[:,1]])
 diffmore_lon = xedges[diffmore[:,0]]
 diffmore_lat = yedges[diffmore[:,1]]
 diffless_lon = xedges[diffless[:,0]]
 diffless_lat = yedges[diffless[:,1]]
+print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(diffmore_lon))
+print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(diffless_lon))
 
-# collect tweets from our dataframe within radius X of lon,lat
 
 
+# collect tweets from dataframe within radius X of lon,lat
 unit = 'meters'
 radius = 100
 radius_increment = 50
@@ -194,13 +220,30 @@ radius_max = 200
 min_activity = 10
 for point in range(len(diffmore_lon)):
     print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[point],diffmore_lon[point])
-    fri_pm_nearby = sd.selectActivityFromPoint(fri_pm,diffmore_lon[point],diffmore_lat[point],unit,radius,radius_increment,radius_max,min_activity)
+    now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[point],diffmore_lat[point],unit,radius,radius_increment,radius_max,min_activity)
     pdb.set_trace()
 
 
-difftweets_fri = sd.selectSpaceFromPoint(fri_pm,diffmore_lon,diffmore_lat)
-difftweets_mon = sd.selectSpaceFromPoint(mon_pm,diffless_lon,diffless_lat)
+difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
+difftweets_prev = sd.selectSpaceFromPoint(activity_prev,diffless_lon,diffless_lat)
 
+
+###########
+# plot over time
+###########
+
+# tweetlocs = df.ix[:, ['longitude','latitude']]
+tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
+tweetlocs_prev = activity_prev.ix[:, ['longitude','latitude']].resample('60min', how='count')
+
+# volume = df.resample('60min', how='count')
+fig, ax = plt.subplots()
+tweetlocs_now.plot(kind='line',style='b')
+tweetlocs_prev.plot(kind='line',style='r')
+fig.autofmt_xdate()
+# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+# ax.set_xlim(['17:00:00','05:00:00'])
 
 
 
@@ -225,27 +268,6 @@ difftweets_mon = sd.selectSpaceFromPoint(mon_pm,diffless_lon,diffless_lat)
 # X = np.vstack((df.longitude, df.latitude)).T
 # dist_matrix = (pdist(X,'euclidean')).reshape(X.shape[0],X.shape[0])
 
-###########
-# plot over time
-###########
-
-# tweetlocs = df.ix[:, ['longitude','latitude']]
-tweetlocs_fri = fri_pm.ix[:, ['longitude','latitude']].resample('60min', how='count')
-tweetlocs_mon = mon_pm.ix[:, ['longitude','latitude']].resample('60min', how='count')
-
-# volume = df.resample('60min', how='count')
-fig, ax = plt.subplots()
-tweetlocs_fri.plot(kind='line',style='b')
-tweetlocs_mon.plot(kind='line',style='r')
-fig.autofmt_xdate()
-# ax.set_xlim(['17:00:00','05:00:00'])
-
-
-
-# fig, ax = subplots()
-# volume.plot(ax=ax, kind='bar', legend=False)
-# fig.autofmt_xdate()
-# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 ############
 # Cluster
