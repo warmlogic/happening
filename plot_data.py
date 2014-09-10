@@ -6,6 +6,7 @@ import pandas as pd
 import select_data as sd
 import matplotlib.pyplot as plt
 import numpy as np
+import pdb
 from sklearn.cluster import DBSCAN
 # from sklearn.preprocessing import StandardScaler
 # from sklearn import metrics
@@ -58,11 +59,26 @@ bayarea_lat = [36.94,38.0]
 sf_lon = [-122.5686,-122.375]
 sf_lat = [37.6681,37.8258]
 
-attpark_lon = [-122.3977,-122.3838]
-attpark_lat = [37.7733,37.7840]
-
 fishwharf_lon = [-122.4231,-122.4076]
 fishwharf_lat = [37.8040,37.8116]
+
+embarc_lon = [-122.4089,-122.3871]
+embarc_lat = [37.7874,37.7998]
+
+att48_lon = [-122.3977,-122.3802]
+att48_lat = [37.7706,37.7840]
+
+pier48_lon = [-122.3977,-122.3838]
+pier48_lat = [37.7706,37.7765]
+
+attpark_lon = [-122.3977,-122.3802]
+attpark_lat = [37.7765,37.7840]
+
+levisstadium_lon = [-122.9914,-122.9465]
+levisstadium_lat = [37.3777,37.4173]
+
+mission_lon = [-122.4286,-122.3979]
+mission_lat = [37.7481,37.7693]
 
 sf_concerts_lon = [-122.4258,-122.4000]
 sf_concerts_lat = [37.7693,37.7926]
@@ -73,6 +89,9 @@ nobhill_lat = [37.7845,37.8042]
 mtview_caltrain_lon = [-122.0832,-122.0743]
 mtview_caltrain_lat = [37.3897,37.3953]
 
+apple_flint_center_lon = [-122.0550,-122.0226]
+apple_flint_center_lat = [37.3121,37.3347]
+
 # this_lon = bayarea_lon;
 # this_lat = bayarea_lat;
 
@@ -82,11 +101,14 @@ mtview_caltrain_lat = [37.3897,37.3953]
 # this_lon = attpark_lon
 # this_lat = attpark_lat
 
+# this_lon = mission_lon
+# this_lat = mission_lat
+
+# this_lon = sf_concerts_lon
+# this_lat = sf_concerts_lat
+
 # this_lon = fishwharf_lon
 # this_lat = fishwharf_lat
-
-this_lon = sf_concerts_lon
-this_lat = sf_concerts_lat
 
 # this_lon = nobhill_lon
 # this_lat = nobhill_lat
@@ -94,7 +116,10 @@ this_lat = sf_concerts_lat
 # this_lon = mtview_caltrain_lon
 # this_lat = mtview_caltrain_lat
 
-df = sd.selectSpace(df,this_lon,this_lat)
+this_lon = apple_flint_center_lon
+this_lat = apple_flint_center_lat
+
+df = sd.selectSpaceBB(df,this_lon,this_lat)
 
 ############
 # Time
@@ -124,17 +149,60 @@ mon_pm = df.ix[sinceDatetime:untilDatetime]
 # Plot
 ############
 
-nbins = 25
-# plt = sd.plot_hist(df,nbins)
-plt = sd.plot_hist(fri_pm,nbins)
-plt = sd.plot_hist(mon_pm,nbins)
-
+nbins = 50
+show_plot=True
 savefig = True
-if savefig:
-    figname = 'data/latlong_plot.png'
-    print 'saving figure to ' + figname
-    plt.savefig(figname, bbox_inches='tight')
-# plt.show()
+# plt = sd.make_hist(df,nbins,show_plot)
+plt, H1, xedges, yedges = sd.make_hist(fri_pm,nbins,show_plot)
+plt, H2, xedges, yedges = sd.make_hist(mon_pm,nbins,show_plot)
+
+Hdiff = H1 - H2
+
+if show_plot:
+    plt.pcolormesh(xedges,yedges,Hdiff)
+    ax.set_title('Difference in tweets (%d bins)' % nbins)
+    ax.set_xlabel('Longitude')
+    ax.set_ylabel('Latitude')
+    ax.get_xaxis().get_major_formatter().set_useOffset(False)
+    ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    cb = plt.colorbar()
+    cb.set_label('Count')
+
+    if savefig:
+        figname = 'data/latlong_plot.png'
+        print 'saving figure to ' + figname
+        plt.savefig(figname, bbox_inches='tight')
+    # plt.show()
+
+
+diffthresh = 15
+diffmore = np.column_stack(np.where(Hdiff > diffthresh))
+diffless = np.column_stack(np.where(Hdiff < -diffthresh))
+# bigcoord = zip(xedges[bigdiff[:,0]], yedges[bigdiff[:,1]])
+diffmore_lon = xedges[diffmore[:,0]]
+diffmore_lat = yedges[diffmore[:,1]]
+diffless_lon = xedges[diffless[:,0]]
+diffless_lat = yedges[diffless[:,1]]
+
+# collect tweets from our dataframe within radius X of lon,lat
+
+
+unit = 'meters'
+radius = 100
+radius_increment = 50
+radius_max = 200
+min_activity = 10
+for point in range(len(diffmore_lon)):
+    print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[point],diffmore_lon[point])
+    fri_pm_nearby = sd.selectActivityFromPoint(fri_pm,diffmore_lon[point],diffmore_lat[point],unit,radius,radius_increment,radius_max,min_activity)
+    pdb.set_trace()
+
+
+difftweets_fri = sd.selectSpaceFromPoint(fri_pm,diffmore_lon,diffmore_lat)
+difftweets_mon = sd.selectSpaceFromPoint(mon_pm,diffless_lon,diffless_lat)
+
+
+
 
 ############
 # Distance
@@ -172,10 +240,12 @@ tweetlocs_mon.plot(kind='line',style='r')
 fig.autofmt_xdate()
 # ax.set_xlim(['17:00:00','05:00:00'])
 
-fig, ax = subplots()
-volume.plot(ax=ax, kind='bar', legend=False)
-fig.autofmt_xdate()
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+
+# fig, ax = subplots()
+# volume.plot(ax=ax, kind='bar', legend=False)
+# fig.autofmt_xdate()
+# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 ############
 # Cluster
@@ -191,13 +261,15 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 # Use DBSCAN
 
 X = np.vstack((df.longitude, df.latitude)).T
+X = np.vstack((mon_pm.longitude, mon_pm.latitude)).T
+X = np.vstack((fri_pm.longitude, fri_pm.latitude)).T
 # X = StandardScaler().fit_transform(X)
 
 # xx, yy = zip(*X)
 # scatter(xx,yy)
 # show()
 
-db = DBSCAN(eps=0.0002, min_samples=100).fit(X)
+db = DBSCAN(eps=0.0001, min_samples=20).fit(X)
 core_samples = db.core_sample_indices_
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
