@@ -171,5 +171,33 @@ def make_hist(df,nbins=200,show_plot=False):
         # ax.get_yaxis().set_visible(False)
     return plt, H, xedges, yedges
 
+def choose_n_sorted(arr, n, srt='max', min_val=None, return_order='descend'):
+    if srt == 'max':
+        indices = arr.ravel().argsort()[-n:]
+    elif srt == 'min':
+        indices = arr.ravel().argsort()[::-1][-n:]
+    indices = (np.unravel_index(i, arr.shape) for i in indices)
+    indices = list(indices)
+    values = np.array([arr[i] for i in indices])
+    idx = np.array([(i) for i in indices])
+    if return_order == 'ascend':
+        values = values[::-1]
+        idx = idx[::-1]
+    if min_val is not None:
+        keepThese = values >= min_val
+        values = values[keepThese]
+        idx = idx[keepThese]
+    return values, idx
+
+# def n_min(arr, n):
+#     indices = arr.ravel().argsort()[::-1][-n:]
+#     indices = (np.unravel_index(i, arr.shape) for i in indices)
+#     values = [arr[i] for i in indices]
+#     idx = [(i) for i in indices]
+#     if order == 'ascend':
+#         values.reverse()
+#         idx.reverse()
+#     return values, idx
+
 # if __name__ == '__main__':
 #     import plot_data
