@@ -103,8 +103,6 @@ def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius
     nFound = 0
     while nFound <= min_activity:
         distance_to_user = compute_distance_from_point(this_lon, this_lat, df.longitude, df.latitude, unit)
-        # df['distance'] = distance_to_user
-        df.loc[:,'distance'] = distance_to_user
         found_activity = df[(df.distance <= radius)]
         nFound += found_activity.shape[0]
         if nFound < min_activity:
@@ -114,6 +112,8 @@ def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius
             print 'Radius larger than %d %s, stopping' % (radius_max,unit)
             radius -= radius_increment
             break
+    # df['distance'] = distance_to_user
+    df.loc[:,'distance'] = distance_to_user
     print 'returning %d tweets from a radius of %d %s.' % (nFound,radius,unit)
     return found_activity
 
