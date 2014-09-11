@@ -98,8 +98,8 @@ apple_flint_center_lat = [37.3121,37.3347]
 # this_lon = sf_lon
 # this_lat = sf_lat
 
-# this_lon = attpark_lon
-# this_lat = attpark_lat
+this_lon = attpark_lon
+this_lat = attpark_lat
 
 # this_lon = mission_lon
 # this_lat = mission_lat
@@ -116,8 +116,8 @@ apple_flint_center_lat = [37.3121,37.3347]
 # this_lon = mtview_caltrain_lon
 # this_lat = mtview_caltrain_lat
 
-this_lon = apple_flint_center_lon
-this_lat = apple_flint_center_lat
+# this_lon = apple_flint_center_lon
+# this_lat = apple_flint_center_lat
 
 geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 
@@ -143,21 +143,38 @@ geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 # untilDatetime_prev = '2014-09-09 05:00:00'
 # activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 
-# apple keynote
-sinceDatetime_now = '2014-09-09 08:00:00'
-untilDatetime_now = '2014-09-09 15:00:00'
+# # apple keynote
+# sinceDatetime_now = '2014-09-09 08:00:00'
+# untilDatetime_now = '2014-09-09 15:00:00'
+# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
+# sinceDatetime_prev = '2014-09-08 08:00:00'
+# untilDatetime_prev = '2014-09-08 15:00:00'
+# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+
+# giants vs diamondbacks
+sinceDatetime_now = '2014-09-09 17:00:00'
+untilDatetime_now = '2014-09-09 23:30:00'
 activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-sinceDatetime_prev = '2014-09-08 08:00:00'
-untilDatetime_prev = '2014-09-08 15:00:00'
+sinceDatetime_prev = '2014-09-08 17:00:00'
+untilDatetime_prev = '2014-09-08 23:30:00'
 activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 
-# # giants vs diamondbacks
-# sinceDatetime_now = '2014-09-09 17:00:00'
-# untilDatetime_now = '2014-09-09 23:30:00'
-# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-# sinceDatetime_prev = '2014-09-08 17:00:00'
-# untilDatetime_prev = '2014-09-08 23:30:00'
-# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+###########
+# plot over time
+###########
+
+# tweetlocs = df.ix[:, ['longitude','latitude']]
+tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
+tweetlocs_prev = activity_prev.ix[:, ['longitude','latitude']].resample('60min', how='count')
+
+# volume = df.resample('60min', how='count')
+fig, ax = plt.subplots()
+tweetlocs_now.plot(kind='line',style='b')
+tweetlocs_prev.plot(kind='line',style='r')
+fig.autofmt_xdate()
+# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+# ax.set_xlim(['17:00:00','05:00:00'])
 
 
 ############
@@ -199,7 +216,7 @@ if show_plot:
 
 
 # return the top x values, sorted; ascend=biggest first
-diffthresh = 150
+diffthresh = 100
 morevals,moreind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='max', return_order='ascend')
 lessvals,lessind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='min', return_order='ascend')
 
@@ -226,29 +243,12 @@ min_activity = 200
 for point in range(len(diffmore_lon)):
     print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[point],diffmore_lon[point])
     now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[point],diffmore_lat[point],unit,radius,radius_increment,radius_max,min_activity)
-    pdb.set_trace()
+    # pdb.set_trace()
 
 
 difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
 difftweets_prev = sd.selectSpaceFromPoint(activity_prev,diffless_lon,diffless_lat)
 
-
-###########
-# plot over time
-###########
-
-# tweetlocs = df.ix[:, ['longitude','latitude']]
-tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
-tweetlocs_prev = activity_prev.ix[:, ['longitude','latitude']].resample('60min', how='count')
-
-# volume = df.resample('60min', how='count')
-fig, ax = plt.subplots()
-tweetlocs_now.plot(kind='line',style='b')
-tweetlocs_prev.plot(kind='line',style='r')
-fig.autofmt_xdate()
-# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-# ax.set_xlim(['17:00:00','05:00:00'])
 
 
 
