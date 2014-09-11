@@ -90,21 +90,21 @@ geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 # untilDatetime_prev = '2014-09-09 05:00:00'
 # activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 
-# # apple keynote
-# sinceDatetime_now = '2014-09-09 08:00:00'
-# untilDatetime_now = '2014-09-09 15:00:00'
-# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-# sinceDatetime_prev = '2014-09-08 08:00:00'
-# untilDatetime_prev = '2014-09-08 15:00:00'
-# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
-
-# giants vs diamondbacks
-sinceDatetime_now = '2014-09-09 17:00:00'
-untilDatetime_now = '2014-09-09 23:30:00'
+# apple keynote
+sinceDatetime_now = '2014-09-09 08:00:00'
+untilDatetime_now = '2014-09-09 15:00:00'
 activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-sinceDatetime_prev = '2014-09-08 17:00:00'
-untilDatetime_prev = '2014-09-08 23:30:00'
+sinceDatetime_prev = '2014-09-08 08:00:00'
+untilDatetime_prev = '2014-09-08 15:00:00'
 activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+
+# # giants vs diamondbacks
+# sinceDatetime_now = '2014-09-09 17:00:00'
+# untilDatetime_now = '2014-09-09 23:30:00'
+# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
+# sinceDatetime_prev = '2014-09-08 17:00:00'
+# untilDatetime_prev = '2014-09-08 23:30:00'
+# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 
 ###########
 # plot over time
@@ -128,13 +128,12 @@ fig.autofmt_xdate()
 # Plot heat map and difference
 ############
 
-nbins = 100
-show_plot=True
+nbins = 50
+show_plot=False
 savefig = False
 # plt = sd.make_hist(df,nbins,show_plot)
-plt, Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
-plt, Hprev, xedges, yedges = sd.make_hist(activity_prev,nbins,show_plot)
-
+Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
+Hprev, xedges, yedges = sd.make_hist(activity_prev,nbins,show_plot)
 Hdiff = Hnow - Hprev
 
 if show_plot:
@@ -162,10 +161,11 @@ if show_plot:
 # diffless = np.column_stack(np.where(Hdiff < -diffthresh))
 
 
-# return the top x values, sorted; ascend=biggest first
+# return the top n values, sorted; ascend=biggest first
+n = 5
 diffthresh = 100
-morevals,moreind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='max', return_order='ascend')
-lessvals,lessind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='min', return_order='ascend')
+morevals,moreind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='max', return_order='ascend')
+lessvals,lessind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='min', return_order='ascend')
 
 # bigcoord = zip(xedges[bigdiff[:,0]], yedges[bigdiff[:,1]])
 # diffmore_lon = xedges[diffmore[:,0]]
@@ -187,14 +187,17 @@ radius = 200
 radius_increment = 50
 radius_max = 1000
 min_activity = 200
-for point in range(len(diffmore_lon)):
-    print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[point],diffmore_lon[point])
-    now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[point],diffmore_lat[point],unit,radius,radius_increment,radius_max,min_activity)
-    # pdb.set_trace()
+events = []
+for i in range(len(diffmore_lon)):
+    print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[i],diffmore_lon[i])
+    now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[i],diffmore_lat[i],unit,radius,radius_increment,radius_max,min_activity)
+    if now_nearby.shape[0] > 0:
+        events.append(dict(lat=now_nearby['latitude'][0], long=now_nearby['longitude'][0], clusterid=i, tweet=now_nearby['text'][0]))
+        # pdb.set_trace()
 
 
-difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
-difftweets_prev = sd.selectSpaceFromPoint(activity_prev,diffless_lon,diffless_lat)
+# difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
+# difftweets_prev = sd.selectSpaceFromPoint(activity_prev,diffless_lon,diffless_lat)
 
 
 
