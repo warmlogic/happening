@@ -69,7 +69,7 @@
         <script>    
         function init_map() {
             
-            var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_long }});
+            var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
             
             var var_ourmap = mapIt(var_location)
             
@@ -101,7 +101,7 @@
                 var var_marker = new google.maps.Marker({
                     position: v_lat,
                     map: var_map,
-                    title:"You"});
+                    title:"What's happening here?"});
  
                 var_marker.setMap(var_map);   
                 
