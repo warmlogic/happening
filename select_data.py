@@ -103,8 +103,8 @@ def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius
     nFound = 0
     while nFound <= min_activity:
         distance_to_user = compute_distance_from_point(this_lon, this_lat, df.longitude, df.latitude, unit)
-        found_activity = df[(df.distance <= radius)]
-        nFound += found_activity.shape[0]
+        within_range = distance_to_user <= radius
+        nFound += within_range.shape[0]
         if nFound < min_activity:
             radius += radius_increment
             print 'Only found %d tweets, increasing radius by %d to %d %s and searching again' % (nFound,radius_increment,radius,unit)
@@ -112,8 +112,9 @@ def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius
             print 'Radius larger than %d %s, stopping' % (radius_max,unit)
             radius -= radius_increment
             break
-    # df['distance'] = distance_to_user
-    df.loc[:,'distance'] = distance_to_user
+    df['distance'] = distance_to_user
+    # df.loc[:,'distance'] = distance_to_user
+    found_activity = df[(df.distance <= radius)]
     print 'returning %d tweets from a radius of %d %s.' % (nFound,radius,unit)
     return found_activity
 
@@ -149,8 +150,6 @@ def selectUser(df,rmnull=True):
     return df
 
 def make_hist(df,nbins=200,show_plot=False):
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
     H,xedges,yedges = np.histogram2d(np.array(df.longitude),np.array(df.latitude),bins=nbins)
     H = np.rot90(H)
     H = np.flipud(H)
@@ -158,6 +157,8 @@ def make_hist(df,nbins=200,show_plot=False):
     if show_plot:
         Hmasked = np.ma.masked_where(H==0,H) # mask pixels
 
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
         plt.pcolormesh(xedges,yedges,Hmasked)
         # plt.title('Density of tweets (%d bins)' % nbins)
         ax.set_title('Density of tweets (%d bins)' % nbins)
@@ -169,7 +170,7 @@ def make_hist(df,nbins=200,show_plot=False):
         cb.set_label('Count')
         # ax.get_xaxis().set_visible(False)
         # ax.get_yaxis().set_visible(False)
-    return plt, H, xedges, yedges
+    return H, xedges, yedges
 
 def choose_n_sorted(arr, n, srt='max', min_val=None, return_order='descend'):
     if srt == 'max':
