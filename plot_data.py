@@ -164,7 +164,7 @@ activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 # Plot heat map and difference
 ############
 
-nbins = 50
+nbins = 100
 show_plot=True
 savefig = False
 # plt = sd.make_hist(df,nbins,show_plot)
@@ -192,32 +192,37 @@ if show_plot:
     # plt.show()
 
 
-# diffthresh = 15
-diffthresh = 100
-diffmore = np.column_stack(np.where(Hdiff > diffthresh))
-diffless = np.column_stack(np.where(Hdiff < -diffthresh))
-# sort differences; most activity first
+# # diffthresh = 15
+# diffthresh = 100
+# diffmore = np.column_stack(np.where(Hdiff > diffthresh))
+# diffless = np.column_stack(np.where(Hdiff < -diffthresh))
 
-# return the top x values
-maxvals,maxind = sd.choose_n_sorted(Hdiff, 5, min_val=100, srt='max', return_order='ascend')
-minvals,minind = sd.choose_n_sorted(Hdiff, 5, srt='min', return_order='ascend')
+
+# return the top x values, sorted; ascend=biggest first
+diffthresh = 150
+morevals,moreind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='max', return_order='ascend')
+lessvals,lessind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='min', return_order='ascend')
 
 # bigcoord = zip(xedges[bigdiff[:,0]], yedges[bigdiff[:,1]])
-diffmore_lon = xedges[diffmore[:,0]]
-diffmore_lat = yedges[diffmore[:,1]]
-diffless_lon = xedges[diffless[:,0]]
-diffless_lat = yedges[diffless[:,1]]
-print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(diffmore_lon))
-print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(diffless_lon))
+# diffmore_lon = xedges[diffmore[:,0]]
+# diffmore_lat = yedges[diffmore[:,1]]
+# diffless_lon = xedges[diffless[:,0]]
+# diffless_lat = yedges[diffless[:,1]]
+diffmore_lon = xedges[moreind[:,0]]
+diffmore_lat = yedges[moreind[:,1]]
+diffless_lon = xedges[lessind[:,0]]
+diffless_lat = yedges[lessind[:,1]]
+print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
+print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
 
 
 # collect tweets from dataframe within radius X of lon,lat
 unit = 'meters'
-radius = 100
+radius = 200
 radius_increment = 50
-radius_max = 200
-min_activity = 10
+radius_max = 1000
+min_activity = 200
 for point in range(len(diffmore_lon)):
     print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[point],diffmore_lon[point])
     now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[point],diffmore_lat[point],unit,radius,radius_increment,radius_max,min_activity)
