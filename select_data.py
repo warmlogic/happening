@@ -189,15 +189,60 @@ def choose_n_sorted(arr, n, srt='max', min_val=None, return_order='descend'):
         idx = idx[keepThese]
     return values, idx
 
-# def n_min(arr, n):
-#     indices = arr.ravel().argsort()[::-1][-n:]
-#     indices = (np.unravel_index(i, arr.shape) for i in indices)
-#     values = [arr[i] for i in indices]
-#     idx = [(i) for i in indices]
-#     if order == 'ascend':
-#         values.reverse()
-#         idx.reverse()
-#     return values, idx
+def set_get_boundBox(area_str='sf'):
+    '''
+    Set and return coordinates for the bounding box of interest.
+    Default is 'sf'.
+    '''
+
+    boundBox = {}
+
+    boundBox['bayarea_lon'] = [-122.53,-121.8]
+    boundBox['bayarea_lat'] = [36.94,38.0]
+
+    boundBox['sf_lon'] = [-122.5686,-122.375]
+    boundBox['sf_lat'] = [37.6681,37.8258]
+
+    boundBox['fishwharf_lon'] = [-122.4231,-122.4076]
+    boundBox['fishwharf_lat'] = [37.8040,37.8116]
+
+    boundBox['embarc_lon'] = [-122.4089,-122.3871]
+    boundBox['embarc_lat'] = [37.7874,37.7998]
+
+    boundBox['att48_lon'] = [-122.3977,-122.3802]
+    boundBox['att48_lat'] = [37.7706,37.7840]
+
+    boundBox['pier48_lon'] = [-122.3977,-122.3838]
+    boundBox['pier48_lat'] = [37.7706,37.7765]
+
+    boundBox['attpark_lon'] = [-122.3977,-122.3802]
+    boundBox['attpark_lat'] = [37.7765,37.7840]
+
+    boundBox['levisstadium_lon'] = [-122.9914,-122.9465]
+    boundBox['levisstadium_lat'] = [37.3777,37.4173]
+
+    boundBox['mission_lon'] = [-122.4286,-122.3979]
+    boundBox['mission_lat'] = [37.7481,37.7693]
+
+    boundBox['sf_concerts_lon'] = [-122.4258,-122.4000]
+    boundBox['sf_concerts_lat'] = [37.7693,37.7926]
+
+    boundBox['nobhill_lon'] = [-122.4322,-122.3976]
+    boundBox['nobhill_lat'] = [37.7845,37.8042]
+
+    boundBox['mtview_caltrain_lon'] = [-122.0832,-122.0743]
+    boundBox['mtview_caltrain_lat'] = [37.3897,37.3953]
+
+    boundBox['apple_flint_center_lon'] = [-122.0550,-122.0226]
+    boundBox['apple_flint_center_lat'] = [37.3121,37.3347]
+
+    lon_str = '%s_lon' % area_str
+    lat_str = '%s_lat' % area_str
+
+    this_lon = boundBox[lon_str]
+    this_lat = boundBox[lat_str]
+
+    return this_lon, this_lat
 
 # if __name__ == '__main__':
 #     import plot_data
