@@ -24,7 +24,6 @@ plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 # Read the data
 ############
 
-# latlong = open("data/latlong_combined.csv")
 latlong = open("data/latlong_userdategeo_combined.csv")
 
 print 'Reading locations...'
@@ -53,71 +52,19 @@ df = df.tz_localize('UTC').tz_convert('US/Pacific')
 
 # choose only coordinates in our bounding box of interest
 
-bayarea_lon = [-122.53,-121.8]
-bayarea_lat = [36.94,38.0]
-
-sf_lon = [-122.5686,-122.375]
-sf_lat = [37.6681,37.8258]
-
-fishwharf_lon = [-122.4231,-122.4076]
-fishwharf_lat = [37.8040,37.8116]
-
-embarc_lon = [-122.4089,-122.3871]
-embarc_lat = [37.7874,37.7998]
-
-att48_lon = [-122.3977,-122.3802]
-att48_lat = [37.7706,37.7840]
-
-pier48_lon = [-122.3977,-122.3838]
-pier48_lat = [37.7706,37.7765]
-
-attpark_lon = [-122.3977,-122.3802]
-attpark_lat = [37.7765,37.7840]
-
-levisstadium_lon = [-122.9914,-122.9465]
-levisstadium_lat = [37.3777,37.4173]
-
-mission_lon = [-122.4286,-122.3979]
-mission_lat = [37.7481,37.7693]
-
-sf_concerts_lon = [-122.4258,-122.4000]
-sf_concerts_lat = [37.7693,37.7926]
-
-nobhill_lon = [-122.4322,-122.3976]
-nobhill_lat = [37.7845,37.8042]
-
-mtview_caltrain_lon = [-122.0832,-122.0743]
-mtview_caltrain_lat = [37.3897,37.3953]
-
-apple_flint_center_lon = [-122.0550,-122.0226]
-apple_flint_center_lat = [37.3121,37.3347]
-
-# this_lon = bayarea_lon;
-# this_lat = bayarea_lat;
-
-# this_lon = sf_lon
-# this_lat = sf_lat
-
-this_lon = attpark_lon
-this_lat = attpark_lat
-
-# this_lon = mission_lon
-# this_lat = mission_lat
-
-# this_lon = sf_concerts_lon
-# this_lat = sf_concerts_lat
-
-# this_lon = fishwharf_lon
-# this_lat = fishwharf_lat
-
-# this_lon = nobhill_lon
-# this_lat = nobhill_lat
-
-# this_lon = mtview_caltrain_lon
-# this_lat = mtview_caltrain_lat
-
-# this_lon = apple_flint_center_lon
-# this_lat = apple_flint_center_lat
+# this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='sf')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='fishwharf')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='embarc')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='att48')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='pier48')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='attpark')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='mission')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='sf_concerts')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='nobhill')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='mtview_caltrain')
+this_lon, this_lat = sd.set_get_boundBox(area_str='apple_flint_center')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='levisstadium')
 
 geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 
