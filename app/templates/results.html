@@ -63,7 +63,9 @@
       </div>
       
     <div id="map-container" class="col-md-6"></div>
-    <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <!--<script src="http://maps.google.com/maps/api/js?sensor=false"></script>-->
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true_or_false">
+    </script>
     
     <!--==============================================================-->
         <script>    
@@ -73,17 +75,28 @@
             
             var var_ourmap = mapIt(var_location)
             
-            //Build color icons for clusters         
-            var iconArray = new Array();
-            var iconColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
-            // ["gray","orange","yellow","green","blue","purple"]
-            for (i = 0; i < {{ncluster}}+1 ; i++) {
-                iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+iconColor[i]+"/"}
-            }
-            
-            {% for result in results %}
-                maprest(var_ourmap,{{ result['lat'] }}, {{ result['long'] }}, {{ result['clusterid'] }})
-            {% endfor %}
+            {% if heatmap %}
+                var heatMapData = []
+                {% for result in results %}
+                    heatMapData.push(
+                        {location: new google.maps.LatLng({{ result['lat'] }},{{ result['long'] }}), weight: 1}
+                        );
+                {% endfor %}
+
+                // DEBUG
+                console.log(heatMapData)
+
+                // set heat map
+                var pointArray = new google.maps.MVCArray(heatMapData);
+                var heatmap = new google.maps.visualization.HeatmapLayer({
+                    data: pointArray
+                });
+                heatmap.setMap(var_ourmap);
+            {% else %}
+                {% for result in results %}
+                    maprest(var_ourmap,{{ result['lat'] }}, {{ result['long'] }}, {{ result['clusterid'] }})
+                {% endfor %}
+            {% endif %}
             
             function getMakerImage(ID) {
                 return iconArray[ID]
@@ -93,17 +106,18 @@
                 var var_mapoptions = {
                     center: v_lat,
                     zoom: 14
+                    // mapTypeId: google.maps.MapTypeId.SATELLITE
                 };
-                
+
                 var var_map = new google.maps.Map(document.getElementById("map-container"),
                     var_mapoptions);
                     
-                var var_marker = new google.maps.Marker({
-                    position: v_lat,
-                    map: var_map,
-                    title:"What's happening here?"});
+                // var var_marker = new google.maps.Marker({
+                //     position: v_lat,
+                //     map: var_map,
+                //     title:"What is happening?"});
  
-                var_marker.setMap(var_map);   
+                // var_marker.setMap(var_map);   
                 
                 return var_map
             }
@@ -117,15 +131,11 @@
                     })
  
                 this_marker.setMap(this_map);   
-                
             }
             
-                        
-             
         }
  
     google.maps.event.addDomListener(window, 'load', init_map);
- 
  
     </script>
     <!--=================================================-->
