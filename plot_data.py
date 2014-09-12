@@ -12,19 +12,19 @@ from sklearn.cluster import DBSCAN
 # from sklearn import metrics
 # from scipy.spatial.distance import pdist
 
-%load_ext autoreload
-%autoreload 2
+# %load_ext autoreload
+# %autoreload 2
 
-%matplotlib inline
-import matplotlib.pyplot as plt
-from IPython.display import Image
-plt.rcParams['figure.figsize'] = 12, 8 # plotsize
+# %matplotlib inline
+# import matplotlib.pyplot as plt
+# from IPython.display import Image
+# plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 
 ############
 # Read the data
 ############
 
-latlong = open("data/latlong_userdategeo_combined.csv")
+latlong = open("./data/latlong_userdategeo_combined.csv")
 
 print 'Reading locations...'
 # df = pd.read_csv(latlong,header=None,names=['longitude', 'latitude'])
@@ -110,18 +110,18 @@ activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
 # plot over time
 ###########
 
-# tweetlocs = df.ix[:, ['longitude','latitude']]
-tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
-tweetlocs_prev = activity_prev.ix[:, ['longitude','latitude']].resample('60min', how='count')
+# # tweetlocs = df.ix[:, ['longitude','latitude']]
+# tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
+# tweetlocs_prev = activity_prev.ix[:, ['longitude','latitude']].resample('60min', how='count')
 
-# volume = df.resample('60min', how='count')
-fig, ax = plt.subplots()
-tweetlocs_now.plot(kind='line',style='b')
-tweetlocs_prev.plot(kind='line',style='r')
-fig.autofmt_xdate()
-# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+# # volume = df.resample('60min', how='count')
+# fig, ax = plt.subplots()
+# tweetlocs_now.plot(kind='line',style='b')
+# tweetlocs_prev.plot(kind='line',style='r')
+# fig.autofmt_xdate()
+# # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-# ax.set_xlim(['17:00:00','05:00:00'])
+# # ax.set_xlim(['17:00:00','05:00:00'])
 
 
 ############
@@ -192,8 +192,9 @@ for i in range(len(diffmore_lon)):
     print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[i],diffmore_lon[i])
     now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[i],diffmore_lat[i],unit,radius,radius_increment,radius_max,min_activity)
     if now_nearby.shape[0] > 0:
-        events.append(dict(lat=now_nearby['latitude'][0], long=now_nearby['longitude'][0], clusterid=i, tweet=now_nearby['text'][0]))
-        # pdb.set_trace()
+        # events.append(dict(lat=now_nearby['latitude'][0], long=now_nearby['longitude'][0], clusterid=i, tweet=now_nearby['text'][0]))
+        for j in range(now_nearby.shape[0]):
+            events.append(dict(lat=now_nearby['latitude'][j], long=now_nearby['longitude'][j], clusterid=i, tweet=now_nearby['text'][j]))
 
 
 # difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
