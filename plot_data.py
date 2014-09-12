@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 from sklearn.cluster import DBSCAN
-# from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 # from sklearn import metrics
 # from scipy.spatial.distance import pdist
 
@@ -231,16 +231,22 @@ for i in range(len(diffmore_lon)):
 
 # Use DBSCAN
 
-X = np.vstack((df.longitude, df.latitude)).T
-X = np.vstack((mon_pm.longitude, mon_pm.latitude)).T
-X = np.vstack((fri_pm.longitude, fri_pm.latitude)).T
+# TODO
+
+# def clusterThose(activity_now):
+
+X = np.vstack((activity_now.longitude, activity_now.latitude)).T
+# X = np.vstack((mon_pm.longitude, mon_pm.latitude)).T
+# X = np.vstack((fri_pm.longitude, fri_pm.latitude)).T
 # X = StandardScaler().fit_transform(X)
+scaler = StandardScaler(copy=True)
+X_centered = scaler.fit(X).transform(X)
 
 # xx, yy = zip(*X)
 # scatter(xx,yy)
 # show()
 
-db = DBSCAN(eps=0.0001, min_samples=20).fit(X)
+db = DBSCAN(eps=0.0001, min_samples=50).fit(X)
 core_samples = db.core_sample_indices_
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
@@ -248,6 +254,20 @@ core_samples_mask[db.core_sample_indices_] = True
 labels = db.labels_
 n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 print('Estimated number of clusters: %d' % n_clusters_)
+
+# X = scaler.inverse_transform(X_centered)
+
+unique_labels = set(labels)
+colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+
+for k, col in zip(unique_labels, colors):
+    if k == -1:
+        # Black used for noise.
+        col = 'k'
+
+    class_member_mask = (labels == k)
+    this_lon = X[class_member_mask]
+
 
 # print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
 # print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
@@ -264,8 +284,8 @@ print('Estimated number of clusters: %d' % n_clusters_)
 ###############
 
 # Plot result
-unique_labels = set(labels)
-colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+# unique_labels = set(labels)
+# colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
 fig = plt.figure()
 ax = fig.add_subplot(111)
 for k, col in zip(unique_labels, colors):
