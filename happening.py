@@ -54,17 +54,17 @@ def whatsHappening(area_str='apple_flint_center', tz='US/Pacific'):
     # sinceDatetime_now = '2014-09-09 08:00:00'
     # untilDatetime_now = '2014-09-09 15:00:00'
     # activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-    # sinceDatetime_prev = '2014-09-08 08:00:00'
-    # untilDatetime_prev = '2014-09-08 15:00:00'
-    # activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+    # sinceDatetime_base = '2014-09-08 08:00:00'
+    # untilDatetime_base = '2014-09-08 15:00:00'
+    # activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
 
     # giants vs diamondbacks
     sinceDatetime_now = '2014-09-09 17:00:00'
     untilDatetime_now = '2014-09-09 23:30:00'
     activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-    sinceDatetime_prev = '2014-09-08 17:00:00'
-    untilDatetime_prev = '2014-09-08 23:30:00'
-    activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+    sinceDatetime_base = '2014-09-08 17:00:00'
+    untilDatetime_base = '2014-09-08 23:30:00'
+    activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
 
     ############
     # get difference between events
@@ -74,7 +74,7 @@ def whatsHappening(area_str='apple_flint_center', tz='US/Pacific'):
     show_plot=False
     # plt = sd.make_hist(df,nbins,show_plot)
     Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
-    Hprev, xedges, yedges = sd.make_hist(activity_prev,nbins,show_plot)
+    Hprev, xedges, yedges = sd.make_hist(activity_base,nbins,show_plot)
 
     Hdiff = Hnow - Hprev
 
