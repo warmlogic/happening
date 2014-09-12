@@ -84,10 +84,11 @@ def happening_page():
         nearby = sd.selectActivityFromPoint(activity,diff_lon[i],diff_lat[i],unit,radius,radius_increment,radius_max,min_activity)
         # just pass in the first tweet for now
         if nearby.shape[0] > 0:
-            events.append(dict(lat=nearby['latitude'][0], long=nearby['longitude'][0], clusterid=i, tweet=nearby['text'][0]))
-            # pdb.set_trace()
+            # events.append(dict(lat=nearby['latitude'][0], long=nearby['longitude'][0], clusterid=i, tweet=nearby['text'][0]))
+            for j in range(nearby.shape[0]):
+                events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=i, tweet=nearby['text'][j]))
     # return render_template('results.html',results=events,user_lat = lat, user_lon = lon, faddress = full_add, ncluster = clusters['n_clusters'])
-    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon)
+    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=True)
     
 @app.route("/testmap")
 def test_maps_page():
