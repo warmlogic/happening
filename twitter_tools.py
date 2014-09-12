@@ -175,7 +175,15 @@ class StreamLogger(tweepy.StreamListener):
         return True
 
     def on_data(self, data):
-        data = json.loads(HTMLParser().unescape(data))
+        try:
+            data = json.loads(HTMLParser().unescape(data))
+        except Exception, e:
+            t = datetime.datetime.now()
+            errf_name = 'errlog_%s_%d%d%d.txt' % (str(t.date()),t.hour,t.minute,t.second)
+            errf = open(errf_name,'w')
+            errf.write(str(e))
+            errf.close()
+            return False
         if data['coordinates']:
             # if we have latitude and longitude, parse it
             pt = self.parseStreamTweet(data)
