@@ -80,7 +80,7 @@ def happening_page():
 
     tz = 'US/Pacific'
 
-    nbins = 100
+    nbins = 50
     nclusters = 5
 
     activity, diff_lon, diff_lat, user_lon, user_lat = happening.whatsHappening(area_str=area_str,\
