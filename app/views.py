@@ -68,15 +68,15 @@ def happening_page():
     # time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
     # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
 
-    # # apple keynote
-    # area_str='apple_flint_center'
-    # time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
-    # time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
+    # apple keynote
+    area_str='apple_flint_center'
+    time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
+    time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
 
-    # giants vs diamondbacks
-    area_str='attpark'
-    time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
-    time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+    # # giants vs diamondbacks
+    # area_str='attpark'
+    # time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
+    # time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
 
     activity, diff_lon, diff_lat, user_lon, user_lat = happening.whatsHappening(area_str=area_str, time_now=time_now, time_then=time_then, tz='US/Pacific')
 
@@ -101,7 +101,7 @@ def happening_page():
             for j in range(nearby.shape[0]):
                 events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=i, tweet=nearby['text'][j]))
     # return render_template('results.html',results=events,user_lat = lat, user_lon = lon, faddress = full_add, ncluster = clusters['n_clusters'])
-    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=True)
+    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=False)
     
 @app.route("/testmap")
 def test_maps_page():
