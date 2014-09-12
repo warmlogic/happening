@@ -130,6 +130,8 @@ Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
 Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot)
 Hdiff = Hnow - Hprev
 
+# Hweight = Hnow ./ Hprev
+
 if show_plot:
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -246,27 +248,69 @@ X_centered = scaler.fit(X).transform(X)
 # scatter(xx,yy)
 # show()
 
-db = DBSCAN(eps=0.0001, min_samples=50).fit(X)
-core_samples = db.core_sample_indices_
-core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-core_samples_mask[db.core_sample_indices_] = True
+# eps = 0.00075
+eps = 0.75
+min_samples = 50
 
-labels = db.labels_
-n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+# db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+n_clusters_ = 0
+n_tries = 0
+while n_clusters_ == 0:
+    db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
+    # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+    n_tries += 1
+
+    labels = db.labels_
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    if n_clusters_ == 0:
+        eps *= 2.0
+    if n_tries > 5:
+        min_samples /= min_samples
+    elif n_tries > 10:
+        break
+
 print('Estimated number of clusters: %d' % n_clusters_)
 
-# X = scaler.inverse_transform(X_centered)
+if n_clusters_ > 0:
+    binscale = 0.001
+    core_samples = db.core_sample_indices_
+    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+    core_samples_mask[db.core_sample_indices_] = True
 
-unique_labels = set(labels)
-colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+    # X = scaler.inverse_transform(X_centered)
 
-for k, col in zip(unique_labels, colors):
-    if k == -1:
-        # Black used for noise.
-        col = 'k'
+    # unique_labels = set(labels)
+    unique_labels = np.unique(labels)
+    # colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
 
-    class_member_mask = (labels == k)
-    this_lon = X[class_member_mask]
+    # go through the found clusters
+    # keepClus = []
+    clusterNums = np.repeat(-1,activity_now.shape[0])
+    # for k, col in zip(unique_labels, colors):
+    for k in unique_labels:
+        print k
+        class_member_mask = (labels == k)
+        if k != -1:
+            # activity_now[class_member_mask]
+            this_lon = X[class_member_mask,0]
+            this_lat = X[class_member_mask,1]
+
+            # keep clusters that contain a hist2d hotspot
+            for i in range(len(diffmore_lon)):
+                if diffmore_lon[i] > (min(X[class_member_mask,0]) - nbins*binscale) and diffmore_lon[i] < (max(X[class_member_mask,0]) + nbins*binscale) and diffmore_lat[i] > (min(X[class_member_mask,1]) - nbins*binscale) and diffmore_lat[i] < (max(X[class_member_mask,1]) + nbins*binscale):
+                    clusterNums[class_member_mask] = k
+                #     keepClus.append(True)
+                # else:
+                #     keepClus.append(False)
+        # else:
+        #     keepClus.append(False)
+        #     # Black used for noise.
+        #     # col = 'k'
+    activity_now['cluster_numbers'] = clusterNums
+
+
+
+
 
 
 # print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
