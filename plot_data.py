@@ -12,13 +12,13 @@ from sklearn.cluster import DBSCAN
 # from sklearn import metrics
 # from scipy.spatial.distance import pdist
 
-# %load_ext autoreload
-# %autoreload 2
+%load_ext autoreload
+%autoreload 2
 
-# %matplotlib inline
-# import matplotlib.pyplot as plt
-# from IPython.display import Image
-# plt.rcParams['figure.figsize'] = 12, 8 # plotsize
+%matplotlib inline
+import matplotlib.pyplot as plt
+from IPython.display import Image
+plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 
 ############
 # Read the data
@@ -58,12 +58,12 @@ df = df.tz_localize('UTC').tz_convert('US/Pacific')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='embarc')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='att48')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='pier48')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='attpark')
+this_lon, this_lat = sd.set_get_boundBox(area_str='attpark')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='mission')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='sf_concerts')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='nobhill')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='mtview_caltrain')
-this_lon, this_lat = sd.set_get_boundBox(area_str='apple_flint_center')
+# this_lon, this_lat = sd.set_get_boundBox(area_str='apple_flint_center')
 # this_lon, this_lat = sd.set_get_boundBox(area_str='levisstadium')
 
 geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
@@ -104,16 +104,16 @@ print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_
 # plot over time
 ###########
 
-# # tweetlocs = df.ix[:, ['longitude','latitude']]
-# tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
-# tweetlocs_then = activity_then.ix[:, ['longitude','latitude']].resample('60min', how='count')
+# tweetlocs = df.ix[:, ['longitude','latitude']]
+tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
+tweetlocs_then = activity_then.ix[:, ['longitude','latitude']].resample('60min', how='count')
 
-# # volume = df.resample('60min', how='count')
-# fig, ax = plt.subplots()
-# tweetlocs_now.plot(kind='line',style='b')
-# tweetlocs_then.plot(kind='line',style='r')
-# fig.autofmt_xdate()
-# # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+# volume = df.resample('60min', how='count')
+fig, ax = plt.subplots()
+tweetlocs_now.plot(kind='line',style='b')
+tweetlocs_then.plot(kind='line',style='r')
+fig.autofmt_xdate()
+# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 # # ax.set_xlim(['17:00:00','05:00:00'])
 
@@ -123,7 +123,7 @@ print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_
 ############
 
 nbins = 50
-show_plot=False
+show_plot=True
 savefig = False
 # plt = sd.make_hist(df,nbins,show_plot)
 Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
