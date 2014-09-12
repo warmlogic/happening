@@ -104,7 +104,7 @@ def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius
     while nFound <= min_activity:
         distance_to_user = compute_distance_from_point(this_lon, this_lat, df.longitude, df.latitude, unit)
         within_range = distance_to_user <= radius
-        nFound += within_range.shape[0]
+        nFound = sum(within_range)
         if nFound < min_activity:
             radius += radius_increment
             print 'Only found %d tweets, increasing radius by %d to %d %s and searching again' % (nFound,radius_increment,radius,unit)
