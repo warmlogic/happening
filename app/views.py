@@ -78,7 +78,14 @@ def happening_page():
     # time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
     # time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
 
-    activity, diff_lon, diff_lat, user_lon, user_lat = happening.whatsHappening(area_str=area_str, time_now=time_now, time_then=time_then, tz='US/Pacific')
+    tz = 'US/Pacific'
+
+    nbins = 100
+    nclusters = 5
+
+    activity, diff_lon, diff_lat, user_lon, user_lat = happening.whatsHappening(area_str=area_str,\
+        nbins=nbins,nclusters=nclusters,\
+        time_now=time_now, time_then=time_then, tz=tz)
 
     # restaurants = []
     # for i in range(len(clusters['X'])):
@@ -92,16 +99,19 @@ def happening_page():
     radius_max = 1000
     min_activity = 200
     events = []
+    clusCount = 0
+    heatmap = False
     for i in range(len(diff_lon)):
         print 'getting tweets from near: %.6f,%.6f' % (diff_lat[i],diff_lon[i])
         nearby = sd.selectActivityFromPoint(activity,diff_lon[i],diff_lat[i],unit,radius,radius_increment,radius_max,min_activity)
-        # just pass in the first tweet for now
         if nearby.shape[0] > 0:
+            clusCount += 1
+            print 'clusCount: %d' % (clusCount)
+            # # just pass in the first tweet for now
             # events.append(dict(lat=nearby['latitude'][0], long=nearby['longitude'][0], clusterid=i, tweet=nearby['text'][0]))
             for j in range(nearby.shape[0]):
-                events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=i, tweet=nearby['text'][j]))
-    # return render_template('results.html',results=events,user_lat = lat, user_lon = lon, faddress = full_add, ncluster = clusters['n_clusters'])
-    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=False)
+                events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
+    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=heatmap)
     
 @app.route("/testmap")
 def test_maps_page():
