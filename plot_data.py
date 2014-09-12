@@ -83,28 +83,22 @@ geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 # geo_activity = sd.selectTime(geo_activity,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
 
 # # night life
-# sinceDatetime_now = '2014-09-05 17:00:00'
-# untilDatetime_now = '2014-09-06 05:00:00'
-# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-# sinceDatetime_base = '2014-09-08 17:00:00'
-# untilDatetime_base = '2014-09-09 05:00:00'
-# activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
+# time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
+# time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
 
-# apple keynote
-sinceDatetime_now = '2014-09-09 08:00:00'
-untilDatetime_now = '2014-09-09 15:00:00'
-activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-sinceDatetime_base = '2014-09-08 08:00:00'
-untilDatetime_base = '2014-09-08 15:00:00'
-activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
+# # apple keynote
+# time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
+# time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
 
-# # giants vs diamondbacks
-# sinceDatetime_now = '2014-09-09 17:00:00'
-# untilDatetime_now = '2014-09-09 23:30:00'
-# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-# sinceDatetime_base = '2014-09-08 17:00:00'
-# untilDatetime_base = '2014-09-08 23:30:00'
-# activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
+# giants vs diamondbacks
+time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
+time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+
+activity_now = geo_activity.ix[time_now[0]:time_now[1]]
+activity_then = geo_activity.ix[time_then[0]:time_then[1]]
+
+print 'Now: Selecting %d entries from %s to %s' % (activity_now.shape[0],time_now[0],time_now[1])
+print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_then[0],time_then[1])
 
 ###########
 # plot over time
@@ -112,12 +106,12 @@ activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
 
 # # tweetlocs = df.ix[:, ['longitude','latitude']]
 # tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
-# tweetlocs_base = activity_base.ix[:, ['longitude','latitude']].resample('60min', how='count')
+# tweetlocs_then = activity_then.ix[:, ['longitude','latitude']].resample('60min', how='count')
 
 # # volume = df.resample('60min', how='count')
 # fig, ax = plt.subplots()
 # tweetlocs_now.plot(kind='line',style='b')
-# tweetlocs_base.plot(kind='line',style='r')
+# tweetlocs_then.plot(kind='line',style='r')
 # fig.autofmt_xdate()
 # # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
@@ -133,7 +127,7 @@ show_plot=False
 savefig = False
 # plt = sd.make_hist(df,nbins,show_plot)
 Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
-Hprev, xedges, yedges = sd.make_hist(activity_base,nbins,show_plot)
+Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot)
 Hdiff = Hnow - Hprev
 
 if show_plot:
@@ -196,9 +190,8 @@ for i in range(len(diffmore_lon)):
         for j in range(now_nearby.shape[0]):
             events.append(dict(lat=now_nearby['latitude'][j], long=now_nearby['longitude'][j], clusterid=i, tweet=now_nearby['text'][j]))
 
-
 # difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
-# difftweets_base = sd.selectSpaceFromPoint(activity_base,diffless_lon,diffless_lat)
+# difftweets_then = sd.selectSpaceFromPoint(activity_then,diffless_lon,diffless_lat)
 
 
 

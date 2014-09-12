@@ -25,7 +25,8 @@ class struct():
     pass
 
 # def whatsHappening(this_lon, this_lat, area_str='apple_flint_center', tz='US/Pacific'):
-def whatsHappening(area_str='apple_flint_center', tz='US/Pacific'):
+def whatsHappening(area_str='apple_flint_center', time_now=['2014-09-09 08:00:00', '2014-09-09 15:00:00'],\
+    time_then=['2014-09-08 08:00:00', '2014-09-08 15:00:00'], tz='US/Pacific'):
     ############
     # Read the data
     ############
@@ -50,21 +51,8 @@ def whatsHappening(area_str='apple_flint_center', tz='US/Pacific'):
 
     geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 
-    # # apple keynote
-    # sinceDatetime_now = '2014-09-09 08:00:00'
-    # untilDatetime_now = '2014-09-09 15:00:00'
-    # activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-    # sinceDatetime_base = '2014-09-08 08:00:00'
-    # untilDatetime_base = '2014-09-08 15:00:00'
-    # activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
-
-    # giants vs diamondbacks
-    sinceDatetime_now = '2014-09-09 17:00:00'
-    untilDatetime_now = '2014-09-09 23:30:00'
-    activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-    sinceDatetime_base = '2014-09-08 17:00:00'
-    untilDatetime_base = '2014-09-08 23:30:00'
-    activity_base = geo_activity.ix[sinceDatetime_base:untilDatetime_base]
+    activity_now = geo_activity.ix[time_now[0]:time_now[1]]
+    activity_then = geo_activity.ix[time_then[0]:time_then[1]]
 
     ############
     # get difference between events
@@ -74,7 +62,7 @@ def whatsHappening(area_str='apple_flint_center', tz='US/Pacific'):
     show_plot=False
     # plt = sd.make_hist(df,nbins,show_plot)
     Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
-    Hprev, xedges, yedges = sd.make_hist(activity_base,nbins,show_plot)
+    Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot)
 
     Hdiff = Hnow - Hprev
 

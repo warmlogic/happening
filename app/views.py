@@ -62,10 +62,23 @@ def happening_page():
     # this_lon, this_lat = sd.set_get_boundBox(area_str='apple_flint_center')
     # this_lon, this_lat = sd.set_get_boundBox(area_str='levisstadium')
 
-    area_str='attpark'
+
+    # # night life
+    # area_str='sf_concerts'
+    # time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
+    # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
+
+    # # apple keynote
     # area_str='apple_flint_center'
-    activity, diff_lon, diff_lat, user_lon, user_lat = happening.whatsHappening(area_str=area_str, tz='US/Pacific')
-    # activity, diff_lon, diff_lat, user_lon, user_lat = happening.whatsHappening(this_lon, this_lat, area_str='apple_flint_center', tz='US/Pacific')
+    # time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
+    # time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
+
+    # giants vs diamondbacks
+    area_str='attpark'
+    time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
+    time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+
+    activity, diff_lon, diff_lat, user_lon, user_lat = happening.whatsHappening(area_str=area_str, time_now=time_now, time_then=time_then, tz='US/Pacific')
 
     # restaurants = []
     # for i in range(len(clusters['X'])):
