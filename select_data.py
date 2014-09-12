@@ -245,5 +245,12 @@ def set_get_boundBox(area_str='sf'):
 
     return this_lon, this_lat
 
+def fullprint(*args, **kwargs):
+    from pprint import pprint
+    import numpy
+    opt = numpy.get_printoptions()
+    numpy.set_printoptions(threshold='nan')
+    pprint(*args, **kwargs)
+    numpy.set_printoptions(**opt)
 # if __name__ == '__main__':
 #     import plot_data
