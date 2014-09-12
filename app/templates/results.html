@@ -75,6 +75,14 @@
             
             var var_ourmap = mapIt(var_location)
             
+            //Build color icons for clusters         
+            var iconArray = new Array();
+            var iconColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
+            // ["gray","orange","yellow","green","blue","purple"]
+            for (i = 0; i < {{ncluster}}+1 ; i++) {
+                iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+iconColor[i]+"/"}
+            }
+
             {% if heatmap %}
                 var heatMapData = []
                 {% for result in results %}
@@ -130,7 +138,7 @@
                     icon: getMakerImage(thisID+1)
                     })
  
-                this_marker.setMap(this_map);   
+                this_marker.setMap(this_map);
             }
             
         }
