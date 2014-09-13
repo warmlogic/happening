@@ -7,6 +7,8 @@ also plots density
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
 import pdb
 
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
@@ -149,7 +151,7 @@ def selectUser(df,rmnull=True):
         df = df[hasUser]
     return df
 
-def make_hist(df,nbins=200,show_plot=False):
+def make_hist(df,nbins=200,show_plot=False,savefig=False,figname='latlong_hist_plot'):
     H,xedges,yedges = np.histogram2d(np.array(df.longitude),np.array(df.latitude),bins=nbins)
     H = np.rot90(H)
     H = np.flipud(H)
@@ -170,6 +172,10 @@ def make_hist(df,nbins=200,show_plot=False):
         cb.set_label('Count')
         # ax.get_xaxis().set_visible(False)
         # ax.get_yaxis().set_visible(False)
+        if savefig:
+            figname = 'data/' + figname + '.png'
+            print 'saving figure to ' + figname
+            plt.savefig(figname, bbox_inches='tight')
     return H, xedges, yedges
 
 def choose_n_sorted(arr, n, srt='max', min_val=None, return_order='descend'):
@@ -252,5 +258,71 @@ def fullprint(*args, **kwargs):
     numpy.set_printoptions(threshold='nan')
     pprint(*args, **kwargs)
     numpy.set_printoptions(**opt)
+
+
+def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
+    X = np.vstack((activity_now.longitude, activity_now.latitude)).T
+    scaler = StandardScaler(copy=True)
+    X_centered = scaler.fit(X).transform(X)
+
+    # eps = 0.00075
+    eps = 0.75
+    min_samples = 50
+
+    n_clusters_ = 0
+    n_tries = 0
+    while n_clusters_ == 0:
+        db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
+        # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+        n_tries += 1
+
+        labels = db.labels_
+        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+        if n_clusters_ == 0:
+            eps *= 2.0
+        if n_tries > 5:
+            min_samples /= min_samples
+        elif n_tries > 10:
+            break
+
+    print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
+
+    if n_clusters_ > 0:
+        binscale = 0.001
+        core_samples = db.core_sample_indices_
+        core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+        core_samples_mask[db.core_sample_indices_] = True
+
+        # X = scaler.inverse_transform(X_centered)
+
+        unique_labels = np.unique(labels)
+
+        # go through the found clusters
+        keepClus = []
+        clusterNums = np.repeat(-1,activity_now.shape[0])
+        # for k, col in zip(unique_labels, colors):
+        for k in unique_labels:
+            class_member_mask = (labels == k)
+            if k != -1:
+                # activity_now[class_member_mask]
+                this_lon = X[class_member_mask,0]
+                this_lat = X[class_member_mask,1]
+
+                # keep clusters that contain a hist2d hotspot
+                for i in range(len(diffmore_lon)):
+                    if diffmore_lon[i] > (min(X[class_member_mask,0]) - nbins*binscale) and diffmore_lon[i] < (max(X[class_member_mask,0]) + nbins*binscale) and diffmore_lat[i] > (min(X[class_member_mask,1]) - nbins*binscale) and diffmore_lat[i] < (max(X[class_member_mask,1]) + nbins*binscale):
+                        clusterNums[class_member_mask] = k
+                        keepClus.append(True)
+                    else:
+                        keepClus.append(False)
+            # else:
+            #     keepClus.append(False)
+            #     # Black used for noise.
+            #     # col = 'k'
+        activity_now['clusterNum'] = clusterNums
+        n_clusters_real = sum(keepClus)
+        return activity_now, n_clusters_real
+
+
 # if __name__ == '__main__':
 #     import plot_data
