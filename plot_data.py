@@ -52,19 +52,21 @@ df = df.tz_localize('UTC').tz_convert('US/Pacific')
 
 # choose only coordinates in our bounding box of interest
 
-# this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='sf')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='fishwharf')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='embarc')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='att48')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='pier48')
-this_lon, this_lat = sd.set_get_boundBox(area_str='attpark')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='mission')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='sf_concerts')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='nobhill')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='mtview_caltrain')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='apple_flint_center')
-# this_lon, this_lat = sd.set_get_boundBox(area_str='levisstadium')
+area_str='attpark'
+# area_str='apple_flint_center'
+# area_str='bayarea'
+# area_str='sf'
+# area_str='fishwharf'
+# area_str='embarc'
+# area_str='att48'
+# area_str='pier48'
+# area_str='mission'
+# area_str='sf_concerts'
+# area_str='nobhill'
+# area_str='mtview_caltrain'
+# area_str='levisstadium'
+
+this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
 
 geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 
@@ -104,16 +106,26 @@ print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_
 # plot over time
 ###########
 
-# tweetlocs = df.ix[:, ['longitude','latitude']]
-tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
-tweetlocs_then = activity_then.ix[:, ['longitude','latitude']].resample('60min', how='count')
+show_plot=True
+savefig = True
+if show_plot:
+    # tweetlocs = df.ix[:, ['longitude','latitude']]
+    tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
+    tweetlocs_then = activity_then.ix[:, ['longitude','latitude']].resample('60min', how='count')
 
-# volume = df.resample('60min', how='count')
-fig, ax = plt.subplots()
-tweetlocs_now.plot(kind='line',style='b')
-tweetlocs_then.plot(kind='line',style='r')
-fig.autofmt_xdate()
-# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    # volume = df.resample('60min', how='count')
+    fig, ax = plt.subplots()
+    tweetlocs_now.plot(kind='line',style='b')
+    tweetlocs_then.plot(kind='line',style='r')
+    fig.autofmt_xdate()
+    # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    if savefig:
+        figname = 'data/activity_over_time_' + area_str + '.png'
+        print 'saving figure to ' + figname
+        plt.savefig(figname, bbox_inches='tight')
+    # plt.show()
+
 
 # # ax.set_xlim(['17:00:00','05:00:00'])
 
@@ -124,10 +136,10 @@ fig.autofmt_xdate()
 
 nbins = 50
 show_plot=True
-savefig = False
+savefig = True
 # plt = sd.make_hist(df,nbins,show_plot)
-Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
-Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot)
+Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot,savefig,'latlong_now_apple')
+Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot,savefig,'latlong_then_apple')
 Hdiff = Hnow - Hprev
 
 # Hweight = Hnow ./ Hprev
@@ -145,7 +157,7 @@ if show_plot:
     cb.set_label('Count')
 
     if savefig:
-        figname = 'data/latlong_plot.png'
+        figname = 'data/latlong_diff_apple.png'
         print 'saving figure to ' + figname
         plt.savefig(figname, bbox_inches='tight')
     # plt.show()
@@ -235,7 +247,7 @@ for i in range(len(diffmore_lon)):
 
 # TODO
 
-# def clusterThose(activity_now):
+activity_clustered =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
 
 X = np.vstack((activity_now.longitude, activity_now.latitude)).T
 # X = np.vstack((mon_pm.longitude, mon_pm.latitude)).T
@@ -269,7 +281,7 @@ while n_clusters_ == 0:
     elif n_tries > 10:
         break
 
-print('Estimated number of clusters: %d' % n_clusters_)
+print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
 
 if n_clusters_ > 0:
     binscale = 0.001
