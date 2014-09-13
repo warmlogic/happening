@@ -184,12 +184,17 @@ class StreamLogger(tweepy.StreamListener):
             errf.write(str(e))
             errf.close()
             return False
+        pdb.set_trace()
         if data['coordinates']:
             # if we have latitude and longitude, parse it
             pt = self.parseStreamTweet(data)
+            try:
+                pic_url = data['entities']['media'][0]['media_url']
+            except:
+                pic_url = ''
             # write it to disk
-            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' %\
-                (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text']))
+            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s,%s\n' %\
+                (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text'],pic_url))
         return True
 
     #on_event = on_status
