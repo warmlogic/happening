@@ -13,6 +13,9 @@
 
     <!-- Bootstrap core CSS -->
     <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link type="text/css" href="../bower_components/bootstrap-timepicker/css/bootstrap-timepicker.min.css" />
+
+    <!-- Other js -->
 
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
@@ -59,14 +62,23 @@
     <div class="container">
 
       <div class="starter-template">
-        <h1>What's going on around you?</h1>
+        <h1>What's happening?</h1>
       </div>
       
     <div id="map-container" class="col-md-6"></div>
     <!--<script src="http://maps.google.com/maps/api/js?sensor=false"></script>-->
     <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=visualization&sensor=true_or_false">
     </script>
-    
+
+
+    <div class="input-append bootstrap-timepicker">
+            Start: <input id="timepicker1" type="text" class="input-small">
+            <span class="add-on"><i class="icon-time"></i></span>
+    </div>
+    <div class="input-append bootstrap-timepicker">
+            End: <input id="timepicker1" type="text" class="input-small">
+            <span class="add-on"><i class="icon-time"></i></span>
+    </div>
     <!--==============================================================-->
         <script>    
         function init_map() {
@@ -170,5 +182,9 @@
     <script src="../../dist/js/bootstrap.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+    <script type="text/javascript" src="../bower_components/bootstrap-timepicker/js/bootstrap-timepicker.min.js"></script>
+    <script type="text/javascript">
+            $('#timepicker1').timepicker();
+    </script>    
   </body>
 </html>
