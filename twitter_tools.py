@@ -184,7 +184,6 @@ class StreamLogger(tweepy.StreamListener):
             errf.write(str(e))
             errf.close()
             return False
-        pdb.set_trace()
         if data['coordinates']:
             # if we have latitude and longitude, parse it
             pt = self.parseStreamTweet(data)
