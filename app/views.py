@@ -94,7 +94,7 @@ def happening_page():
     # restaurants = []
     # for i in range(len(clusters['X'])):
     #     restaurants.append(dict(lat=clusters['X'][i][0], long=clusters['X'][i][1], clusterid=clusters['labels'][i]))
-    # return render_template('results.html',results=restaurants,user_lat = lat, user_long = lon, faddress = full_add, ncluster = clusters['n_clusters'])
+    # return render_template('index.html',results=restaurants,user_lat = lat, user_long = lon, faddress = full_add, ncluster = clusters['n_clusters'])
 
     # collect tweets from dataframe within radius X of lon,lat
     # unit = 'meters'
@@ -110,7 +110,7 @@ def happening_page():
     for i in range(activity.shape[0]):
         # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
-    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=n_clusters, heatmap=heatmap)
+    return render_template('index.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=n_clusters, heatmap=heatmap)
 
 
     # for i in range(len(diff_lon)):
@@ -124,8 +124,12 @@ def happening_page():
     #         for j in range(nearby.shape[0]):
     #             # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
     #             events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=nearby['clusterNum'][j], tweet=nearby['text'][j]))
-    # return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=heatmap)
+    # return render_template('index.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=heatmap)
     
 @app.route("/testmap")
 def test_maps_page():
     return render_template('testmap.html')
+    
+@app.route("/testmapcal")
+def test_maps_cal_page():
+    return render_template('testmapcal.html')
