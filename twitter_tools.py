@@ -181,6 +181,7 @@ class StreamLogger(tweepy.StreamListener):
             t = datetime.datetime.now()
             errf_name = 'errlog_%s_%d%d%d.txt' % (str(t.date()),t.hour,t.minute,t.second)
             errf = open(errf_name,'w')
+            errf.write(HTMLParser().unescape(data))
             errf.write(str(e))
             errf.close()
             return False
