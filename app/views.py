@@ -3,9 +3,9 @@ from flask import render_template, request
 import pymysql as mdb
 import happening
 import jinja2
-import pdb
-import app.helpers.maps as maps
+# import app.helpers.maps as maps
 import select_data as sd
+import pdb
 
 # db = mdb.connect(user="username",host="localhost",passwd="secretsecret",db="world_innodb",
 #     charset='utf8')
@@ -47,21 +47,6 @@ def happening_page():
     # # request location from user
     # user_location = request.args.get("origin")
     # lat,lon,full_add,data = maps.geocode(user_location)
-
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='sf')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='fishwharf')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='embarc')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='att48')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='pier48')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='attpark')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='mission')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='sf_concerts')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='nobhill')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='mtview_caltrain')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='apple_flint_center')
-    # this_lon, this_lat = sd.set_get_boundBox(area_str='levisstadium')
-
 
     # # night life
     # area_str='sf_concerts'
@@ -133,3 +118,6 @@ def test_maps_page():
 @app.route("/testmapcal")
 def test_maps_cal_page():
     return render_template('testmapcal.html')
+
+if __name__ == "__main__":
+    app.run(debug=True)
