@@ -176,8 +176,12 @@ class StreamLogger(tweepy.StreamListener):
 
     def on_data(self, data):
         try:
-            if data.find('""') > 0:
-                data = data.replace('""','"')
+            if data.find(':"",') > 0:
+                data = data.replace(':"",', ':"nonegiven",')
+            if data.find(':""') > 0:
+                data.replace(':""', ':"\\"')
+            if data.find('"","') > 0:
+                data.replace('"","', '\\"","')
             data = json.loads(HTMLParser().unescape(data))
         except Exception, e:
             t = datetime.datetime.now()
@@ -197,7 +201,7 @@ class StreamLogger(tweepy.StreamListener):
             # write it to disk
             self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s,%s\n' %\
                 (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text'],pic_url))
-        return False
+        return True
 
     #on_event = on_status
     on_event = on_data
