@@ -3,18 +3,54 @@ from flask import render_template, request
 import pymysql as mdb
 import happening
 import jinja2
-# import app.helpers.maps as maps
+import app.helpers.maps as maps
 import select_data as sd
+import numpy as np
 import pdb
 
-# db = mdb.connect(user="username",host="localhost",passwd="secretsecret",db="world_innodb",
-#     charset='utf8')
 
-# @app.route("/happening",methods=['GET'])
+# ROUTING/VIEW FUNCTIONS
 @app.route('/')
 @app.route('/index')
 def happening_page():
+    # Renders index.html.
+    # # request location from user
+    # user_location = request.args.get("origin")
+    # lat,lon,full_add,data = maps.geocode(user_location)
+    
+    events = []
+    this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
+    # for our loc, just set the average
+    user_lon = np.mean(this_lon)
+    user_lat = np.mean(this_lat)
 
+    return render_template('index.html',results=events,user_lat = user_lat, user_lon = user_lon)
+
+
+@app.route("/results",methods=['GET'])
+# @app.route('/results/<entered>', methods=['GET', 'POST'])
+def results():
+    pdb.set_trace()
+    user_location = request.args.get("origin")
+    lat,lon,full_add,data = maps.geocode(user_location)
+    # print lat
+    # print lon
+    # print full_add
+    # print data
+
+    # entered = json.loads(entered)
+    # start_address, categories, yelp_perc  = sanitize_input(entered)
+    # start_lat,start_long = hopper.get_coordinates(start_address)
+    # if not hopper.in_bay_area(start_lat, start_long):
+    #     raise InvalidUsage("Starting Location Not in Bay Area")
+    # try:
+    #     locations = hopper.get_path(start_lat, start_long, yelp_perc, tuple(categories))
+    # except Exception as e:
+    #     raise InvalidUsage(e)
+    # suggestion = hopper.get_recommended(locations)
+    # return render_template('results.html', locations = locations, start = (start_lat,start_long), suggestion=suggestion)
+
+    # Renders index.html.
     # # request location from user
     # user_location = request.args.get("origin")
     # lat,lon,full_add,data = maps.geocode(user_location)
@@ -42,53 +78,32 @@ def happening_page():
     activity, n_clusters, user_lon, user_lat = happening.whatsHappening(area_str=area_str,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
-
-    # activity, n_clusters, user_lon, user_lat, diff_lon, diff_lat = happening.whatsHappening(area_str=area_str,\
-    #     nbins=nbins,nclusters=nclusters,\
-    #     time_now=time_now, time_then=time_then, tz=tz)
-
-    # restaurants = []
-    # for i in range(len(clusters['X'])):
-    #     restaurants.append(dict(lat=clusters['X'][i][0], long=clusters['X'][i][1], clusterid=clusters['labels'][i]))
-    # return render_template('index.html',results=restaurants,user_lat = lat, user_long = lon, faddress = full_add, ncluster = clusters['n_clusters'])
-
-    # collect tweets from dataframe within radius X of lon,lat
-    # unit = 'meters'
-    # radius = 200
-    # radius_increment = 50
-    # radius_max = 1000
-    # min_activity = 200
-    # clusCount = 0
-
+    
     events = []
     heatmap = True
 
     for i in range(activity.shape[0]):
         # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
-    return render_template('index.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=n_clusters, heatmap=heatmap)
+    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=n_clusters, heatmap=heatmap)
 
 
-    # for i in range(len(diff_lon)):
-    #     print 'getting tweets from near: %.6f,%.6f' % (diff_lat[i],diff_lon[i])
-    #     nearby = sd.selectActivityFromPoint(activity,diff_lon[i],diff_lat[i],unit,radius,radius_increment,radius_max,min_activity)
-    #     if nearby.shape[0] > 0:
-    #         clusCount += 1
-    #         print 'clusCount: %d' % (clusCount)
-    #         # # just pass in the first tweet for now
-    #         # events.append(dict(lat=nearby['latitude'][0], long=nearby['longitude'][0], clusterid=i, tweet=nearby['text'][0]))
-    #         for j in range(nearby.shape[0]):
-    #             # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
-    #             events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=nearby['clusterNum'][j], tweet=nearby['text'][j]))
-    # return render_template('index.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=len(diff_lon), heatmap=heatmap)
-    
-@app.route("/testmap")
-def test_maps_page():
-    return render_template('testmap.html')
-    
-@app.route("/testmapcal")
-def test_maps_cal_page():
-    return render_template('testmapcal.html')
 
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.route('/author')
+def contact():
+    # Renders author.html.
+    return render_template('author.html')
+
+# @app.route('/slides')
+# def about():
+#     # Renders slides.html.
+#     return render_template('slides.html')
+
+# @app.errorhandler(404)
+# def page_not_found(error):
+#     return render_template('404.html'), 404
+
+# @app.errorhandler(500)
+# def internal_error(error):
+#     return render_template('500.html'), 500
+
