@@ -102,7 +102,7 @@ function init_map() {
         return var_map
     }
     
-    function maprest(this_map,thislat,thislong,thisID) {
+    function addPinMarker(this_map,thislat,thislong,thisID) {
         var latlong = new google.maps.LatLng(thislat,thislong)
 
         var this_marker = new google.maps.Marker({

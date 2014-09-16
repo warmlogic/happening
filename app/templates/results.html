@@ -130,11 +130,13 @@ function init_map() {
         heatmap.setMap(var_ourmap);
 
         {% for clus in clus_centers %}
-            maprest(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
+            // addCentroidMarker(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
+            addPinMarker(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
+            // addPinMarkerWithInfo(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
         {% endfor %}
     {% else %}
         {% for result in results %}
-            maprest(var_ourmap,{{ result['lat'] }}, {{ result['long'] }}, {{ result['clusterid'] }})
+            addPinMarker(var_ourmap,{{ result['lat'] }}, {{ result['long'] }}, {{ result['clusterid'] }})
         {% endfor %}
     {% endif %}
     
@@ -162,15 +164,50 @@ function init_map() {
         return var_map
     }
     
-    function maprest(this_map,thislat,thislong,thisID) {
+    function addPinMarker(this_map,thislat,thislong,thisID) {
         var latlong = new google.maps.LatLng(thislat,thislong)
 
         var this_marker = new google.maps.Marker({
             position: latlong,
+            map: this_map,
             icon: getMakerImage(thisID+1)
             })
 
-        this_marker.setMap(this_map);
+        // this_marker.setMap(this_map);
+    }
+
+    function addPinMarkerWithInfo(this_map,thislat,thislong,thisID,infoWindow) {
+        // https://github.com/helenaxwang/AveNeue/blob/master/flask_site/app/templates/map_basic.html
+        var latlong = new google.maps.LatLng(thislat,thislong)
+
+        var this_marker = new google.maps.Marker({
+            position: latlong,
+            map: this_map,
+            icon: getMakerImage(thisID+1)
+            })
+
+        var infoWindow = new google.maps.InfoWindow();
+
+        google.maps.event.addListener(this_marker, 'click', function(event) {
+            infoWindow.setPosition(latlong);
+            infoWindow.setContent('TiH' + '<br>' + 'Event');
+            infoWindow.open(this_map,this);
+        });
+    }
+
+    function addCentroidMarker(this_map,thislat,thislong,thisID) {
+        var latlong = new google.maps.LatLng(thislat,thislong)
+
+        var this_marker = new google.maps.Marker({
+            position: latlong,
+            map: this_map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 3
+            },
+            })
+
+        // this_marker.setMap(this_map);
     }
     
 }
