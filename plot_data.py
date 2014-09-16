@@ -7,8 +7,8 @@ import select_data as sd
 import matplotlib.pyplot as plt
 import numpy as np
 import pdb
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
+# from sklearn.cluster import DBSCAN
+# from sklearn.preprocessing import StandardScaler
 # from sklearn import metrics
 # from scipy.spatial.distance import pdist
 
@@ -135,8 +135,8 @@ if show_plot:
 ############
 
 nbins = 50
-show_plot=True
-savefig = True
+show_plot=False
+savefig = False
 # plt = sd.make_hist(df,nbins,show_plot)
 Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot,savefig,'latlong_now_apple')
 Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot,savefig,'latlong_then_apple')
@@ -163,15 +163,9 @@ if show_plot:
     # plt.show()
 
 
-# # diffthresh = 15
-# diffthresh = 100
-# diffmore = np.column_stack(np.where(Hdiff > diffthresh))
-# diffless = np.column_stack(np.where(Hdiff < -diffthresh))
-
-
 # return the top n values, sorted; ascend=biggest first
 n = 5
-diffthresh = 100
+diffthresh = int(np.floor(nbins * 0.75))
 morevals,moreind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='max', return_order='ascend')
 lessvals,lessind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='min', return_order='ascend')
 
@@ -188,6 +182,18 @@ print 'At threshold %d, found %d "events" that have more activity than previous 
 print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
 
+############
+# Cluster
+############
+
+# return activity with cluster numbers after clustering with DBSCAN
+activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,plotData=True)
+
+
+
+#############
+# Select activity using radius from point
+#############
 
 # collect tweets from dataframe within radius X of lon,lat
 unit = 'meters'
@@ -208,10 +214,8 @@ for i in range(len(diffmore_lon)):
 # difftweets_then = sd.selectSpaceFromPoint(activity_then,diffless_lon,diffless_lat)
 
 
-
-
 ############
-# Distance
+# Calculate distance from a given point
 ############
 
 # # calculate distance
@@ -232,165 +236,3 @@ for i in range(len(diffmore_lon)):
 # dist_matrix = (pdist(X,'euclidean')).reshape(X.shape[0],X.shape[0])
 
 
-############
-# Cluster
-############
-
-# import numpy as np
-# from sklearn.cluster import DBSCAN
-# from sklearn.preprocessing import StandardScaler
-# from sklearn import metrics
-
-# concert lat/lon coordinates to UTM?
-
-# Use DBSCAN
-
-# TODO
-
-activity_clustered =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
-
-X = np.vstack((activity_now.longitude, activity_now.latitude)).T
-# X = np.vstack((mon_pm.longitude, mon_pm.latitude)).T
-# X = np.vstack((fri_pm.longitude, fri_pm.latitude)).T
-# X = StandardScaler().fit_transform(X)
-scaler = StandardScaler(copy=True)
-X_centered = scaler.fit(X).transform(X)
-
-# xx, yy = zip(*X)
-# scatter(xx,yy)
-# show()
-
-# eps = 0.00075
-eps = 0.75
-min_samples = 50
-
-# db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-n_clusters_ = 0
-n_tries = 0
-while n_clusters_ == 0:
-    db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
-    # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-    n_tries += 1
-
-    labels = db.labels_
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    if n_clusters_ == 0:
-        eps *= 2.0
-    if n_tries > 5:
-        min_samples /= min_samples
-    elif n_tries > 10:
-        break
-
-print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
-
-if n_clusters_ > 0:
-    binscale = 0.001
-    core_samples = db.core_sample_indices_
-    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-    core_samples_mask[db.core_sample_indices_] = True
-
-    # X = scaler.inverse_transform(X_centered)
-
-    # unique_labels = set(labels)
-    unique_labels = np.unique(labels)
-    # colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
-
-    # go through the found clusters
-    # keepClus = []
-    clusterNums = np.repeat(-1,activity_now.shape[0])
-    # for k, col in zip(unique_labels, colors):
-    for k in unique_labels:
-        print k
-        class_member_mask = (labels == k)
-        if k != -1:
-            # activity_now[class_member_mask]
-            this_lon = X[class_member_mask,0]
-            this_lat = X[class_member_mask,1]
-
-            # keep clusters that contain a hist2d hotspot
-            for i in range(len(diffmore_lon)):
-                if diffmore_lon[i] > (min(X[class_member_mask,0]) - nbins*binscale) and diffmore_lon[i] < (max(X[class_member_mask,0]) + nbins*binscale) and diffmore_lat[i] > (min(X[class_member_mask,1]) - nbins*binscale) and diffmore_lat[i] < (max(X[class_member_mask,1]) + nbins*binscale):
-                    clusterNums[class_member_mask] = k
-                #     keepClus.append(True)
-                # else:
-                #     keepClus.append(False)
-        # else:
-        #     keepClus.append(False)
-        #     # Black used for noise.
-        #     # col = 'k'
-    activity_now['cluster_numbers'] = clusterNums
-
-
-
-
-
-
-# print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
-# print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
-# print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
-# print("Adjusted Rand Index: %0.3f"
-#       % metrics.adjusted_rand_score(labels_true, labels))
-# print("Adjusted Mutual Information: %0.3f"
-#       % metrics.adjusted_mutual_info_score(labels_true, labels))
-# print("Silhouette Coefficient: %0.3f"
-#       % metrics.silhouette_score(X, labels))
-
-###############
-# Plot clusters
-###############
-
-# Plot result
-# unique_labels = set(labels)
-# colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
-fig = plt.figure()
-ax = fig.add_subplot(111)
-for k, col in zip(unique_labels, colors):
-    if k == -1:
-        # Black used for noise.
-        col = 'k'
-
-    class_member_mask = (labels == k)
-
-    xy = X[class_member_mask & ~core_samples_mask]
-    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
-             markeredgecolor='k', markersize=2)
-
-    xy = X[class_member_mask & core_samples_mask]
-    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
-             markeredgecolor='k', markersize=14)
-
-ax.get_xaxis().get_major_formatter().set_useOffset(False)
-ax.get_yaxis().get_major_formatter().set_useOffset(False)
-plt.title('Estimated number of clusters: %d' % n_clusters_)
-ax.set_xlabel('Longitude')
-ax.set_ylabel('Latitude')
-# plt.show()
-
-
-
-# n = 1e5
-# x = y = np.linspace(-5, 5, 100)
-
-# x = np.array(df.latitude)
-# y = np.array(df.longitude)
-
-# X, Y = np.meshgrid(x, y)
-# Z1 = mlab.bivariate_normal(X, Y, 2, 2, 0, 0)
-# Z2 = mlab.bivariate_normal(X, Y, 4, 1, 1, 1)
-# ZD = Z2 - Z1
-# x = X.ravel()
-# y = Y.ravel()
-# z = ZD.ravel()
-# gridsize=30
-# plt.subplot(111)
-
-# # if 'bins=None', then color of each hexagon corresponds directly to its count
-# # 'C' is optional--it maps values to x-y coordinates; if 'C' is None (default) then 
-# # the result is a pure 2D histogram 
-
-# plt.hexbin(x, y, C=z, gridsize=gridsize, cmap=cm.jet, bins=1000)
-# plt.axis([x.min(), x.max(), y.min(), y.max()])
-
-# cb = plt.colorbar()
-# cb.set_label('mean value')
-# plt.show()
