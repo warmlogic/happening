@@ -260,13 +260,16 @@ def fullprint(*args, **kwargs):
     numpy.set_printoptions(**opt)
 
 
-def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
+def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,plotData=False):
     X = np.vstack((activity_now.longitude, activity_now.latitude)).T
-    scaler = StandardScaler(copy=True)
-    X_centered = scaler.fit(X).transform(X)
+    if centerData:
+        scaler = StandardScaler(copy=True)
+        X_centered = scaler.fit(X).transform(X)
+        eps = 0.75
+    else:
+        X_centered = X
+        eps = 0.00075
 
-    # eps = 0.00075
-    eps = 0.75
     min_samples = 50
 
     n_clusters_ = 0
@@ -292,8 +295,6 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
         core_samples = db.core_sample_indices_
         core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
         core_samples_mask[db.core_sample_indices_] = True
-
-        # X = scaler.inverse_transform(X_centered)
 
         unique_labels = np.unique(labels)
 
@@ -336,9 +337,47 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
             #     # col = 'k'
         activity_now['clusterNum'] = clusterNums
         n_clusters_real = sum(keepClus)
-        return activity_now, n_clusters_real, cluster_centers
+
+        if plotData:
+            colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            for k, col in zip(unique_labels, colors):
+                if k == -1:
+                    # Black used for noise.
+                    col = 'k'
+
+                class_member_mask = (labels == k)
+
+                xy = X[class_member_mask & ~core_samples_mask]
+                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+                         markeredgecolor='k', markersize=2)
+
+                xy = X[class_member_mask & core_samples_mask]
+                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+                         markeredgecolor='k', markersize=14)
+
+            ax.get_xaxis().get_major_formatter().set_useOffset(False)
+            ax.get_yaxis().get_major_formatter().set_useOffset(False)
+            plt.title('Estimated number of clusters: %d' % n_clusters_)
+            ax.set_xlabel('Longitude')
+            ax.set_ylabel('Latitude')
+            # plt.show()
+
+            # print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
+            # print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
+            # print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
+            # print("Adjusted Rand Index: %0.3f"
+            #       % metrics.adjusted_rand_score(labels_true, labels))
+            # print("Adjusted Mutual Information: %0.3f"
+            #       % metrics.adjusted_mutual_info_score(labels_true, labels))
+            # print("Silhouette Coefficient: %0.3f"
+            #       % metrics.silhouette_score(X_centered, labels))
     else:
-        return activity_now, 0, []
+        n_clusters_real = 0
+        cluster_centers = []
+
+    return activity_now, n_clusters_real, cluster_centers
 
 
 # if __name__ == '__main__':
