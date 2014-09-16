@@ -72,7 +72,7 @@ def whatsHappening(area_str='apple_flint_center',\
     Hdiff = Hnow - Hprev
 
     # return the top nclusters values, sorted; ascend=biggest first
-    diffthresh = nbins * 0.75
+    int(np.floor(nbins * 0.75))
     morevals,moreind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='max', return_order='ascend')
     lessvals,lessind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='min', return_order='ascend')
 
