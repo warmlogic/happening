@@ -63,7 +63,7 @@
         </div>
 
 
-        <div class="col-md-4">
+<!--         <div class="col-md-4">
         <div class="container" style="width: 300px;">
             <span>Start:</span>
             <div class="form-group">
@@ -81,7 +81,7 @@
             </div>
         </div>
         </div>
-
+ -->
 
         <!--==============================================================-->
         <script>
@@ -172,43 +172,42 @@
     <script src="../static/js/bootstrap.min.js"></script>
 
     <!-- Moment.js -->
-    <script src="../static/js/moment.js"></script>
+    <!-- <script src="../static/js/moment.js"></script>-->
     <!-- Bootstrap Datetimepicker -->
-    <script src="../static/js/bootstrap-datetimepicker.min.js"></script>
+    <!--<script src="../static/js/bootstrap-datetimepicker.min.js"></script>-->
     <!-- initialize the pickers -->
+<!--
     <script type="text/javascript">
         $(function () {
-            $('#start').datetimepicker({
-                pickTime: true,
-                useCurrent: true,
-                maxDate: new Date()
-            });
-            $('#stop').datetimepicker({
-                pickTime: true,
-                useCurrent: true,
-                maxDate: new Date()
-            });
+            $('#start').datetimepicker()
+            $('#stop').datetimepicker()
+        //     $('#start').datetimepicker({
+        //         pickTime: true,
+        //         useCurrent: true,
+        //         showToday: true,
+        //         language : 'en',
+        //         maxDate: moment()
+        //     });
+        //     $('#stop').datetimepicker({
+        //         pickTime: true,
+        //         useCurrent: true,
+        //         showToday: true,
+        //         language : 'en',
+        //         maxDate: moment()
+        //     });
         });
-    </script>
-
-<!--    <script type="text/javascript">
-    $(function () {
-        $('#datetimepicker8').datetimepicker();
-        $('#datetimepicker9').datetimepicker();
-        $("#datetimepicker8").on("dp.change",function (e) {
-            alert("1");
-            $('#datetimepicker9').data("DateTimePicker").setMinDate(e.date);
+        var now = moment();
+        // $('#stop').data("DateTimePicker").setDate();
+        console.log(now);
+        // $("#start").data("DateTimePicker").setMinDate(new Date("September 05, 2014"));
+        $('#start').on('change.dp', function() {
+        var time_start = $('#start').data("DateTimePicker").getDate();
+        // alert (time_start); // this is the new change and works perfect 
         });
-        $("#datetimepicker9").on("dp.change",function (e) {
-            alert("2");
-            $('#datetimepicker8').data("DateTimePicker").setMaxDate(e.date);
+        $('#stop').on('change.dp', function() {
+        var time_end = $('#end').data("DateTimePicker").getDate();
+        // alert (time_end); // this is the new change and works perfect 
         });
-
-        $("#datetimepicker9").on("change.dp",function (e) {
-            alert("3");
-            $('#datetimepicker8').data("DateTimePicker").setMaxDate(e.date);
-        });
-    });
     </script>
 -->
 
