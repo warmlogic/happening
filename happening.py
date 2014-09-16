@@ -83,10 +83,9 @@ def whatsHappening(area_str='apple_flint_center',\
     print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
     print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
-    activity_clustered, n_clusters =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
-    print n_clusters
+    activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
 
-    return activity_clustered, n_clusters, user_lon, user_lat
+    return activity_clustered, n_clusters, cluster_centers, user_lon, user_lat
     # return activity_now, n_clusters, user_lon, user_lat, diffmore_lon, diffmore_lat
 
 def main():

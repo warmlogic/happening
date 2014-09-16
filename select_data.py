@@ -299,29 +299,46 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
 
         # go through the found clusters
         keepClus = []
+        cluster_centers = []
         clusterNums = np.repeat(-1,activity_now.shape[0])
         # for k, col in zip(unique_labels, colors):
         for k in unique_labels:
-            class_member_mask = (labels == k)
             if k != -1:
-                # activity_now[class_member_mask]
-                this_lon = X[class_member_mask,0]
-                this_lat = X[class_member_mask,1]
+                # if in a cluster, set a mask for this cluster
+                class_member_mask = (labels == k)
+
+                # get the lat and long for this cluster
+                cluster_lon = X[class_member_mask,0]
+                cluster_lat = X[class_member_mask,1]
+
+                # default setting for keeping the cluster
+                keepThisClus = False
 
                 # keep clusters that contain a hist2d hotspot
                 for i in range(len(diffmore_lon)):
-                    if diffmore_lon[i] > (min(X[class_member_mask,0]) - nbins*binscale) and diffmore_lon[i] < (max(X[class_member_mask,0]) + nbins*binscale) and diffmore_lat[i] > (min(X[class_member_mask,1]) - nbins*binscale) and diffmore_lat[i] < (max(X[class_member_mask,1]) + nbins*binscale):
-                        clusterNums[class_member_mask] = k
-                        keepClus.append(True)
-                    else:
-                        keepClus.append(False)
+                    if diffmore_lon[i] > (min(cluster_lon) - nbins*binscale) and diffmore_lon[i] < (max(cluster_lon) + nbins*binscale) and diffmore_lat[i] > (min(cluster_lat) - nbins*binscale) and diffmore_lat[i] < (max(cluster_lat) + nbins*binscale):
+                        keepThisClus = True
+                        break
+
+                keepClus.append(keepThisClus)
+                if keepThisClus:
+                    # fill in the cluster lable vector
+                    clusterNums[class_member_mask] = k
+
+                    # set the mean latitude and longitude
+                    mean_lon = np.mean(X[core_samples_mask & class_member_mask,0])
+                    mean_lat = np.mean(X[core_samples_mask & class_member_mask,1])
+                    cluster_centers.append([mean_lon,mean_lat,k])
+
             # else:
             #     keepClus.append(False)
             #     # Black used for noise.
             #     # col = 'k'
         activity_now['clusterNum'] = clusterNums
         n_clusters_real = sum(keepClus)
-        return activity_now, n_clusters_real
+        return activity_now, n_clusters_real, cluster_centers
+    else:
+        return activity_now, 0, []
 
 
 # if __name__ == '__main__':

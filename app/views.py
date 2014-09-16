@@ -30,7 +30,7 @@ def happening_page():
 @app.route("/results",methods=['GET'])
 # @app.route('/results/<entered>', methods=['GET', 'POST'])
 def results():
-    pdb.set_trace()
+    # pdb.set_trace()
     user_location = request.args.get("origin")
     lat,lon,full_add,data = maps.geocode(user_location)
     # print lat
@@ -75,17 +75,19 @@ def results():
     nbins = 50
     nclusters = 5
 
-    activity, n_clusters, user_lon, user_lat = happening.whatsHappening(area_str=area_str,\
+    activity, n_clusters, cluster_centers, user_lon, user_lat = happening.whatsHappening(area_str=area_str,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
     
     events = []
+    clus_centers = []
     heatmap = True
-
     for i in range(activity.shape[0]):
         # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
-    return render_template('results.html',results=events,user_lat = user_lat, user_lon = user_lon, ncluster=n_clusters, heatmap=heatmap)
+    for clus in cluster_centers:
+        clus_centers.append(dict(lat=clus[1], long=clus[0], clusterid=int(clus[2])))
+    return render_template('results.html', results=events, ncluster=n_clusters, clus_centers=clus_centers, user_lat = user_lat, user_lon = user_lon, heatmap=heatmap)
 
 
 

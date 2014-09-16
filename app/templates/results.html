@@ -128,6 +128,10 @@ function init_map() {
             data: pointArray
         });
         heatmap.setMap(var_ourmap);
+
+        {% for clus in clus_centers %}
+            maprest(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
+        {% endfor %}
     {% else %}
         {% for result in results %}
             maprest(var_ourmap,{{ result['lat'] }}, {{ result['long'] }}, {{ result['clusterid'] }})
