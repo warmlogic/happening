@@ -175,13 +175,26 @@ class StreamLogger(tweepy.StreamListener):
         return True
 
     def on_data(self, data):
-        data = json.loads(HTMLParser().unescape(data))
+        try:
+            data = json.loads(data)
+        except Exception, e:
+            t = datetime.datetime.now()
+            errf_name = 'errlog_%s_%d%d%d.txt' % (str(t.date()),t.hour,t.minute,t.second)
+            errf = open(errf_name,'w')
+            errf.write(data)
+            errf.write(str(e))
+            errf.close()
+            return True
         if data['coordinates']:
             # if we have latitude and longitude, parse it
             pt = self.parseStreamTweet(data)
+            try:
+                pic_url = data['entities']['media'][0]['media_url']
+            except:
+                pic_url = ''
             # write it to disk
-            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s\n' %\
-                (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text']))
+            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s,%s\n' %\
+                (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text'],pic_url))
         return True
 
     #on_event = on_status

@@ -7,6 +7,8 @@ also plots density
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
 import pdb
 
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
@@ -103,8 +105,8 @@ def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius
     nFound = 0
     while nFound <= min_activity:
         distance_to_user = compute_distance_from_point(this_lon, this_lat, df.longitude, df.latitude, unit)
-        found_activity = df[(df.distance <= radius)]
-        nFound += found_activity.shape[0]
+        within_range = distance_to_user <= radius
+        nFound = sum(within_range)
         if nFound < min_activity:
             radius += radius_increment
             print 'Only found %d tweets, increasing radius by %d to %d %s and searching again' % (nFound,radius_increment,radius,unit)
@@ -112,8 +114,9 @@ def selectActivityFromPoint(df,this_lon,this_lat,unit='meters',radius=100,radius
             print 'Radius larger than %d %s, stopping' % (radius_max,unit)
             radius -= radius_increment
             break
-    # df['distance'] = distance_to_user
-    df.loc[:,'distance'] = distance_to_user
+    df['distance'] = distance_to_user
+    # df.loc[:,'distance'] = distance_to_user
+    found_activity = df[(df.distance <= radius)]
     print 'returning %d tweets from a radius of %d %s.' % (nFound,radius,unit)
     return found_activity
 
@@ -148,9 +151,7 @@ def selectUser(df,rmnull=True):
         df = df[hasUser]
     return df
 
-def make_hist(df,nbins=200,show_plot=False):
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+def make_hist(df,nbins=200,show_plot=False,savefig=False,figname='latlong_hist_plot'):
     H,xedges,yedges = np.histogram2d(np.array(df.longitude),np.array(df.latitude),bins=nbins)
     H = np.rot90(H)
     H = np.flipud(H)
@@ -158,6 +159,8 @@ def make_hist(df,nbins=200,show_plot=False):
     if show_plot:
         Hmasked = np.ma.masked_where(H==0,H) # mask pixels
 
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
         plt.pcolormesh(xedges,yedges,Hmasked)
         # plt.title('Density of tweets (%d bins)' % nbins)
         ax.set_title('Density of tweets (%d bins)' % nbins)
@@ -169,7 +172,11 @@ def make_hist(df,nbins=200,show_plot=False):
         cb.set_label('Count')
         # ax.get_xaxis().set_visible(False)
         # ax.get_yaxis().set_visible(False)
-    return plt, H, xedges, yedges
+        if savefig:
+            figname = 'data/' + figname + '.png'
+            print 'saving figure to ' + figname
+            plt.savefig(figname, bbox_inches='tight')
+    return H, xedges, yedges
 
 def choose_n_sorted(arr, n, srt='max', min_val=None, return_order='descend'):
     if srt == 'max':
@@ -189,15 +196,133 @@ def choose_n_sorted(arr, n, srt='max', min_val=None, return_order='descend'):
         idx = idx[keepThese]
     return values, idx
 
-# def n_min(arr, n):
-#     indices = arr.ravel().argsort()[::-1][-n:]
-#     indices = (np.unravel_index(i, arr.shape) for i in indices)
-#     values = [arr[i] for i in indices]
-#     idx = [(i) for i in indices]
-#     if order == 'ascend':
-#         values.reverse()
-#         idx.reverse()
-#     return values, idx
+def set_get_boundBox(area_str='sf'):
+    '''
+    Set and return coordinates for the bounding box of interest.
+    Default is 'sf'.
+    '''
+
+    boundBox = {}
+
+    boundBox['bayarea_lon'] = [-122.53,-121.8]
+    boundBox['bayarea_lat'] = [36.94,38.0]
+
+    boundBox['sf_lon'] = [-122.5686,-122.375]
+    boundBox['sf_lat'] = [37.6681,37.8258]
+
+    boundBox['fishwharf_lon'] = [-122.4231,-122.4076]
+    boundBox['fishwharf_lat'] = [37.8040,37.8116]
+
+    boundBox['embarc_lon'] = [-122.4089,-122.3871]
+    boundBox['embarc_lat'] = [37.7874,37.7998]
+
+    boundBox['att48_lon'] = [-122.3977,-122.3802]
+    boundBox['att48_lat'] = [37.7706,37.7840]
+
+    boundBox['pier48_lon'] = [-122.3977,-122.3838]
+    boundBox['pier48_lat'] = [37.7706,37.7765]
+
+    boundBox['attpark_lon'] = [-122.3977,-122.3802]
+    boundBox['attpark_lat'] = [37.7765,37.7840]
+
+    boundBox['levisstadium_lon'] = [-122.9914,-122.9465]
+    boundBox['levisstadium_lat'] = [37.3777,37.4173]
+
+    boundBox['mission_lon'] = [-122.4286,-122.3979]
+    boundBox['mission_lat'] = [37.7481,37.7693]
+
+    boundBox['sf_concerts_lon'] = [-122.4258,-122.4000]
+    boundBox['sf_concerts_lat'] = [37.7693,37.7926]
+
+    boundBox['nobhill_lon'] = [-122.4322,-122.3976]
+    boundBox['nobhill_lat'] = [37.7845,37.8042]
+
+    boundBox['mtview_caltrain_lon'] = [-122.0832,-122.0743]
+    boundBox['mtview_caltrain_lat'] = [37.3897,37.3953]
+
+    boundBox['apple_flint_center_lon'] = [-122.0550,-122.0226]
+    boundBox['apple_flint_center_lat'] = [37.3121,37.3347]
+
+    lon_str = '%s_lon' % area_str
+    lat_str = '%s_lat' % area_str
+
+    this_lon = boundBox[lon_str]
+    this_lat = boundBox[lat_str]
+
+    return this_lon, this_lat
+
+def fullprint(*args, **kwargs):
+    from pprint import pprint
+    import numpy
+    opt = numpy.get_printoptions()
+    numpy.set_printoptions(threshold='nan')
+    pprint(*args, **kwargs)
+    numpy.set_printoptions(**opt)
+
+
+def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
+    X = np.vstack((activity_now.longitude, activity_now.latitude)).T
+    scaler = StandardScaler(copy=True)
+    X_centered = scaler.fit(X).transform(X)
+
+    # eps = 0.00075
+    eps = 0.75
+    min_samples = 50
+
+    n_clusters_ = 0
+    n_tries = 0
+    while n_clusters_ == 0:
+        db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
+        # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+        n_tries += 1
+
+        labels = db.labels_
+        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+        if n_clusters_ == 0:
+            eps *= 2.0
+        if n_tries > 5:
+            min_samples /= min_samples
+        elif n_tries > 10:
+            break
+
+    print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
+
+    if n_clusters_ > 0:
+        binscale = 0.001
+        core_samples = db.core_sample_indices_
+        core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+        core_samples_mask[db.core_sample_indices_] = True
+
+        # X = scaler.inverse_transform(X_centered)
+
+        unique_labels = np.unique(labels)
+
+        # go through the found clusters
+        keepClus = []
+        clusterNums = np.repeat(-1,activity_now.shape[0])
+        # for k, col in zip(unique_labels, colors):
+        for k in unique_labels:
+            class_member_mask = (labels == k)
+            if k != -1:
+                # activity_now[class_member_mask]
+                this_lon = X[class_member_mask,0]
+                this_lat = X[class_member_mask,1]
+
+                # keep clusters that contain a hist2d hotspot
+                for i in range(len(diffmore_lon)):
+                    if diffmore_lon[i] > (min(X[class_member_mask,0]) - nbins*binscale) and diffmore_lon[i] < (max(X[class_member_mask,0]) + nbins*binscale) and diffmore_lat[i] > (min(X[class_member_mask,1]) - nbins*binscale) and diffmore_lat[i] < (max(X[class_member_mask,1]) + nbins*binscale):
+                        clusterNums[class_member_mask] = k
+                        keepClus.append(True)
+                    else:
+                        keepClus.append(False)
+            # else:
+            #     keepClus.append(False)
+            #     # Black used for noise.
+            #     # col = 'k'
+        activity_now['clusterNum'] = clusterNums
+        n_clusters_real = sum(keepClus)
+        return activity_now, n_clusters_real
+
 
 # if __name__ == '__main__':
 #     import plot_data

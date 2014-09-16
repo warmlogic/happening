@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 from sklearn.cluster import DBSCAN
-# from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 # from sklearn import metrics
 # from scipy.spatial.distance import pdist
 
@@ -24,8 +24,7 @@ plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 # Read the data
 ############
 
-# latlong = open("data/latlong_combined.csv")
-latlong = open("data/latlong_userdategeo_combined.csv")
+latlong = open("./data/latlong_userdategeo_combined.csv")
 
 print 'Reading locations...'
 # df = pd.read_csv(latlong,header=None,names=['longitude', 'latitude'])
@@ -53,71 +52,21 @@ df = df.tz_localize('UTC').tz_convert('US/Pacific')
 
 # choose only coordinates in our bounding box of interest
 
-bayarea_lon = [-122.53,-121.8]
-bayarea_lat = [36.94,38.0]
+area_str='attpark'
+# area_str='apple_flint_center'
+# area_str='bayarea'
+# area_str='sf'
+# area_str='fishwharf'
+# area_str='embarc'
+# area_str='att48'
+# area_str='pier48'
+# area_str='mission'
+# area_str='sf_concerts'
+# area_str='nobhill'
+# area_str='mtview_caltrain'
+# area_str='levisstadium'
 
-sf_lon = [-122.5686,-122.375]
-sf_lat = [37.6681,37.8258]
-
-fishwharf_lon = [-122.4231,-122.4076]
-fishwharf_lat = [37.8040,37.8116]
-
-embarc_lon = [-122.4089,-122.3871]
-embarc_lat = [37.7874,37.7998]
-
-att48_lon = [-122.3977,-122.3802]
-att48_lat = [37.7706,37.7840]
-
-pier48_lon = [-122.3977,-122.3838]
-pier48_lat = [37.7706,37.7765]
-
-attpark_lon = [-122.3977,-122.3802]
-attpark_lat = [37.7765,37.7840]
-
-levisstadium_lon = [-122.9914,-122.9465]
-levisstadium_lat = [37.3777,37.4173]
-
-mission_lon = [-122.4286,-122.3979]
-mission_lat = [37.7481,37.7693]
-
-sf_concerts_lon = [-122.4258,-122.4000]
-sf_concerts_lat = [37.7693,37.7926]
-
-nobhill_lon = [-122.4322,-122.3976]
-nobhill_lat = [37.7845,37.8042]
-
-mtview_caltrain_lon = [-122.0832,-122.0743]
-mtview_caltrain_lat = [37.3897,37.3953]
-
-apple_flint_center_lon = [-122.0550,-122.0226]
-apple_flint_center_lat = [37.3121,37.3347]
-
-# this_lon = bayarea_lon;
-# this_lat = bayarea_lat;
-
-# this_lon = sf_lon
-# this_lat = sf_lat
-
-this_lon = attpark_lon
-this_lat = attpark_lat
-
-# this_lon = mission_lon
-# this_lat = mission_lat
-
-# this_lon = sf_concerts_lon
-# this_lat = sf_concerts_lat
-
-# this_lon = fishwharf_lon
-# this_lat = fishwharf_lat
-
-# this_lon = nobhill_lon
-# this_lat = nobhill_lat
-
-# this_lon = mtview_caltrain_lon
-# this_lat = mtview_caltrain_lat
-
-# this_lon = apple_flint_center_lon
-# this_lat = apple_flint_center_lat
+this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
 
 geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 
@@ -136,59 +85,64 @@ geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 # geo_activity = sd.selectTime(geo_activity,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
 
 # # night life
-# sinceDatetime_now = '2014-09-05 17:00:00'
-# untilDatetime_now = '2014-09-06 05:00:00'
-# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-# sinceDatetime_prev = '2014-09-08 17:00:00'
-# untilDatetime_prev = '2014-09-09 05:00:00'
-# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+# time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
+# time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
 
 # # apple keynote
-# sinceDatetime_now = '2014-09-09 08:00:00'
-# untilDatetime_now = '2014-09-09 15:00:00'
-# activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-# sinceDatetime_prev = '2014-09-08 08:00:00'
-# untilDatetime_prev = '2014-09-08 15:00:00'
-# activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+# time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
+# time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
 
 # giants vs diamondbacks
-sinceDatetime_now = '2014-09-09 17:00:00'
-untilDatetime_now = '2014-09-09 23:30:00'
-activity_now = geo_activity.ix[sinceDatetime_now:untilDatetime_now]
-sinceDatetime_prev = '2014-09-08 17:00:00'
-untilDatetime_prev = '2014-09-08 23:30:00'
-activity_prev = geo_activity.ix[sinceDatetime_prev:untilDatetime_prev]
+time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
+time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+
+activity_now = geo_activity.ix[time_now[0]:time_now[1]]
+activity_then = geo_activity.ix[time_then[0]:time_then[1]]
+
+print 'Now: Selecting %d entries from %s to %s' % (activity_now.shape[0],time_now[0],time_now[1])
+print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_then[0],time_then[1])
 
 ###########
 # plot over time
 ###########
 
-# tweetlocs = df.ix[:, ['longitude','latitude']]
-tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
-tweetlocs_prev = activity_prev.ix[:, ['longitude','latitude']].resample('60min', how='count')
+show_plot=True
+savefig = True
+if show_plot:
+    # tweetlocs = df.ix[:, ['longitude','latitude']]
+    tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
+    tweetlocs_then = activity_then.ix[:, ['longitude','latitude']].resample('60min', how='count')
 
-# volume = df.resample('60min', how='count')
-fig, ax = plt.subplots()
-tweetlocs_now.plot(kind='line',style='b')
-tweetlocs_prev.plot(kind='line',style='r')
-fig.autofmt_xdate()
-# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    # volume = df.resample('60min', how='count')
+    fig, ax = plt.subplots()
+    tweetlocs_now.plot(kind='line',style='b')
+    tweetlocs_then.plot(kind='line',style='r')
+    fig.autofmt_xdate()
+    # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-# ax.set_xlim(['17:00:00','05:00:00'])
+    if savefig:
+        figname = 'data/activity_over_time_' + area_str + '.png'
+        print 'saving figure to ' + figname
+        plt.savefig(figname, bbox_inches='tight')
+    # plt.show()
+
+
+# # ax.set_xlim(['17:00:00','05:00:00'])
 
 
 ############
 # Plot heat map and difference
 ############
 
-nbins = 100
+nbins = 50
 show_plot=True
-savefig = False
+savefig = True
 # plt = sd.make_hist(df,nbins,show_plot)
-plt, Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
-plt, Hprev, xedges, yedges = sd.make_hist(activity_prev,nbins,show_plot)
-
+Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot,savefig,'latlong_now_apple')
+Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot,savefig,'latlong_then_apple')
 Hdiff = Hnow - Hprev
+
+# Hweight = Hnow ./ Hprev
 
 if show_plot:
     fig = plt.figure()
@@ -203,7 +157,7 @@ if show_plot:
     cb.set_label('Count')
 
     if savefig:
-        figname = 'data/latlong_plot.png'
+        figname = 'data/latlong_diff_apple.png'
         print 'saving figure to ' + figname
         plt.savefig(figname, bbox_inches='tight')
     # plt.show()
@@ -215,10 +169,11 @@ if show_plot:
 # diffless = np.column_stack(np.where(Hdiff < -diffthresh))
 
 
-# return the top x values, sorted; ascend=biggest first
+# return the top n values, sorted; ascend=biggest first
+n = 5
 diffthresh = 100
-morevals,moreind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='max', return_order='ascend')
-lessvals,lessind = sd.choose_n_sorted(Hdiff, 5, min_val=diffthresh, srt='min', return_order='ascend')
+morevals,moreind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='max', return_order='ascend')
+lessvals,lessind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='min', return_order='ascend')
 
 # bigcoord = zip(xedges[bigdiff[:,0]], yedges[bigdiff[:,1]])
 # diffmore_lon = xedges[diffmore[:,0]]
@@ -240,14 +195,17 @@ radius = 200
 radius_increment = 50
 radius_max = 1000
 min_activity = 200
-for point in range(len(diffmore_lon)):
-    print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[point],diffmore_lon[point])
-    now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[point],diffmore_lat[point],unit,radius,radius_increment,radius_max,min_activity)
-    # pdb.set_trace()
+events = []
+for i in range(len(diffmore_lon)):
+    print 'getting tweets from near: %.6f,%.6f' % (diffmore_lat[i],diffmore_lon[i])
+    now_nearby = sd.selectActivityFromPoint(activity_now,diffmore_lon[i],diffmore_lat[i],unit,radius,radius_increment,radius_max,min_activity)
+    if now_nearby.shape[0] > 0:
+        # events.append(dict(lat=now_nearby['latitude'][0], long=now_nearby['longitude'][0], clusterid=i, tweet=now_nearby['text'][0]))
+        for j in range(now_nearby.shape[0]):
+            events.append(dict(lat=now_nearby['latitude'][j], long=now_nearby['longitude'][j], clusterid=i, tweet=now_nearby['text'][j]))
 
-
-difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
-difftweets_prev = sd.selectSpaceFromPoint(activity_prev,diffless_lon,diffless_lat)
+# difftweets_now = sd.selectSpaceFromPoint(activity_now,diffmore_lon,diffmore_lat)
+# difftweets_then = sd.selectSpaceFromPoint(activity_then,diffless_lon,diffless_lat)
 
 
 
@@ -287,23 +245,85 @@ difftweets_prev = sd.selectSpaceFromPoint(activity_prev,diffless_lon,diffless_la
 
 # Use DBSCAN
 
-X = np.vstack((df.longitude, df.latitude)).T
-X = np.vstack((mon_pm.longitude, mon_pm.latitude)).T
-X = np.vstack((fri_pm.longitude, fri_pm.latitude)).T
+# TODO
+
+activity_clustered =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
+
+X = np.vstack((activity_now.longitude, activity_now.latitude)).T
+# X = np.vstack((mon_pm.longitude, mon_pm.latitude)).T
+# X = np.vstack((fri_pm.longitude, fri_pm.latitude)).T
 # X = StandardScaler().fit_transform(X)
+scaler = StandardScaler(copy=True)
+X_centered = scaler.fit(X).transform(X)
 
 # xx, yy = zip(*X)
 # scatter(xx,yy)
 # show()
 
-db = DBSCAN(eps=0.0001, min_samples=20).fit(X)
-core_samples = db.core_sample_indices_
-core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-core_samples_mask[db.core_sample_indices_] = True
+# eps = 0.00075
+eps = 0.75
+min_samples = 50
 
-labels = db.labels_
-n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-print('Estimated number of clusters: %d' % n_clusters_)
+# db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+n_clusters_ = 0
+n_tries = 0
+while n_clusters_ == 0:
+    db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
+    # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+    n_tries += 1
+
+    labels = db.labels_
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    if n_clusters_ == 0:
+        eps *= 2.0
+    if n_tries > 5:
+        min_samples /= min_samples
+    elif n_tries > 10:
+        break
+
+print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
+
+if n_clusters_ > 0:
+    binscale = 0.001
+    core_samples = db.core_sample_indices_
+    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+    core_samples_mask[db.core_sample_indices_] = True
+
+    # X = scaler.inverse_transform(X_centered)
+
+    # unique_labels = set(labels)
+    unique_labels = np.unique(labels)
+    # colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+
+    # go through the found clusters
+    # keepClus = []
+    clusterNums = np.repeat(-1,activity_now.shape[0])
+    # for k, col in zip(unique_labels, colors):
+    for k in unique_labels:
+        print k
+        class_member_mask = (labels == k)
+        if k != -1:
+            # activity_now[class_member_mask]
+            this_lon = X[class_member_mask,0]
+            this_lat = X[class_member_mask,1]
+
+            # keep clusters that contain a hist2d hotspot
+            for i in range(len(diffmore_lon)):
+                if diffmore_lon[i] > (min(X[class_member_mask,0]) - nbins*binscale) and diffmore_lon[i] < (max(X[class_member_mask,0]) + nbins*binscale) and diffmore_lat[i] > (min(X[class_member_mask,1]) - nbins*binscale) and diffmore_lat[i] < (max(X[class_member_mask,1]) + nbins*binscale):
+                    clusterNums[class_member_mask] = k
+                #     keepClus.append(True)
+                # else:
+                #     keepClus.append(False)
+        # else:
+        #     keepClus.append(False)
+        #     # Black used for noise.
+        #     # col = 'k'
+    activity_now['cluster_numbers'] = clusterNums
+
+
+
+
+
 
 # print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
 # print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
@@ -320,8 +340,8 @@ print('Estimated number of clusters: %d' % n_clusters_)
 ###############
 
 # Plot result
-unique_labels = set(labels)
-colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+# unique_labels = set(labels)
+# colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
 fig = plt.figure()
 ax = fig.add_subplot(111)
 for k, col in zip(unique_labels, colors):
