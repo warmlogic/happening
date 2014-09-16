@@ -176,18 +176,12 @@ class StreamLogger(tweepy.StreamListener):
 
     def on_data(self, data):
         try:
-            if data.find(':"",') > 0:
-                data = data.replace(':"",', ':"nonegiven",')
-            if data.find(':""') > 0:
-                data.replace(':""', ':"\\"')
-            if data.find('"","') > 0:
-                data.replace('"","', '\\"","')
-            data = json.loads(HTMLParser().unescape(data))
+            data = json.loads(data)
         except Exception, e:
             t = datetime.datetime.now()
             errf_name = 'errlog_%s_%d%d%d.txt' % (str(t.date()),t.hour,t.minute,t.second)
             errf = open(errf_name,'w')
-            errf.write(HTMLParser().unescape(data))
+            errf.write(data)
             errf.write(str(e))
             errf.close()
             return True
