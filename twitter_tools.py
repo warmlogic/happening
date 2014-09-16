@@ -190,7 +190,7 @@ class StreamLogger(tweepy.StreamListener):
             errf.write(HTMLParser().unescape(data))
             errf.write(str(e))
             errf.close()
-            return False
+            return True
         if data['coordinates']:
             # if we have latitude and longitude, parse it
             pt = self.parseStreamTweet(data)
