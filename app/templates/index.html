@@ -12,6 +12,8 @@
         <p class="lead">Find current social activity that stands out from the background.</p>
     </div>
 
+    <div class ="col-sm-12">
+
     <div id="map-container" class="col-md-6">
     <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places,visualization&sensor=true_or_false">
     </script>
@@ -20,7 +22,9 @@
     <!-- The location entry field   -->
     <div class ="col-sm-6">
         <div class="well">
-            <h3>Where to look?</h3>
+            <div class="thumbnail">
+              <div class="caption">
+            <h3 style="color: #f74f00">Where to look?</h3>
             <div class="row">       
                 <form role="form" action="/results" onsubmit='show_loading()' method="GET">
                 <div class="col-sm-9">
@@ -30,27 +34,51 @@
                     </div>
                 </div>
                 <div class="col-sm-3">
-                    <button type="submit_loc" name="query" class="btn btn-large btn-success">Submit</button>
+                    <button type="submit_loc" style="background-color: #f74f00; color: white;" name="query" class="btn btn-default">Continue</button>
                 </div>
                 </form>
             </div>
+            </div>
+            </div>
 
-            <h3>Predefined Events</h3>
-            <div class="col-sm-9">
-                <select id="predefine_loc" class="btn btn-primary form-control input-sm">
-                    <option selected="selected">Apple Keynote - Sep 9, 2014</option>
-                    <option>Diamondbacks at Giants - Sep 9, 2014</option>
+            <!-- <div class="col-md-4"> -->
+            <div class="thumbnail">
+              <div class="caption">
+                <h3 style="color: #f74f00">Examples</h3>
+                <p>Or choose from these examples just to explore</p>
+                    <form action="/choose_examples" method="POST">
+                        <div class="form-group">
+                            <select class="form-control" name="athlete_id">
+                            {% for event in examples %}
+                                <option value="{{ event["id"] }}">{{ event["name"] }}</option>
+                            {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit_predef" style="background-color: #f74f00; color: white;" class="btn btn-default">Continue</button>
+                    </form>
+
+            <!-- <div class="col-sm-9"> -->
+                <!-- <select id="predefine_loc" class="btn btn-primary form-control input-sm", name="how it is passed back"> -->
+                    <!-- <option value="apple" selected="selected">Apple Keynote - Sep 9, 2014</option> -->
+                    <!-- <option>Diamondbacks at Giants - Sep 9, 2014</option> -->
                     <!-- <option>Another 1</option> -->
                     <!-- <option>Another 2</option> -->
                     <!-- <option>Another 3</option> -->
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <button id="submit_predef" type="button" class="btn btn-primary btn-block input-sm">Submit</button>
+                <!-- </select> -->
+            <!-- </div> -->
+            <!-- <div class="col-sm-3"> -->
+                <!-- <button id="submit_predef" type="button" class="btn btn-primary btn-block input-sm">Submit</button> -->
+            <!-- </div> -->
+              </div>
             </div>
         </div>
     <!-- Closing the starting location field -->
     </div>
+
+    <!-- Closing map and location input row -->
+    </div>
+
+
 
 </div><!-- /.container -->
 

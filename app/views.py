@@ -8,6 +8,12 @@ import select_data as sd
 import numpy as np
 import pdb
 
+
+#############
+# Helpers
+#############
+
+
 # ROUTING/VIEW FUNCTIONS
 @app.route('/')
 @app.route('/index')
@@ -17,16 +23,24 @@ def happening_page():
     # user_location = request.args.get("origin")
     # lat,lon,full_add,data = maps.geocode(user_location)
     
+    # TODO: pass in a page title
+
+
+    # TODO: pass in an examples variable to populate the pulldown form on the html page.
+    # can have id and name for easy passing
+
+    # can include map and form on base.html in {% block body %}
+
     events = []
     this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
     # for our loc, just set the average
     user_lon = np.mean(this_lon)
     user_lat = np.mean(this_lat)
 
-    return render_template('index.html',results=events,user_lat = user_lat, user_lon = user_lon)
+    return render_template('index.html', results=events, examples=examples, user_lat=user_lat, user_lon=user_lon)
 
 
-@app.route("/results",methods=['GET'])
+@app.route("/results",methods=['GET', 'POST'])
 # @app.route('/results/<entered>', methods=['GET', 'POST'])
 def results():
     # pdb.set_trace()
@@ -182,3 +196,8 @@ def contact():
 # def internal_error(error):
 #     return render_template('500.html'), 500
 
+examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", "startTime": "2014-09-09 08:00:00", "endTime": "2014-09-09 15:00:00"},
+            {"id": "attpark", "name": "Diamondbacks at Giants - Sep 9, 2014", "startTime": "2014-09-09 17:00:00", "endTime": "2014-09-09 23:30:00"},
+            {"id": "3", "name": "Event 3", "startTime": "", "endTime": ""},
+            {"id": "4", "name": "Event 4", "startTime": "", "endTime": ""}
+            ]
