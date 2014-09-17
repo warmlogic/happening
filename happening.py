@@ -20,11 +20,11 @@ import select_data as sd
 # import urllib2
 # import configparser
 
-# from nltk.corpus import stopwords
-# from nltk import FreqDist
-# # import nltk
-# # nltk.download() # get the stopwords corpus
-# import string
+from nltk.corpus import stopwords
+from nltk import FreqDist
+# import nltk
+# nltk.download() # get the stopwords corpus
+import string
 
 import pdb
 
@@ -95,16 +95,42 @@ def whatsHappening(area_str='apple_flint_center',\
     return activity_clustered, n_clusters, cluster_centers, user_lon, user_lat
     # return activity_now, n_clusters, user_lon, user_lat, diffmore_lon, diffmore_lat
 
-# def getWordFrequency(activity_clustered):
-#     stop = stopwords.words('english')
+def cleanTextGetWordFrequency(activity):
+    # for removing punctuation (via translate)
+    table = string.maketrans("","")
+    clean_text = []
+    # for removing stop words
+    stop = stopwords.words('english')
+    tokens = []
+    # stop.append('AT_USER')
+    # stop.append('URL')
+    stop.append('unicode_only')
+    stop.append('w')
+    stop.append('im')
+    stop.append('')
 
-#     tokens = []
-#     for txt in activity_clustered['text'].values:
-#         txt = sd.processTweet(txt)
-#         txt = sd.getFeatureVector(txt,stop)
-#         tokens.extend([t for t in txt])
-#     freq_dist = FreqDist(tokens)
-#     return tokens, freq_dist
+    for txt in activity['text'].values:
+        txt = sd.processTweet(txt)
+        nopunct = txt.translate(table, string.punctuation)
+        #Remove additional white spaces
+        # nopunct = re.sub('[\s]+', ' ', nopunct)
+        # if nopunct is not '':
+        clean_text.append(nopunct)
+        # split it and remove stop words
+        txt = sd.getFeatureVector(txt,stop)
+        tokens.extend([t for t in txt])
+    freq_dist = FreqDist(tokens)
+    return tokens, freq_dist, clean_text
+
+    # stop = stopwords.words('english')
+
+    # tokens = []
+    # for txt in activity_clustered['text'].values:
+    #     txt = sd.processTweet(txt)
+    #     txt = sd.getFeatureVector(txt,stop)
+    #     tokens.extend([t for t in txt])
+    # freq_dist = FreqDist(tokens)
+    # return tokens, freq_dist, clean_text
 
 def main():
     print 'not ready yet'

@@ -8,12 +8,6 @@ import select_data as sd
 import numpy as np
 import pdb
 
-from nltk.corpus import stopwords
-from nltk import FreqDist
-# import nltk
-# nltk.download() # get the stopwords corpus
-import string
-
 # ROUTING/VIEW FUNCTIONS
 @app.route('/')
 @app.route('/index')
@@ -84,32 +78,34 @@ def results():
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
 
-    # tokens, freq_dist = hap.getWordFrequency(activity_clustered)
 
-    # for removing punctuation (via translate)
-    table = string.maketrans("","")
-    clean_text = []
-    # for removing stop words
-    stop = stopwords.words('english')
-    tokens = []
-    # stop.append('AT_USER')
-    # stop.append('URL')
-    stop.append('unicode_only')
-    stop.append('w')
-    stop.append('im')
-    stop.append('')
+    # # for removing punctuation (via translate)
+    # table = string.maketrans("","")
+    # clean_text = []
+    # # for removing stop words
+    # stop = stopwords.words('english')
+    # tokens = []
+    # # stop.append('AT_USER')
+    # # stop.append('URL')
+    # stop.append('unicode_only')
+    # stop.append('w')
+    # stop.append('im')
+    # stop.append('')
 
-    for txt in activity['text'].values:
-        txt = sd.processTweet(txt)
-        nopunct = txt.translate(table, string.punctuation)
-        #Remove additional white spaces
-        # nopunct = re.sub('[\s]+', ' ', nopunct)
-        # if nopunct is not '':
-        clean_text.append(nopunct)
-        # split it and remove stop words
-        txt = sd.getFeatureVector(txt,stop)
-        tokens.extend([t for t in txt])
-    freq_dist = FreqDist(tokens)
+    # for txt in activity['text'].values:
+    #     txt = sd.processTweet(txt)
+    #     nopunct = txt.translate(table, string.punctuation)
+    #     #Remove additional white spaces
+    #     # nopunct = re.sub('[\s]+', ' ', nopunct)
+    #     # if nopunct is not '':
+    #     clean_text.append(nopunct)
+    #     # split it and remove stop words
+    #     txt = sd.getFeatureVector(txt,stop)
+    #     tokens.extend([t for t in txt])
+    # freq_dist = FreqDist(tokens)
+
+    tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity)
+
     top_words = freq_dist.keys()[:20]
     
     events = []
