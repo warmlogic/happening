@@ -13,13 +13,18 @@ import matplotlib.pyplot as plt
 import select_data as sd
 # import jsonOpen, figSetup
 # from collections import defaultdict
-from sklearn.cluster import DBSCAN
+# from sklearn.cluster import DBSCAN
 # from sklearn import metrics
 # from sklearn.preprocessing import StandardScaler
 # import rauth
 # import urllib2
 # import configparser
 import pdb
+
+from nltk.corpus import stopwords
+from nltk import FreqDist
+# import nltk
+# nltk.download() # get the stopwords corpus
 
 class struct():
     pass
@@ -87,6 +92,16 @@ def whatsHappening(area_str='apple_flint_center',\
 
     return activity_clustered, n_clusters, cluster_centers, user_lon, user_lat
     # return activity_now, n_clusters, user_lon, user_lat, diffmore_lon, diffmore_lat
+
+def getWordFrequency(activity_clustered):
+    stop = stopwords.words('english')
+
+    tokens = []
+    for txt in activity_clustered['text'].values:
+        txt = sd.processTweet(txt)
+        txt = sd.getFeatureVector(txt,stop)
+        tokens.extend([t for t in txt])
+    return tokens
 
 def main():
     print 'not ready yet'

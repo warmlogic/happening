@@ -78,6 +78,8 @@ def results():
     activity, n_clusters, cluster_centers, user_lon, user_lat = happening.whatsHappening(area_str=area_str,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
+
+    tokens = getWordFrequency(activity_clustered)
     
     events = []
     clus_centers = []
