@@ -8,6 +8,11 @@ import select_data as sd
 import numpy as np
 import pdb
 
+from nltk.corpus import stopwords
+from nltk import FreqDist
+# import nltk
+# nltk.download() # get the stopwords corpus
+import string
 
 # ROUTING/VIEW FUNCTIONS
 @app.route('/')
@@ -79,8 +84,26 @@ def results():
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
 
-    tokens, freq_dist = hap.getWordFrequency(activity_clustered)
-    freq_dist.keys()[:20]
+    # tokens, freq_dist = hap.getWordFrequency(activity_clustered)
+
+    # for removing punctuation (via translate)
+    table = string.maketrans("","")
+    clean_text = []
+    # for removing stop words
+    stop = stopwords.words('english')
+    tokens = []
+    for txt in activity['text'].values:
+        txt = sd.processTweet(txt)
+        nopunct = txt.translate(table, string.punctuation)
+        #Remove additional white spaces
+        # nopunct = re.sub('[\s]+', ' ', nopunct)
+        # if nopunct is not '':
+        clean_text.append(nopunct)
+        # split it and remove stop words
+        txt = sd.getFeatureVector(txt,stop)
+        tokens.extend([t for t in txt])
+    freq_dist = FreqDist(tokens)
+    top_words = freq_dist.keys()[:20]
     
     events = []
     clus_centers = []
@@ -91,7 +114,7 @@ def results():
     for clus in cluster_centers:
         clus_centers.append(dict(lat=clus[1], long=clus[0], clusterid=int(clus[2])))
     return render_template('results.html', results=events,\
-        top_words=freq_dist.keys()[:20],\
+        top_words=top_words,\
         ncluster=n_clusters, clus_centers=clus_centers,\
         user_lat = user_lat, user_lon = user_lon, heatmap=heatmap)
 

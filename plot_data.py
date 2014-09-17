@@ -12,6 +12,10 @@ import pdb
 # from sklearn.preprocessing import StandardScaler
 # from sklearn import metrics
 # from scipy.spatial.distance import pdist
+from nltk.corpus import stopwords
+from nltk import FreqDist
+import string
+# import re
 
 %load_ext autoreload
 %autoreload 2
@@ -195,7 +199,26 @@ activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,
 # NLP
 ############
 
-tokens, freq_dist = hap.getWordFrequency(activity_clustered)
+# tokens, freq_dist = hap.getWordFrequency(activity_clustered)
+
+# for removing punctuation (via translate)
+table = string.maketrans("","")
+clean_text = []
+# for removing stop words
+stop = stopwords.words('english')
+tokens = []
+for txt in activity_clustered['text'].values:
+    txt = sd.processTweet(txt)
+    nopunct = txt.translate(table, string.punctuation)
+    #Remove additional white spaces
+    # nopunct = re.sub('[\s]+', ' ', nopunct)
+    # if nopunct is not '':
+    clean_text.append(nopunct)
+    # split it and remove stop words
+    txt = sd.getFeatureVector(txt,stop)
+    tokens.extend([t for t in txt])
+freq_dist = FreqDist(tokens)
+
 
 # filtered_tokens = [w for w in tokens if not w in stop]
 freq_dist.plot(50)

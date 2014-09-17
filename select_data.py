@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
+import re
 import pdb
 
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
@@ -386,9 +387,11 @@ def processTweet(tweet):
     #Convert to lower case
     tweet = tweet.lower()
     #Convert www.* or https?://* to URL
-    tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','URL',tweet)
+    # tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','URL',tweet)
+    tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','',tweet)
     #Convert @username to AT_USER
-    tweet = re.sub('@[^\s]+','AT_USER',tweet)
+    # tweet = re.sub('@[^\s]+','AT_USER',tweet)
+    tweet = re.sub('@[^\s]+','',tweet)
     #Remove additional white spaces
     tweet = re.sub('[\s]+', ' ', tweet)
 
@@ -396,7 +399,7 @@ def processTweet(tweet):
     # tweet = re.sub(r'#([^\s]+)', r'\1', tweet)
 
     # remove single quotes and multiple periods
-    tweet = tweet.replace('\'','').replace('..',' ')
+    tweet = tweet.replace('\'','').replace('..',' ').strip(' \'"?,.!@$%^&*()-_+=/:')
     return tweet
 
 def replaceTwoOrMore(s):
@@ -406,8 +409,8 @@ def replaceTwoOrMore(s):
     return pattern.sub(r"\1\1", s)
 
 def getFeatureVector(tweet,stop):
-    stop.append('AT_USER')
-    stop.append('URL')
+    # stop.append('AT_USER')
+    # stop.append('URL')
     stop.append('unicode_only')
     stop.append('w')
     stop.append('im')
