@@ -207,6 +207,12 @@ clean_text = []
 # for removing stop words
 stop = stopwords.words('english')
 tokens = []
+# stop.append('AT_USER')
+# stop.append('URL')
+stop.append('unicode_only')
+stop.append('w')
+stop.append('im')
+stop.append('')
 for txt in activity_clustered['text'].values:
     txt = sd.processTweet(txt)
     nopunct = txt.translate(table, string.punctuation)

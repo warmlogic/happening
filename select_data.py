@@ -409,18 +409,11 @@ def replaceTwoOrMore(s):
     return pattern.sub(r"\1\1", s)
 
 def getFeatureVector(tweet,stop):
-    # stop.append('AT_USER')
-    # stop.append('URL')
-    stop.append('unicode_only')
-    stop.append('w')
-    stop.append('im')
-    stop.append('')
-
     featureVector = []
     #split tweet into words
     words = tweet.split()
     for w in words:
-        #replace two or more with two occurrences
+        #replace two or more with two occurrences of a character
         w = replaceTwoOrMore(w)
         #strip punctuation
         w = w.strip('\'"?,.!@$%^&*()-_+=/:')
