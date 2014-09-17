@@ -79,7 +79,7 @@ def whatsHappening(area_str='apple_flint_center',\
     Hdiff = Hnow - Hprev
 
     # return the top nclusters values, sorted; ascend=biggest first
-    int(np.floor(nbins * 0.75))
+    diffthresh = int(np.floor(nbins * 0.75))
     morevals,moreind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='max', return_order='ascend')
     lessvals,lessind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='min', return_order='ascend')
 
@@ -131,6 +131,47 @@ def cleanTextGetWordFrequency(activity):
     #     tokens.extend([t for t in txt])
     # freq_dist = FreqDist(tokens)
     # return tokens, freq_dist, clean_text
+
+# modified from here: http://alexdavies.net/twitter-sentiment-analysis/
+def readSentimentList(file_name='./data/twitter_sentiment_list_cleaned.csv'):
+    ifile = open(file_name, 'r')
+    happy_log_probs = {}
+    sad_log_probs = {}
+    ifile.readline() #Ignore title row
+    
+    for line in ifile:
+        tokens = line[:-1].split(',')
+        happy_log_probs[tokens[0]] = float(tokens[1])
+        sad_log_probs[tokens[0]] = float(tokens[2])
+
+    return happy_log_probs, sad_log_probs
+
+def classifySentiment(words, happy_log_probs, sad_log_probs):
+    # Get the log-probability of each word under each sentiment
+    happy_probs = [happy_log_probs[word] for word in words if word in happy_log_probs]
+    sad_probs = [sad_log_probs[word] for word in words if word in sad_log_probs]
+
+    # Sum all the log-probabilities for each sentiment to get a log-probability for the whole tweet
+    tweet_happy_log_prob = np.sum(happy_probs)
+    tweet_sad_log_prob = np.sum(sad_probs)
+
+    # Calculate the probability of the tweet belonging to each sentiment
+    prob_happy = np.reciprocal(np.exp(tweet_sad_log_prob - tweet_happy_log_prob) + 1)
+    prob_sad = 1 - prob_happy
+
+    return prob_happy, prob_sad
+
+# def clusterSentiment(activity, n_clusters, happy_log_probs, sad_log_probs):
+#     cluster_happy_sentiment = []
+#     for clusNum in range(n_clusters):
+#         activity_thisclus = activity.loc[activity['clusterNum'] == clusNum]
+#         tokens, freq_dist, clean_text = cleanTextGetWordFrequency(activity_thisclus)
+#         happy_probs = []
+#         for tweet in clean_text:
+#             prob_happy, prob_sad = classifySentiment(tweet.split(), happy_log_probs, sad_log_probs)
+#             happy_probs.append(prob_happy)
+#         cluster_happy_sentiment.append(sum(np.array(happy_probs) > .5) / float(len(happy_probs)))
+#     return cluster_happy_sentiment
 
 def main():
     print 'not ready yet'

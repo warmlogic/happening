@@ -224,7 +224,32 @@ activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,
 #     tokens.extend([t for t in txt])
 # freq_dist = FreqDist(tokens)
 
-tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_clustered)
+# tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_clustered)
+
+# happy_log_probs, sad_log_probs = hap.readSentimentList()
+
+# cluster_happy_sentiment = hap.clusterSentiment(activity_clustered, happy_log_probs, sad_log_probs)
+
+word_freq = []
+# top_nWords = 20
+# top_words = []
+# cluster_happy_sentiment = []
+for clusNum in range(n_clusters):
+    activity_thisclus = activity_clustered.loc[activity_clustered['clusterNum'] == clusNum]
+    tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_thisclus)
+    word_freq.append(freq_dist)
+    # top_w = sorted(freq_dist, key=freq_dist.get, reverse=True)
+    # try:
+    #     top_words.append(top_w[:top_nWords])
+    # except:
+    #     top_words.append(top_w)
+    # happy_probs = []
+    # for tweet in clean_text:
+    #     prob_happy, prob_sad = hap.classifySentiment(tweet.split(), happy_log_probs, sad_log_probs)
+    #     happy_probs.append(prob_happy)
+    #     print tweet
+    #     print prob_happy
+    # cluster_happy_sentiment.append(sum(np.array(happy_probs) > .5) / float(len(happy_probs)))
 
 freq_dist.plot(50)
 freq_dist.keys()[:50]

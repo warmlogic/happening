@@ -104,20 +104,61 @@ def results():
     #     tokens.extend([t for t in txt])
     # freq_dist = FreqDist(tokens)
 
-    tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity)
+    # do this for each cluster?
+    # tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity)
 
-    top_words = freq_dist.keys()[:20]
+    # top_words = freq_dist.keys()[:20]
+
+    # happy_log_probs, sad_log_probs = hap.readSentimentList()
+
+    word_freq = []
+    # top_nWords = 20
+    # top_words = []
+    # cluster_happy_sentiment = []
+    for clusNum in range(n_clusters):
+        activity_thisclus = activity.loc[activity['clusterNum'] == clusNum]
+        tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_thisclus)
+        word_freq.append(freq_dist)
+        # top_w = sorted(freq_dist, key=freq_dist.get, reverse=True)
+        # try:
+        #     top_words.append(top_w[:top_nWords])
+        # except:
+        #     top_words.append(top_w)
+        # happy_probs = []
+        # for tweet in clean_text:
+        #     prob_happy, prob_sad = hap.classifySentiment(tweet.split(), happy_log_probs, sad_log_probs)
+        #     happy_probs.append(prob_happy)
+        #     print tweet
+        #     print prob_happy
+        # cluster_happy_sentiment.append(sum(np.array(happy_probs) > .5) / float(len(happy_probs)))
+
+    # sentiment analysis
+    #
+    # short sentences:
+    # https://github.com/abromberg/sentiment_analysis_python
+    # http://andybromberg.com/sentiment-analysis-python/
+    #
+    # bag of words:
+    # https://github.com/jeffreybreen/twitter-sentiment-analysis-tutorial-201107
+    # http://jeffreybreen.wordpress.com/2011/07/04/twitter-text-mining-r-slides/
     
+    # tried this but it doesn't work well for my data
+    # http://alexdavies.net/twitter-sentiment-analysis/
+
+
+    # create a word cloud array
+    # https://github.com/lucaong/jQCloud
+
     events = []
     clus_centers = []
-    heatmap = True
     for i in range(activity.shape[0]):
         # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
     for clus in cluster_centers:
         clus_centers.append(dict(lat=clus[1], long=clus[0], clusterid=int(clus[2])))
+
+    heatmap = True
     return render_template('results.html', results=events,\
-        top_words=top_words,\
         ncluster=n_clusters, clus_centers=clus_centers,\
         user_lat = user_lat, user_lon = user_lon, heatmap=heatmap)
 
