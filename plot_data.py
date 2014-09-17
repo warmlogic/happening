@@ -190,10 +190,33 @@ print 'At threshold %d, found %d "events" that have less activity than previous 
 activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,plotData=True)
 
 
+############
+# NLP
+############
 
-#############
+from nltk.corpus import stopwords
+from nltk import FreqDist
+# import nltk
+# nltk.download() # get the stopwords corpus
+stop = stopwords.words('english')
+
+tokens = []
+for txt in activity_clustered['text'].values:
+    txt = sd.processTweet(txt)
+    txt = sd.getFeatureVector(txt,stop)
+    tokens.extend([t for t in txt])
+
+# filtered_tokens = [w for w in tokens if not w in stop]
+freq_dist = nltk.FreqDist(tokens)
+freq_dist.plot(50)
+freq_dist.keys()[:50]
+
+
+
+
+############
 # Select activity using radius from point
-#############
+############
 
 # collect tweets from dataframe within radius X of lon,lat
 unit = 'meters'
