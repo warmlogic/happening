@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 import pdb
-import re
 
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
     if unit == 'meters':
@@ -402,7 +401,7 @@ def processTweet(tweet):
 
 def replaceTwoOrMore(s):
     #look for 2 or more repetitions of character and replace with the character itself
-    # e.g., huuuuuuuungry
+    # e.g., huuuuuuuungry to hungry
     pattern = re.compile(r"(.)\1{1,}", re.DOTALL)
     return pattern.sub(r"\1\1", s)
 

@@ -1,7 +1,7 @@
 from app import app
 from flask import render_template, request
 import pymysql as mdb
-import happening
+import happening as hap
 import jinja2
 import app.helpers.maps as maps
 import select_data as sd
@@ -75,11 +75,12 @@ def results():
     nbins = 50
     nclusters = 5
 
-    activity, n_clusters, cluster_centers, user_lon, user_lat = happening.whatsHappening(area_str=area_str,\
+    activity, n_clusters, cluster_centers, user_lon, user_lat = hap.whatsHappening(area_str=area_str,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
 
-    tokens = getWordFrequency(activity_clustered)
+    tokens, freq_dist = hap.getWordFrequency(activity_clustered)
+    freq_dist.keys()[:20]
     
     events = []
     clus_centers = []
@@ -89,7 +90,10 @@ def results():
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
     for clus in cluster_centers:
         clus_centers.append(dict(lat=clus[1], long=clus[0], clusterid=int(clus[2])))
-    return render_template('results.html', results=events, ncluster=n_clusters, clus_centers=clus_centers, user_lat = user_lat, user_lon = user_lon, heatmap=heatmap)
+    return render_template('results.html', results=events,\
+        top_words=freq_dist.keys()[:20],\
+        ncluster=n_clusters, clus_centers=clus_centers,\
+        user_lat = user_lat, user_lon = user_lon, heatmap=heatmap)
 
 
 

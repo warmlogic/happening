@@ -19,12 +19,13 @@ import select_data as sd
 # import rauth
 # import urllib2
 # import configparser
-import pdb
 
 from nltk.corpus import stopwords
 from nltk import FreqDist
 # import nltk
 # nltk.download() # get the stopwords corpus
+
+import pdb
 
 class struct():
     pass
@@ -101,12 +102,12 @@ def getWordFrequency(activity_clustered):
         txt = sd.processTweet(txt)
         txt = sd.getFeatureVector(txt,stop)
         tokens.extend([t for t in txt])
-    return tokens
+    freq_dist = FreqDist(tokens)
+    return tokens, freq_dist
 
 def main():
     print 'not ready yet'
     return
-
 
 if __name__ == '__main__':
     main()

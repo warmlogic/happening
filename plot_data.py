@@ -4,6 +4,7 @@ check out the data
 
 import pandas as pd
 import select_data as sd
+import happening as hap
 import matplotlib.pyplot as plt
 import numpy as np
 import pdb
@@ -194,20 +195,9 @@ activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,
 # NLP
 ############
 
-from nltk.corpus import stopwords
-from nltk import FreqDist
-# import nltk
-# nltk.download() # get the stopwords corpus
-stop = stopwords.words('english')
-
-tokens = []
-for txt in activity_clustered['text'].values:
-    txt = sd.processTweet(txt)
-    txt = sd.getFeatureVector(txt,stop)
-    tokens.extend([t for t in txt])
+tokens, freq_dist = hap.getWordFrequency(activity_clustered)
 
 # filtered_tokens = [w for w in tokens if not w in stop]
-freq_dist = nltk.FreqDist(tokens)
 freq_dist.plot(50)
 freq_dist.keys()[:50]
 
