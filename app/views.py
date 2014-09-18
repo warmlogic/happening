@@ -1,11 +1,12 @@
 from app import app
-from flask import render_template, request
+from flask import render_template, request, redirect, url_for
 import pymysql as mdb
 import happening as hap
 import jinja2
 import app.helpers.maps as maps
 import select_data as sd
 import numpy as np
+import pandas as pd
 import pdb
 
 
@@ -40,12 +41,64 @@ def happening_page():
     return render_template('index.html', results=events, examples=examples, user_lat=user_lat, user_lon=user_lon)
 
 
-@app.route("/results",methods=['GET', 'POST'])
-# @app.route('/results/<entered>', methods=['GET', 'POST'])
-def results():
-    # pdb.set_trace()
-    user_location = request.args.get("origin")
+@app.route("/results_location",methods=['POST'])
+def results_procLocation():
+    user_location = request.form.get("location")
     lat,lon,full_add,data = maps.geocode(user_location)
+
+    # set the bounding box for the requested area
+    res = data['results'][0]
+    lng_sw = res['geometry']['bounds']['southwest']['lng']
+    lng_ne = res['geometry']['bounds']['northeast']['lng']
+    lat_sw = res['geometry']['bounds']['southwest']['lat']
+    lat_ne = res['geometry']['bounds']['northeast']['lat']
+
+    # get the times
+    hoursOffset = 1
+    # endTime = pd.datetime.isoformat(pd.datetime.now())
+    endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
+    startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
+    endTime = pd.datetime.isoformat(endTime)
+    # time_now = [startTime, endTime]
+
+    # pdb.set_trace()
+
+    return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime))
+
+@app.route("/results_predef",methods=['POST'])
+def results_procPredef():
+    area_str = request.form.get("event_id")
+
+    # set the bounding box for the requested area
+    this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
+
+    # get the pre-defined time period
+    startTime = [dct["startTime"] for dct in examples if dct["id"] == area_str][0]
+    endTime = [dct["endTime"] for dct in examples if dct["id"] == area_str][0]
+    # time_now = [startTime, endTime]
+
+    # pdb.set_trace()
+
+    # get bounding box from this area_str
+    return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime))
+    # return redirect(url_for('.results', this_lat=this_lat, this_lon=this_lon, time_now=time_now))
+
+
+
+# @app.route("/results",methods=['GET', 'POST'])
+# @app.route('/results/<entered>', methods=['GET', 'POST'])
+@app.route("/results",methods=['GET'])
+def results():
+    this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
+    this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
+    time_now = [request.args.get('startTime'), request.args.get('endTime')]
+
+    # compare to the day before
+    daysOffset = 1
+    startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
+    endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
+    time_then = [startTime_then, endTime_then]
+
     # print lat
     # print lon
     # print full_add
@@ -74,9 +127,9 @@ def results():
     # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
 
     # apple keynote
-    area_str='apple_flint_center'
-    time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
-    time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
+    # area_str='apple_flint_center'
+    # time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
+    # time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
 
     # # giants vs diamondbacks
     # area_str='attpark'
@@ -88,7 +141,8 @@ def results():
     nbins = 50
     nclusters = 5
 
-    activity, n_clusters, cluster_centers, user_lon, user_lat = hap.whatsHappening(area_str=area_str,\
+    # activity, n_clusters, cluster_centers, user_lon, user_lat = hap.whatsHappening(area_str=area_str,\
+    activity, n_clusters, cluster_centers, user_lon, user_lat = hap.whatsHappening(this_lon=this_lon,this_lat=this_lat,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
 
@@ -173,6 +227,7 @@ def results():
 
     heatmap = True
     return render_template('results.html', results=events,\
+        examples=examples,\
         ncluster=n_clusters, clus_centers=clus_centers,\
         user_lat = user_lat, user_lon = user_lon, heatmap=heatmap)
 
