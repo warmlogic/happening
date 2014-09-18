@@ -1,5 +1,6 @@
 from app import app
 from flask import render_template, request, redirect, url_for
+import json
 import pymysql as mdb
 import happening as hap
 import jinja2
@@ -31,7 +32,15 @@ def happening_page():
     user_lon = np.mean(this_lon)
     user_lat = np.mean(this_lat)
 
-    return render_template('index.html', results=events, examples=examples, user_lat=user_lat, user_lon=user_lon)
+    # latlng_sw = [this_lat[0], this_lon[0]]
+    # latlng_ne = [this_lat[1], this_lon[1]]
+    latlng_sw = [this_lat[1], this_lon[1]]
+    latlng_ne = [this_lat[0], this_lon[0]]
+    # pdb.set_trace()
+
+    return render_template('index.html', results=events, examples=examples,\
+        user_lat=user_lat, user_lon=user_lon,\
+        latlng_sw=latlng_sw, latlng_ne=latlng_ne)
 
 @app.route("/results_location",methods=['POST'])
 def results_procLocation():
@@ -93,6 +102,10 @@ def results():
         this_lon=this_lon,this_lat=this_lat,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
+    if success:
+        print 'message: found clusters, hoooray!'
+    else:
+        print 'message: ' + message
 
     # # for removing punctuation (via translate)
     # table = string.maketrans("","")
@@ -127,7 +140,7 @@ def results():
     # happy_log_probs, sad_log_probs = hap.readSentimentList()
 
     word_freq = []
-    top_nWords = 20
+    # top_nWords = 20
     # top_words = []
     # cluster_happy_sentiment = []
     for clusNum in range(n_clusters):
@@ -169,6 +182,7 @@ def results():
 
     events = []
     clus_centers = []
+    top_nWords = 20
     for i in range(activity.shape[0]):
         # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
@@ -181,12 +195,31 @@ def results():
             this_array.append({'text': word[0], 'weight': word[1]})
         word_array.append(this_array)
 
-    heatmap = True
+
+    plotdata=[['Date', 'Count']];
+    # for index in range(0,len(chosen_years)):
+    #   plotdata.append([strdate[index], predicted_crowds[index]])
+    # print plotdata
+    
+    returnObject = {
+        'visData': plotdata
+    }
+    # returnObject = {
+    #     'visData': plotdata,
+    #     'photoURLs': photo_urls
+    # }
+
+    latlng_sw = [float(request.args.get('lat_sw')), float(request.args.get('lng_sw'))]
+    latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
     return render_template('results.html', results=events,\
         examples=examples,\
         ncluster=n_clusters, clus_centers=clus_centers,\
-        user_lat = user_lat, user_lon = user_lon, heatmap=heatmap,\
-        word_array=word_array)
+        user_lat = user_lat, user_lon = user_lon,\
+        latlng_sw = latlng_sw, latlng_ne = latlng_ne,\
+        heatmap=True,\
+        word_array=word_array,\
+        message = message,\
+        plotdata=json.dumps(returnObject))
 
 
 

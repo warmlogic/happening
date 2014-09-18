@@ -84,21 +84,25 @@
 function init_map() {
     
     var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
+    var sw = new google.maps.LatLng({{ latlng_sw }});
+    var ne = new google.maps.LatLng({{ latlng_ne }});
+    var var_bounds = new google.maps.LatLngBounds(sw, ne);
     
-    var var_ourmap = mapIt(var_location)
+    var var_ourmap = mapIt(var_location,var_bounds)
     
-    function mapIt(v_lat) {
+    function mapIt(var_location,var_bounds) {
         var var_mapoptions = {
-            center: v_lat,
+            center: var_location,
             zoom: 9
             // mapTypeId: google.maps.MapTypeId.SATELLITE
         };
 
         var var_map = new google.maps.Map(document.getElementById("map-container"),
             var_mapoptions);
+        var_map.panToBounds(var_bounds)
             
         // var var_marker = new google.maps.Marker({
-        //     position: v_lat,
+        //     position: var_location,
         //     map: var_map,
         //     title:"You"});
 
@@ -134,7 +138,7 @@ $("document").ready(function(){
     });
 });
 </script>
-<script>    
+<script>
     //autocomplete for whereToLook
     var input = /** @type {HTMLInputElement} */(
       document.getElementById('whereToLook'));
