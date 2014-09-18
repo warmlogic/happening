@@ -32,7 +32,8 @@ class struct():
     pass
 
 # def whatsHappening(this_lon, this_lat, area_str='apple_flint_center', tz='US/Pacific'):
-def whatsHappening(area_str='apple_flint_center',\
+# def whatsHappening(area_str='apple_flint_center',\
+def whatsHappening(this_lon, this_lat,\
     time_now=['2014-09-09 08:00:00', '2014-09-09 15:00:00'],\
     time_then=['2014-09-08 08:00:00', '2014-09-08 15:00:00'],\
     nbins=100,nclusters=5,\
@@ -53,7 +54,7 @@ def whatsHappening(area_str='apple_flint_center',\
     df = df.tz_localize('UTC').tz_convert(tz)
 
     # set the bounding box for the requested area
-    this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
+    # this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
 
     # for our loc, just set the average
     user_lon = np.mean(this_lon)
