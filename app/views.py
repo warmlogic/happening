@@ -19,18 +19,11 @@ import pdb
 @app.route('/')
 @app.route('/index')
 def happening_page():
-    # Renders index.html.
-    # # request location from user
-    # user_location = request.args.get("origin")
-    # lat,lon,full_add,data = maps.geocode(user_location)
+    # Renders index.html
     
     # TODO: pass in a page title
 
-
-    # TODO: pass in an examples variable to populate the pulldown form on the html page.
-    # can have id and name for easy passing
-
-    # can include map and form on base.html in {% block body %}
+    # TODO: can include map and form on base.html in {% block body %}
 
     events = []
     this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
@@ -39,7 +32,6 @@ def happening_page():
     user_lat = np.mean(this_lat)
 
     return render_template('index.html', results=events, examples=examples, user_lat=user_lat, user_lon=user_lon)
-
 
 @app.route("/results_location",methods=['POST'])
 def results_procLocation():
@@ -55,13 +47,9 @@ def results_procLocation():
 
     # get the times
     hoursOffset = 1
-    # endTime = pd.datetime.isoformat(pd.datetime.now())
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
     startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
     endTime = pd.datetime.isoformat(endTime)
-    # time_now = [startTime, endTime]
-
-    # pdb.set_trace()
 
     return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime))
 
@@ -75,18 +63,10 @@ def results_procPredef():
     # get the pre-defined time period
     startTime = [dct["startTime"] for dct in examples if dct["id"] == area_str][0]
     endTime = [dct["endTime"] for dct in examples if dct["id"] == area_str][0]
-    # time_now = [startTime, endTime]
-
-    # pdb.set_trace()
 
     # get bounding box from this area_str
     return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime))
-    # return redirect(url_for('.results', this_lat=this_lat, this_lon=this_lon, time_now=time_now))
 
-
-
-# @app.route("/results",methods=['GET', 'POST'])
-# @app.route('/results/<entered>', methods=['GET', 'POST'])
 @app.route("/results",methods=['GET'])
 def results():
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
@@ -99,53 +79,19 @@ def results():
     endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
     time_then = [startTime_then, endTime_then]
 
-    # print lat
-    # print lon
-    # print full_add
-    # print data
-
-    # entered = json.loads(entered)
-    # start_address, categories, yelp_perc  = sanitize_input(entered)
-    # start_lat,start_long = hopper.get_coordinates(start_address)
-    # if not hopper.in_bay_area(start_lat, start_long):
-    #     raise InvalidUsage("Starting Location Not in Bay Area")
-    # try:
-    #     locations = hopper.get_path(start_lat, start_long, yelp_perc, tuple(categories))
-    # except Exception as e:
-    #     raise InvalidUsage(e)
-    # suggestion = hopper.get_recommended(locations)
-    # return render_template('results.html', locations = locations, start = (start_lat,start_long), suggestion=suggestion)
-
-    # Renders index.html.
-    # # request location from user
-    # user_location = request.args.get("origin")
-    # lat,lon,full_add,data = maps.geocode(user_location)
-
     # # night life
     # area_str='sf_concerts'
     # time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
     # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
-
-    # apple keynote
-    # area_str='apple_flint_center'
-    # time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
-    # time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
-
-    # # giants vs diamondbacks
-    # area_str='attpark'
-    # time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
-    # time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
 
     tz = 'US/Pacific'
 
     nbins = 50
     nclusters = 5
 
-    # activity, n_clusters, cluster_centers, user_lon, user_lat = hap.whatsHappening(area_str=area_str,\
     activity, n_clusters, cluster_centers, user_lon, user_lat = hap.whatsHappening(this_lon=this_lon,this_lat=this_lat,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
-
 
     # # for removing punctuation (via translate)
     # table = string.maketrans("","")
@@ -180,14 +126,16 @@ def results():
     # happy_log_probs, sad_log_probs = hap.readSentimentList()
 
     word_freq = []
-    # top_nWords = 20
+    top_nWords = 20
     # top_words = []
     # cluster_happy_sentiment = []
     for clusNum in range(n_clusters):
         activity_thisclus = activity.loc[activity['clusterNum'] == clusNum]
         tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_thisclus)
         word_freq.append(freq_dist)
-        # top_w = sorted(freq_dist, key=freq_dist.get, reverse=True)
+        
+        top_w = sorted(freq_dist, key=freq_dist.get, reverse=True)
+        print top_w[:top_nWords]
         # try:
         #     top_words.append(top_w[:top_nWords])
         # except:
