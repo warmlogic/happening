@@ -102,20 +102,12 @@ def cleanTextGetWordFrequency(activity):
     clean_text = []
     # for removing stop words
     stop = stopwords.words('english')
+    stop.extend(stopwords.words('spanish'))
     tokens = []
     # stop.append('AT_USER')
     # stop.append('URL')
     stop.append('unicode_only')
-    stop.append('y')
     stop.append('w')
-    stop.append('el')
-    stop.append('en')
-    stop.append('la')
-    stop.append('los')
-    stop.append('que')
-    stop.append('para')
-    stop.append('es')
-    stop.append('un')
     stop.append('im')
     stop.append('')
 
