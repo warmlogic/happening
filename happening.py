@@ -46,7 +46,7 @@ def whatsHappening(this_lon, this_lat,\
 
     print 'Reading locations...'
     df = pd.read_csv(latlong,header=None,parse_dates=[2],\
-        names=['user_id','tweet_id','datetime','longitude','latitude','text'],index_col='datetime')
+        names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
     print 'Done.'
     latlong.close()
 
