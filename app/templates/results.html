@@ -2,6 +2,7 @@
 
 {% block head %}
 <link href="{{ url_for('static', filename='css/typeahead.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/jqcloud.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -64,46 +65,30 @@
                     </div>
                 </form>
 
+                </div>
             </div>
         </div>
+        <!-- Closing the location entry field -->
     </div>
-    <!-- Closing the location entry field -->
-</div>
 
-<!-- Closing map and location input row -->
-</div>
+    <!-- Closing map and location input row -->
+    </div>
 
+    <!-- Word cloud -->
+    <div class ="col-md-6">
+        <h3>jQCloud Example</h3>
+        <div id="example" style="width: 450px; height: 250px; border: 1px solid #ccc;"></div>
+    </div>
+    <div class ="col-md-6">
+        <h3>Nearby photos</h3>
+    </div>
 </div><!-- /.container -->
 
 
 {% endblock %}
 
-
 <!--==============================================================-->
 {% block scripts %}
-<!-- places javascript API -->
-<!-- <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places"></script> -->
-<!-- typeahead -->
-<!-- <script src="{{ url_for('static', filename='js/typeahead.min.js') }}"></script> -->
-
-<!--
-<script type="text/javascript">
-    //submitting the form redirects the page
-    $('#submit_predef').click(function(e){
-        entries = {};
-        // for (var i=0; i < desintationList.length; i++){
-        //     entries[i] = desintationList[i];
-        // }
-        var predefine_loc_dropdown = document.getElementById('predefine_loc');
-        entries['predefine_loc'] = predefine_loc_dropdown.value;
-        // var start = document.getElementById('startingLocation');
-        // entries["start"] = start.value;
-        debugger;
-        window.location.href = '/results/' + encodeURIComponent(JSON.stringify(entries));
-        return 0;
-    });
-</script>
--->
 
 <script>
 function init_map() {
@@ -247,8 +232,21 @@ $("document").ready(function(){
     autocomplete.setBounds(LatLngBounds);
 </script>
 
-{% endblock %}
+<script src="{{ url_for('static', filename='js/jqcloud-1.0.4.min.js') }}"></script>
+<script type="text/javascript">
+    var word_list = []
+    {% for cluster in word_array %}
+        {% for words in cluster %}
+            word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }} })
+        {% endfor %}
+    {% endfor %}
+    $(function() {
+        $("#example").jQCloud(word_list);
+    });
+    </script>
+
 <!--=================================================-->
+{% endblock %}
 
 {# commenting out
 {% block footer %}
