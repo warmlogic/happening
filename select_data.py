@@ -399,7 +399,7 @@ def processTweet(tweet):
     # tweet = re.sub(r'#([^\s]+)', r'\1', tweet)
 
     # remove single quotes and multiple periods
-    tweet = tweet.replace('\'','').replace('..',' ').strip(' \'"?,.!@$%^&*()-_+=/:')
+    tweet = tweet.replace('\'','').replace('..',' ').strip(' \'"?,.!@$%^&*_+=/<>;:-()|\\')
     return tweet
 
 def replaceTwoOrMore(s):
@@ -416,7 +416,7 @@ def getFeatureVector(tweet,stop):
         #replace two or more with two occurrences of a character
         w = replaceTwoOrMore(w)
         #strip punctuation
-        w = w.strip('\'"?,.!@$%^&*()-_+=/:')
+        w = w.strip('\'"?,.!@$%^&*_+=/<>;:-()|\\')
         #check if the word stats with an alphabet
         # val = re.search(r"^[a-zA-Z][a-zA-Z0-9]*$", w)
         #ignore if it is a stop word
