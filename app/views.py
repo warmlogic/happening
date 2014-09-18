@@ -89,7 +89,8 @@ def results():
     nbins = 50
     nclusters = 5
 
-    activity, n_clusters, cluster_centers, user_lon, user_lat = hap.whatsHappening(this_lon=this_lon,this_lat=this_lat,\
+    activity, n_clusters, cluster_centers, user_lon, user_lat, message, success = hap.whatsHappening(\
+        this_lon=this_lon,this_lat=this_lat,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
 
@@ -133,9 +134,10 @@ def results():
         activity_thisclus = activity.loc[activity['clusterNum'] == clusNum]
         tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_thisclus)
         word_freq.append(freq_dist)
-        
-        top_w = sorted(freq_dist, key=freq_dist.get, reverse=True)
-        print top_w[:top_nWords]
+
+        # top_words.append(freq_dist.most_common(top_nWords))
+        # top_w = sorted(freq_dist, key=freq_dist.get, reverse=True)
+        # print top_w[:top_nWords]
         # try:
         #     top_words.append(top_w[:top_nWords])
         # except:
@@ -170,14 +172,21 @@ def results():
     for i in range(activity.shape[0]):
         # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
-    for clus in cluster_centers:
+
+    word_array = []
+    for i, clus in enumerate(cluster_centers):
         clus_centers.append(dict(lat=clus[1], long=clus[0], clusterid=int(clus[2])))
+        this_array = []
+        for word in word_freq[i].most_common(top_nWords):
+            this_array.append({'text': word[0], 'weight': word[1]})
+        word_array.append(this_array)
 
     heatmap = True
     return render_template('results.html', results=events,\
         examples=examples,\
         ncluster=n_clusters, clus_centers=clus_centers,\
-        user_lat = user_lat, user_lon = user_lon, heatmap=heatmap)
+        user_lat = user_lat, user_lon = user_lon, heatmap=heatmap,\
+        word_array=word_array)
 
 
 
