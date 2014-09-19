@@ -310,3 +310,8 @@ examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", 
             {"id": "3", "name": "Event 3", "startTime": "", "endTime": ""},
             {"id": "4", "name": "Event 4", "startTime": "", "endTime": ""}
             ]
+
+# todo decouple id and area_str
+            # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 10, 2014", "startTime": "2014-09-10T17:00:00", "endTime": "2014-09-10 23:30:00"},
+            # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 11, 2014", "startTime": "2014-09-11T11:00:00", "endTime": "2014-09-11 18:30:00"},
+            # {"id": "attpark", "name": "Dodgers at Giants - Sep 12, 2014", "startTime": "2014-09-12T17:00:00", "endTime": "2014-09-12 23:30:00"},
