@@ -65,8 +65,6 @@
          <!-- Closing the well -->
          </div>
 
-        <!-- <div id="chart_div" style="width: 900px; height: 500px;"></div> -->
-        <div id="chart_div"></div>
 
         <!-- Closing the location entry field -->
     </div>
@@ -75,20 +73,27 @@
     <!-- Closing map and location input row -->
     </div>
 
-    <!-- Instagram photos -->
+    <div class ="col-md-12">
+    <!-- Word cloud -->
     <div class ="col-md-6">
-        <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby photos</span>
+        <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby topics</span> -->
+        <!-- <h3>Nearby topics</h3> -->
+        <div id="example" style="width: 450px; height: 320px;"></div>
+    </div>
+    <div class ="col-md-6">
+        <!-- <div id="chart_div" style="width: 900px; height: 500px;"></div> -->
+        <div id="chart_div"></div>
+    </div>
+    </div>
+
+    <div class ="col-md-12">
+    <!-- Instagram photos -->
+        <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby photos</span> -->
         <!-- <h3>Nearby photos</h3> -->
         <div id="instafeed"></div>
         <!-- <button id="load-more" style="background-color: #ff6600; color: white;" class="btn btn-default">More!</button> -->
     </div>
 
-    <!-- Word cloud -->
-    <div class ="col-md-6">
-        <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby topics</span>
-        <!-- <h3>Nearby topics</h3> -->
-        <div id="example" style="width: 450px; height: 250px;"></div>
-    </div>
 </div><!-- /.container -->
 
 
@@ -159,7 +164,7 @@ function init_map() {
     function mapIt(var_location) {
         var var_mapoptions = {
             center: var_location,
-            zoom: 12
+            zoom: 13
             // mapTypeId: google.maps.MapTypeId.SATELLITE
         };
 
@@ -380,10 +385,10 @@ $("document").ready(function(){
 <script type="text/javascript">
     var feed = new Instafeed({
         get: 'search_happening',
-        limit: 15,
+        limit: 14,
         lat: {{ clus1_lat }},
         lng: {{ clus1_lon }},
-        distance: 300,
+        distance: 140,
         min_timestamp: {{ time_now_start }},
         max_timestamp: {{ time_now_end }},
         accessToken: "{{ insta_access_token }}"
