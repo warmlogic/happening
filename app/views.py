@@ -197,7 +197,10 @@ def results():
         this_array = []
         for word in word_freq[i].most_common(top_nWords):
             this_array.append({'text': word[0], 'weight': word[1]})
+            # this_array.append({'text': word[0], 'weight': word[1], 'style': 'color:' + clusterColor[i] + ';'})
+            # this_array.append({'text': word[0], 'weight': word[1], 'class': str(i)})
         word_array.append(this_array)
+    print word_array
 
 
     resample_activity_overtime = '15min'

@@ -270,7 +270,6 @@ function drawChart() { //javascript
         // console.log(thisTime)
         arrayData.push(thisTime);
     {% endfor %}
-    console.log(arrayData)
 
     // Not enough data to plot
     // TODO: Display an error message.
@@ -288,7 +287,6 @@ function drawChart() { //javascript
     // console.log(data);
 
     // Set chart options
-    console.log(lineColors);
     var options = {
      'title':"", //options object takes lots of things, including colors, so it is an easy way of customizing visualization - go look at docs.
      'curveType': 'function',
@@ -352,12 +350,15 @@ $("document").ready(function(){
 
 <script src="{{ url_for('static', filename='js/jqcloud-1.0.4.min.js') }}"></script>
 <script type="text/javascript">
-    var word_list = []
+    var word_list = [];
     {% for cluster in word_array %}
         {% for words in cluster %}
-            word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }} })
+            word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}});
+            // word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}, html: {style: "{{ words['color'] }}" }});
+            // word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}, html: {class: "{{ words['class'] }}" }});
         {% endfor %}
     {% endfor %}
+    // console.log(word_list);
     $(function() {
         $("#example").jQCloud(word_list);
     });
