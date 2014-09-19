@@ -104,7 +104,7 @@
 <script>
 function init_map() {
     
-    var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
+    var var_location = new google.maps.LatLng({{ clus1_lat }}, {{ clus1_lon }});
     var sw = new google.maps.LatLng({{ latlng_sw }});
     var ne = new google.maps.LatLng({{ latlng_ne }});
     var var_bounds = new google.maps.LatLngBounds(sw, ne);
@@ -159,7 +159,7 @@ function init_map() {
     function mapIt(var_location) {
         var var_mapoptions = {
             center: var_location,
-            zoom: 14
+            zoom: 12
             // mapTypeId: google.maps.MapTypeId.SATELLITE
         };
 
