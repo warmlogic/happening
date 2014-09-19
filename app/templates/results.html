@@ -105,6 +105,7 @@
 function init_map() {
     
     var var_location = new google.maps.LatLng({{ cluster_centers[0][1] }}, {{ cluster_centers[0][0] }});
+    // var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
     var sw = new google.maps.LatLng({{ latlng_sw }});
     var ne = new google.maps.LatLng({{ latlng_ne }});
     // var var_bounds = new google.maps.LatLngBounds(sw, ne);
