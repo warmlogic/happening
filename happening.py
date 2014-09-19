@@ -95,8 +95,12 @@ def whatsHappening(this_lon, this_lat,\
                 print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
                 activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
-                message = None
-                success = True
+                if len(cluster_centers) > 0:
+                    message = 'found clusters, hoooray!'
+                    success = True
+                else:
+                    message = 'all clusters rejected!'
+                    success = False
             else:
                 activity_now_clustered = activity_now
                 n_clusters = 0
