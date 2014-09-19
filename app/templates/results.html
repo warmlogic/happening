@@ -90,7 +90,11 @@
 
 <!--==============================================================-->
 {% block scripts %}
-
+<!-- 
+<script>
+    var clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
+</script>
+ -->
 <script>
 function init_map() {
     
@@ -103,11 +107,15 @@ function init_map() {
     
     //Build color icons for clusters         
     var iconArray = new Array();
-    var iconColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
     // ["gray","orange","yellow","green","blue","purple"]
-    for (i = 0; i < {{ncluster}}+1 ; i++) {
-        iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+iconColor[i]+"/"}
-    }
+    // for (i = 0; i < {{ncluster}}+1 ; i++) {
+    //     iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+clusterColor[i]+"/"}
+    // }
+    {% for i in range(ncluster) %}
+        // console.log("{{ loop.index }}");
+        // console.log("{{ clusterColor[loop.index] }}");
+        iconArray[{{ loop.index }}] = { url: "http://www.googlemapsmarkers.com/v1/"+"{{ loop.index }}"+"/"+"{{ clusterColor[loop.index] }}"+"/"};
+    {% endfor %}
 
     {% if heatmap %}
         var heatMapData = []
@@ -240,6 +248,15 @@ google.maps.event.addDomListener(window, 'load', init_map);
 //   $('#third-link').attr('href', urls[2]['flickr']);
 // }
 
+// lineColors = clusterColor.slice(1)
+// var lineColors = {{ "clusterColor[1:]" }};
+
+var lineColors = []
+{% for i in range(ncluster) %}
+    if ({{ loop.index }} > 0) {
+        lineColors.push("{{ clusterColor[loop.index] }}")
+    }
+{% endfor %}
 
 // Load the Visualization API and the corechart package.
 google.load("visualization", "1", {packages:["corechart"]});
@@ -248,10 +265,12 @@ function drawChart() { //javascript
     var arrayData = []
     // arrayData.push(['Date', 'Count'])
     {% for dat in plotdata %}
-        arrayData.push([new Date("{{ dat[0] }}"), {{ dat[1] }} ])
-        // console.log("{{ dat[0] }}")
-        // console.log(new Date("{{ dat[0] }}"))
+        var thisTime = [new Date("{{ dat[0] }}")];
+        thisTime.push.apply(thisTime, {{ dat[1:] }});
+        // console.log(thisTime)
+        arrayData.push(thisTime);
     {% endfor %}
+    console.log(arrayData)
 
     // Not enough data to plot
     // TODO: Display an error message.
@@ -259,7 +278,9 @@ function drawChart() { //javascript
     
     var data = new google.visualization.DataTable();
     data.addColumn('datetime', 'Time');
-    data.addColumn('number','Count');
+    {% for i in range(ncluster) %}
+        data.addColumn('number',"Event {{ loop.index }}");
+    {% endfor %}
     data.addRows(arrayData);
 
     // var formatter = new google.visualization.DateFormat({formatType: 'long', timeZone: -7});
@@ -267,9 +288,11 @@ function drawChart() { //javascript
     // console.log(data);
 
     // Set chart options
+    console.log(lineColors);
     var options = {
-     'title':"", //options object takes lots of things, incliuding colors, so it is an easy way of customizing visualization - go look at docs.
+     'title':"", //options object takes lots of things, including colors, so it is an easy way of customizing visualization - go look at docs.
      'curveType': 'function',
+     'colors': lineColors,
      'width':500,
      'height':300,
      'backgroundColor': '#f4f7f2',
