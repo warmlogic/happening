@@ -104,18 +104,25 @@
 <script>
 function init_map() {
     
-    var var_location = new google.maps.LatLng({{ clus1_lat }}, {{ clus1_lon }});
+    var var_location = new google.maps.LatLng({{ cluster_centers[0][1] }}, {{ cluster_centers[0][0] }});
     var sw = new google.maps.LatLng({{ latlng_sw }});
     var ne = new google.maps.LatLng({{ latlng_ne }});
-    var var_bounds = new google.maps.LatLngBounds(sw, ne);
+    // var var_bounds = new google.maps.LatLngBounds(sw, ne);
+    var var_bounds = new google.maps.LatLngBounds();
     
-    var var_ourmap = mapIt(var_location,var_bounds)
+    var var_ourmap = mapIt(var_location);
+    // var var_ourmap = mapIt(var_location,var_bounds)
     
     //Build color icons for clusters         
     var iconArray = new Array();
     // ["gray","orange","yellow","green","blue","purple"]
     // for (i = 0; i < {{ncluster}}+1 ; i++) {
     //     iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+clusterColor[i]+"/"}
+    // }
+    // for (i = 0; i < {{ncluster}}+1 ; i++) {
+    //     var col = {{ clusterColor[i] }}
+    //     console.log(col);
+    //     iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+col+"/"}
     // }
     {% for i in range(ncluster) %}
         // console.log("{{ loop.index }}");
@@ -131,9 +138,6 @@ function init_map() {
                 );
         {% endfor %}
 
-        // DEBUG
-        // console.log(heatMapData)
-
         // set heat map
         var pointArray = new google.maps.MVCArray(heatMapData);
         var heatmap = new google.maps.visualization.HeatmapLayer({
@@ -142,13 +146,19 @@ function init_map() {
         heatmap.setMap(var_ourmap);
 
         {% for clus in clus_centers %}
-            // addCentroidMarker(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
-            addPinMarker(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
-            // addPinMarkerWithInfo(var_ourmap,{{ clus['lat'] }}, {{ clus['long'] }}, {{ clus['clusterid'] }})
+            clus_lat_lng = new google.maps.LatLng({{ clus['lat'] }}, {{ clus['long'] }})
+            var_bounds.extend(clus_lat_lng)
+            // addCentroidMarker(var_ourmap, clus_lat_lng, {{ clus['clusterid'] }})
+            addPinMarker(var_ourmap, clus_lat_lng, {{ clus['clusterid'] }})
+            // addPinMarkerWithInfo(var_ourmap, clus_lat_lng, {{ clus['clusterid'] }})
         {% endfor %}
+        if ({{ ncluster }} > 1) {
+            var_ourmap.fitBounds(var_bounds);
+        }
     {% else %}
         {% for result in results %}
-            addPinMarker(var_ourmap,{{ result['lat'] }}, {{ result['long'] }}, {{ result['clusterid'] }})
+            res_lat_lng = new google.maps.LatLng({{ result['lat'] }}, {{ result['long'] }})
+            addPinMarker(var_ourmap, res_lat_lng, {{ result['clusterid'] }})
         {% endfor %}
     {% endif %}
     
@@ -156,6 +166,7 @@ function init_map() {
         return iconArray[ID]
     }
     
+    // function mapIt(var_location,var_bounds) {
     function mapIt(var_location) {
         var var_mapoptions = {
             center: var_location,
@@ -165,7 +176,7 @@ function init_map() {
 
         var var_map = new google.maps.Map(document.getElementById("map-container"),
             var_mapoptions);
-        var_map.panToBounds(var_bounds)
+        // var_map.panToBounds(var_bounds)
             
         // var var_marker = new google.maps.Marker({
         //     position: var_location,
@@ -177,11 +188,11 @@ function init_map() {
         return var_map
     }
     
-    function addPinMarker(this_map,thislat,thislong,thisID) {
-        var latlong = new google.maps.LatLng(thislat,thislong)
+    function addPinMarker(this_map,clus_lat_lng,thisID) {
+        // var latlong = new google.maps.LatLng(thislat,thislong)
 
         var this_marker = new google.maps.Marker({
-            position: latlong,
+            position: clus_lat_lng,
             map: this_map,
             icon: getMakerImage(thisID+1)
             })
@@ -189,12 +200,12 @@ function init_map() {
         // this_marker.setMap(this_map);
     }
 
-    function addPinMarkerWithInfo(this_map,thislat,thislong,thisID,infoWindow) {
+    function addPinMarkerWithInfo(this_map,clus_lat_lng,thisID,infoWindow) {
         // https://github.com/helenaxwang/AveNeue/blob/master/flask_site/app/templates/map_basic.html
-        var latlong = new google.maps.LatLng(thislat,thislong)
+        // var latlong = new google.maps.LatLng(thislat,thislong)
 
         var this_marker = new google.maps.Marker({
-            position: latlong,
+            position: clus_lat_lng,
             map: this_map,
             icon: getMakerImage(thisID+1)
             })
@@ -208,11 +219,11 @@ function init_map() {
         });
     }
 
-    function addCentroidMarker(this_map,thislat,thislong,thisID) {
-        var latlong = new google.maps.LatLng(thislat,thislong)
+    function addCentroidMarker(this_map,clus_lat_lng,thisID) {
+        // var latlong = new google.maps.LatLng(thislat,thislong)
 
         var this_marker = new google.maps.Marker({
-            position: latlong,
+            position: clus_lat_lng,
             map: this_map,
             icon: {
                 path: google.maps.SymbolPath.CIRCLE,
@@ -273,7 +284,6 @@ function drawChart() { //javascript
     {% for dat in plotdata %}
         var thisTime = [new Date("{{ dat[0] }}")];
         thisTime.push.apply(thisTime, {{ dat[1:] }});
-        // console.log(thisTime)
         arrayData.push(thisTime);
     {% endfor %}
 
@@ -360,11 +370,8 @@ $("document").ready(function(){
     {% for cluster in word_array %}
         {% for words in cluster %}
             word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}});
-            // word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}, html: {style: "{{ words['color'] }}" }});
-            // word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}, html: {class: "{{ words['class'] }}" }});
         {% endfor %}
     {% endfor %}
-    // console.log(word_list);
     $(function() {
         $("#example").jQCloud(word_list);
     });
@@ -381,8 +388,8 @@ $("document").ready(function(){
     var feed = new Instafeed({
         get: 'search_happening',
         limit: 14,
-        lat: {{ clus1_lat }},
-        lng: {{ clus1_lon }},
+        lat: {{ cluster_centers[0][1] }},
+        lng: {{ cluster_centers[0][0] }},
         distance: 140,
         min_timestamp: {{ time_now_start }},
         max_timestamp: {{ time_now_end }},

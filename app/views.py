@@ -230,6 +230,7 @@ def results():
     latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
 
     insta_access_token = instaauth['accesstoken']
+    print cluster_centers
     return render_template('results.html', results=events,\
         examples=examples,\
         ncluster=n_clusters, clus_centers=clus_centers,\
@@ -242,10 +243,11 @@ def results():
         selected=selected,\
         clusterColor=clusterColor,\
         insta_access_token=insta_access_token,\
-        clus1_lat=cluster_centers[0][1],\
-        clus1_lon=cluster_centers[0][0],\
+        cluster_centers=cluster_centers,\
         time_now_start=activity.index[0].value // 10**9,\
         time_now_end=activity.index[-1].value // 10**9)
+        # clus1_lat=cluster_centers[0][1],\
+        # clus1_lon=cluster_centers[0][0],\
 
 @app.route('/author')
 def contact():
@@ -281,6 +283,7 @@ def contact():
 # set up some examples
 #############
 
+# ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 
 examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09 15:00:00"},
