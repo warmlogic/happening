@@ -56,7 +56,7 @@ def results_procLocation():
     lat_ne = res['geometry']['bounds']['northeast']['lat']
 
     # get the times
-    hoursOffset = 1
+    hoursOffset = 2
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
     startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
     endTime = pd.datetime.isoformat(endTime)
@@ -88,6 +88,9 @@ def results():
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
     time_now = [request.args.get('startTime'), request.args.get('endTime')]
 
+    latlng_sw = [float(request.args.get('lat_sw')), float(request.args.get('lng_sw'))]
+    latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
+
     # compare to the day before
     daysOffset = 1
     startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
@@ -113,20 +116,25 @@ def results():
     else:
         print 'message: ' + message
         # TODO: set redirect to failure page
-        return render_template('results.html', results=events,\
-            examples=examples,\
-            ncluster=n_clusters, clus_centers=clus_centers,\
-            user_lat = user_lat, user_lon = user_lon,\
-            latlng_sw = latlng_sw, latlng_ne = latlng_ne,\
-            heatmap=True,\
-            word_array=word_array,\
-            message = message,\
-            plotdata=plotdata,\
-            selected=selected,\
-            clusterColor=clusterColor,\
-            insta_access_token=insta_access_token,\
-            time_now_start=activity.index[0].value // 10**9,\
-            time_now_end=activity.index[-1].value // 10**9)
+        events = []
+        return render_template('no_events.html', results=events, examples=examples,\
+            user_lat=user_lat, user_lon=user_lon,\
+            latlng_sw=latlng_sw, latlng_ne=latlng_ne)
+
+        # return render_template('no_events.html', results=events,\
+        #     examples=examples,\
+        #     ncluster=n_clusters, clus_centers=clus_centers,\
+        #     user_lat = user_lat, user_lon = user_lon,\
+        #     latlng_sw = latlng_sw, latlng_ne = latlng_ne,\
+        #     heatmap=True,\
+        #     word_array=word_array,\
+        #     message = message,\
+        #     plotdata=plotdata,\
+        #     selected=selected,\
+        #     clusterColor=clusterColor,\
+        #     insta_access_token=insta_access_token,\
+        #     time_now_start=activity.index[0].value // 10**9,\
+        #     time_now_end=activity.index[-1].value // 10**9)
 
 
     # # for removing punctuation (via translate)
@@ -240,9 +248,6 @@ def results():
     #     'visData': plotdata,
     #     'photoURLs': photo_urls
     # }
-
-    latlng_sw = [float(request.args.get('lat_sw')), float(request.args.get('lng_sw'))]
-    latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
 
     insta_access_token = instaauth['accesstoken']
     return render_template('results.html', results=events,\
