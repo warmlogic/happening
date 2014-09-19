@@ -75,13 +75,19 @@
     <!-- Closing map and location input row -->
     </div>
 
+    <!-- Instagram photos -->
+    <div class ="col-md-6">
+        <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby photos</span>
+        <!-- <h3>Nearby photos</h3> -->
+        <div id="instafeed"></div>
+        <!-- <button id="load-more" style="background-color: #ff6600; color: white;" class="btn btn-default">More!</button> -->
+    </div>
+
     <!-- Word cloud -->
     <div class ="col-md-6">
-        <h3>Nearby topics</h3>
+        <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby topics</span>
+        <!-- <h3>Nearby topics</h3> -->
         <div id="example" style="width: 450px; height: 250px;"></div>
-    </div>
-    <div class ="col-md-6">
-        <h3>Nearby photos</h3>
     </div>
 </div><!-- /.container -->
 
@@ -369,6 +375,45 @@ $("document").ready(function(){
         $("#predef").val({{ selected|tojson }}); // set dropdown to curr value
     });
 </script>
+
+<script src="{{ url_for('static', filename='js/instafeed.js') }}"></script>
+<script type="text/javascript">
+    var feed = new Instafeed({
+        get: 'search_happening',
+        limit: 15,
+        lat: {{ clus1_lat }},
+        lng: {{ clus1_lon }},
+        distance: 300,
+        min_timestamp: {{ time_now_start }},
+        max_timestamp: {{ time_now_end }},
+        accessToken: "{{ insta_access_token }}"
+    });
+    feed.run();
+</script>
+
+<!--
+<script type="text/javascript">
+var loadButton = document.getElementById('load-more');
+var feed = new Instafeed({
+  // every time we load more, run this function
+  after: function() {
+    // disable button if no more results to load
+    if (!this.hasNext()) {
+      loadButton.setAttribute('disabled', 'disabled');
+    }
+  },
+});
+
+// bind the load more button
+loadButton.addEventListener('click', function() {
+  feed.next();
+});
+
+// run our feed!
+feed.run();
+</script>
+-->
+
 <!--=================================================-->
 {% endblock %}
 
