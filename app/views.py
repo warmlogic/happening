@@ -113,6 +113,21 @@ def results():
     else:
         print 'message: ' + message
         # TODO: set redirect to failure page
+        return render_template('results.html', results=events,\
+            examples=examples,\
+            ncluster=n_clusters, clus_centers=clus_centers,\
+            user_lat = user_lat, user_lon = user_lon,\
+            latlng_sw = latlng_sw, latlng_ne = latlng_ne,\
+            heatmap=True,\
+            word_array=word_array,\
+            message = message,\
+            plotdata=plotdata,\
+            selected=selected,\
+            clusterColor=clusterColor,\
+            insta_access_token=insta_access_token,\
+            time_now_start=activity.index[0].value // 10**9,\
+            time_now_end=activity.index[-1].value // 10**9)
+
 
     # # for removing punctuation (via translate)
     # table = string.maketrans("","")
@@ -188,13 +203,13 @@ def results():
     # https://github.com/lucaong/jQCloud
 
     events = []
-    clus_centers = []
-    top_nWords = 20
     for i in range(activity.shape[0]):
         # events.append(dict(lat=nearby['latitude'][j], long=nearby['longitude'][j], clusterid=clusCount, tweet=nearby['text'][j]))
         events.append(dict(lat=activity['latitude'][i], long=activity['longitude'][i], clusterid=activity['clusterNum'][i], tweet=activity['text'][i]))
 
+    clus_centers = []
     word_array = []
+    top_nWords = 20
     for i, clus in enumerate(cluster_centers):
         clus_centers.append(dict(lat=clus[1], long=clus[0], clusterid=int(clus[2])))
         this_array = []
@@ -230,7 +245,6 @@ def results():
     latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
 
     insta_access_token = instaauth['accesstoken']
-    print cluster_centers
     return render_template('results.html', results=events,\
         examples=examples,\
         ncluster=n_clusters, clus_centers=clus_centers,\

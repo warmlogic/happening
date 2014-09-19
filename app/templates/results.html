@@ -213,7 +213,7 @@ function init_map() {
         var infoWindow = new google.maps.InfoWindow();
 
         google.maps.event.addListener(this_marker, 'click', function(event) {
-            infoWindow.setPosition(latlong);
+            infoWindow.setPosition(clus_lat_lng);
             infoWindow.setContent('TiH' + '<br>' + 'Event');
             infoWindow.open(this_map,this);
         });
