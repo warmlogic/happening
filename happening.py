@@ -45,10 +45,11 @@ def whatsHappening(this_lon, this_lat,\
     latlong = open("./data/latlong_userdategeo_combined.csv")
 
     print 'Reading locations...'
-    df = pd.read_csv(latlong,header=None,parse_dates=[2],\
+    df = pd.read_csv(latlong,header=None,parse_dates=[2],dtype={'url': str},\
         names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
     print 'Done.'
     latlong.close()
+    # df.fillna('', inplace=True)
 
     # twitter times are in UTC
     df = df.tz_localize('UTC').tz_convert(tz)
