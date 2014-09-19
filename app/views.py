@@ -106,6 +106,7 @@ def results():
         print 'message: found clusters, hoooray!'
     else:
         print 'message: ' + message
+        # TODO: set redirect to failure page
 
     # # for removing punctuation (via translate)
     # table = string.maketrans("","")
@@ -196,10 +197,17 @@ def results():
         word_array.append(this_array)
 
 
-    plotdata=[['Date', 'Count']];
-    # for index in range(0,len(chosen_years)):
-    #   plotdata.append([strdate[index], predicted_crowds[index]])
-    # print plotdata
+    resample_activity_overtime = '15min'
+    overtime_now = activity.ix[:, ['clusterNum']].resample(resample_activity_overtime, how='count')
+    # plotdata = [['Date', 'Count']];
+    plotdata = [];
+    for i in range(overtime_now.shape[0]):
+        plotdata.append([overtime_now.index[i][0].isoformat(), overtime_now[i]])
+        # TODO add other clusters in other columns
+
+        # plotdata.append([overtime_now.index[i][0].replace(tzinfo=None).isoformat(), overtime_now[i]])
+        # plotdata.append([overtime_now.index[i][0].value // 10**9, overtime_now[i]])
+        # plotdata.append([overtime_now.index[i][0].value, overtime_now[i]])
     
     returnObject = {
         'visData': plotdata
@@ -219,7 +227,7 @@ def results():
         heatmap=True,\
         word_array=word_array,\
         message = message,\
-        plotdata=json.dumps(returnObject))
+        plotdata=plotdata)
 
 
 
@@ -240,6 +248,22 @@ def contact():
 # @app.errorhandler(500)
 # def internal_error(error):
 #     return render_template('500.html'), 500
+
+#############
+# read the data
+#############
+
+# latlong = open("./data/latlong_userdategeo_combined.csv")
+
+# print 'Reading locations...'
+# df = pd.read_csv(latlong,header=None,parse_dates=[2],\
+#     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
+# print 'Done.'
+# latlong.close()
+
+#############
+# set up some examples
+#############
 
 examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", "startTime": "2014-09-09 08:00:00", "endTime": "2014-09-09 15:00:00"},
             {"id": "attpark", "name": "Diamondbacks at Giants - Sep 9, 2014", "startTime": "2014-09-09 17:00:00", "endTime": "2014-09-09 23:30:00"},
