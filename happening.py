@@ -93,11 +93,11 @@ def whatsHappening(this_lon, this_lat,\
                 print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
                 print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
-                activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
+                activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
                 message = None
                 success = True
             else:
-                activity_clustered = activity_now
+                activity_now_clustered = activity_now
                 n_clusters = 0
                 cluster_centers = []
                 message = 'Sorry, no activity found during the baseline time!'
@@ -105,20 +105,20 @@ def whatsHappening(this_lon, this_lat,\
 
                 # TODO: pick a different baseline
         else:
-            activity_clustered = geo_activity
+            activity_now_clustered = geo_activity
             n_clusters = 0
             cluster_centers = []
             message = 'Sorry, no activity found during this time!'
             success = False
     else:
-        activity_clustered = geo_activity
+        activity_now_clustered = geo_activity
         n_clusters = 0
         cluster_centers = []
         message = 'Sorry, no activity found in this region!'
         success = False
 
 
-    return activity_clustered, n_clusters, cluster_centers, user_lon, user_lat, message, success
+    return activity_now_clustered, n_clusters, cluster_centers, user_lon, user_lat, message, success
 
 def cleanTextGetWordFrequency(activity):
     # for removing punctuation (via translate)
