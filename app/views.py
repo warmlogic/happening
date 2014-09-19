@@ -111,10 +111,8 @@ def results():
         this_lon=this_lon,this_lat=this_lat,\
         nbins=nbins,nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
-    if success:
-        print 'message: found clusters, hoooray!'
-    else:
-        print 'message: ' + message
+    print 'message: ' + message
+    if success is False:
         # TODO: set redirect to failure page
         events = []
         return render_template('no_events.html', results=events, examples=examples,\
@@ -306,12 +304,12 @@ def contact():
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 
 examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09 15:00:00"},
-            {"id": "attpark", "name": "Diamondbacks at Giants - Sep 9, 2014", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09 23:30:00"},
-            {"id": "3", "name": "Event 3", "startTime": "", "endTime": ""},
-            {"id": "4", "name": "Event 4", "startTime": "", "endTime": ""}
+            {"id": "attpark", "name": "Diamondbacks at Giants - Sep 9, 2014", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09 23:30:00"}
             ]
 
 # todo decouple id and area_str
             # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 10, 2014", "startTime": "2014-09-10T17:00:00", "endTime": "2014-09-10 23:30:00"},
             # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 11, 2014", "startTime": "2014-09-11T11:00:00", "endTime": "2014-09-11 18:30:00"},
             # {"id": "attpark", "name": "Dodgers at Giants - Sep 12, 2014", "startTime": "2014-09-12T17:00:00", "endTime": "2014-09-12 23:30:00"},
+            # {"id": "3", "name": "Event 3", "startTime": "", "endTime": ""},
+            # {"id": "4", "name": "Event 4", "startTime": "", "endTime": ""}
