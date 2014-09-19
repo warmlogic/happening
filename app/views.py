@@ -74,10 +74,13 @@ def results_procPredef():
     endTime = [dct["endTime"] for dct in examples if dct["id"] == area_str][0]
 
     # get bounding box from this area_str
-    return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime))
+    return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime, selected=request.form.get("event_id")))
 
 @app.route("/results",methods=['GET'])
 def results():
+    # get the selected event
+    selected = request.args.get('selected')
+    
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
     time_now = [request.args.get('startTime'), request.args.get('endTime')]
@@ -227,7 +230,8 @@ def results():
         heatmap=True,\
         word_array=word_array,\
         message = message,\
-        plotdata=plotdata)
+        plotdata=plotdata,\
+        selected=selected)
 
 
 
