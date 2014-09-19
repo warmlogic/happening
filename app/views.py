@@ -81,6 +81,8 @@ def results_procPredef():
 def results():
     # get the selected event
     selected = request.args.get('selected')
+    if selected == None:
+        selected = "apple_flint_center"
 
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
