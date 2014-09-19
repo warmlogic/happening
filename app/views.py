@@ -80,7 +80,7 @@ def results_procPredef():
 def results():
     # get the selected event
     selected = request.args.get('selected')
-    
+
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
     time_now = [request.args.get('startTime'), request.args.get('endTime')]
@@ -201,16 +201,18 @@ def results():
 
 
     resample_activity_overtime = '15min'
-    overtime_now = activity.ix[:, ['clusterNum']].resample(resample_activity_overtime, how='count')
-    # plotdata = [['Date', 'Count']];
-    plotdata = [];
-    for i in range(overtime_now.shape[0]):
-        plotdata.append([overtime_now.index[i][0].isoformat(), overtime_now[i]])
-        # TODO add other clusters in other columns
+    grouper = pd.TimeGrouper(resample_activity_overtime)
+    activity_resamp = activity.groupby(grouper).apply(lambda x: x['clusterNum'].value_counts()).unstack()
 
-        # plotdata.append([overtime_now.index[i][0].replace(tzinfo=None).isoformat(), overtime_now[i]])
-        # plotdata.append([overtime_now.index[i][0].value // 10**9, overtime_now[i]])
-        # plotdata.append([overtime_now.index[i][0].value, overtime_now[i]])
+    plotdata = [];
+    for i in range(activity_resamp.shape[0]):
+        thisRow = []
+        thisRow.extend([activity_resamp.index[i].isoformat()])
+        for clusNum in range(n_clusters):
+            thisCluster = activity_resamp[clusNum]
+            thisCluster.fillna(value=0, inplace=True)
+            thisRow.extend([thisCluster[i]])
+        plotdata.append(thisRow)
     
     returnObject = {
         'visData': plotdata
@@ -231,9 +233,8 @@ def results():
         word_array=word_array,\
         message = message,\
         plotdata=plotdata,\
-        selected=selected)
-
-
+        selected=selected,\
+        clusterColor=clusterColor)
 
 @app.route('/author')
 def contact():
@@ -268,6 +269,8 @@ def contact():
 #############
 # set up some examples
 #############
+
+clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 
 examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", "startTime": "2014-09-09 08:00:00", "endTime": "2014-09-09 15:00:00"},
             {"id": "attpark", "name": "Diamondbacks at Giants - Sep 9, 2014", "startTime": "2014-09-09 17:00:00", "endTime": "2014-09-09 23:30:00"},
