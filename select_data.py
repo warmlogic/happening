@@ -152,7 +152,7 @@ def selectUser(df,rmnull=True):
         df = df[hasUser]
     return df
 
-def make_hist(df,nbins=200,show_plot=False,savefig=False,figname='latlong_hist_plot'):
+def make_hist(df,nbins,show_plot=False,savefig=False,figname='latlong_hist_plot'):
     H,xedges,yedges = np.histogram2d(np.array(df.longitude),np.array(df.latitude),bins=nbins)
     H = np.rot90(H)
     H = np.flipud(H)
@@ -164,7 +164,7 @@ def make_hist(df,nbins=200,show_plot=False,savefig=False,figname='latlong_hist_p
         ax = fig.add_subplot(111)
         plt.pcolormesh(xedges,yedges,Hmasked)
         # plt.title('Density of tweets (%d bins)' % nbins)
-        ax.set_title('Density of tweets (%d bins)' % nbins)
+        ax.set_title('Density of tweets (%d bins x %d bins)' % (nbins[0],nbins[1]))
         ax.set_xlabel('Longitude')
         ax.set_ylabel('Latitude')
         ax.get_xaxis().get_major_formatter().set_useOffset(False)
@@ -208,8 +208,11 @@ def set_get_boundBox(area_str='sf'):
     boundBox['bayarea_lon'] = [-122.53,-121.8]
     boundBox['bayarea_lat'] = [36.94,38.0]
 
-    boundBox['sf_lon'] = [-122.5686,-122.375]
-    boundBox['sf_lat'] = [37.6681,37.8258]
+    boundBox['sf_lon'] = [-122.5154,-122.3681]
+    boundBox['sf_lat'] = [37.7371,37.8103]
+
+    boundBox['peninsula_lon'] = [-122.5686,-122.375]
+    boundBox['peninsula_lat'] = [37.6681,37.8258]
 
     boundBox['fishwharf_lon'] = [-122.4231,-122.4076]
     boundBox['fishwharf_lat'] = [37.8040,37.8116]
@@ -261,38 +264,53 @@ def fullprint(*args, **kwargs):
     numpy.set_printoptions(**opt)
 
 
-def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,plotData=False):
+def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,eps=0.025,min_samples=50,plotData=False):
     X = np.vstack((activity_now.longitude, activity_now.latitude)).T
     if centerData:
         scaler = StandardScaler(copy=True)
         X_centered = scaler.fit(X).transform(X)
-        eps = 0.75
     else:
         X_centered = X
-        eps = 0.00075
-
-    min_samples = 50
 
     n_clusters_ = 0
-    n_tries = 0
-    while n_clusters_ == 0:
-        db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
-        # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-        n_tries += 1
 
-        labels = db.labels_
-        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-        if n_clusters_ == 0:
-            eps *= 2.0
-        if n_tries > 5:
-            min_samples /= min_samples
-        elif n_tries > 10:
-            break
+    if len(diffmore_lon) > 0:
+        n_tries_db = 0
+        min_clusters = 3
+        while n_clusters_ < min_clusters:
+            db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
+            # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+            n_tries_db += 1
+            print 'try number %d' % n_tries_db
 
-    print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
+            labels = db.labels_
+            n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+            if n_tries_db < 3:
+                eps *= 2.0
+                print 'increasing eps to %.3f' % eps
+            else:
+                print 'found %d clusters' % n_clusters_
+            if n_tries_db >= 3 and n_tries_db <= 7:
+                if min_samples > 10.0:
+                    min_samples = int(np.ceil(min_samples * 0.67))
+                    print 'decreasing min_samples to %d' % min_samples
+                else:
+                    break
+            elif n_tries_db > 7 and n_tries_db <= 8:
+                eps *= 2.0
+                print 'increasing eps to %.3f' % eps
+            elif n_tries_db > 8:
+                break
+
+        print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
+    else:
+        print 'no differences found using %d x %d bins' % (nbins[0], nbins[1])
 
     if n_clusters_ > 0:
-        binscale = 0.001
+        nbins_combo = int(np.floor(np.prod(nbins) / 100))
+        print 'nbins_combo %d' % nbins_combo
+        if nbins_combo < 5:
+            nbins_combo = 5
         core_samples = db.core_sample_indices_
         core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
         core_samples_mask[db.core_sample_indices_] = True
@@ -317,10 +335,25 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,pl
                 keepThisClus = False
 
                 # keep clusters that contain a hist2d hotspot
+                # print 'len diffmore_lon: %d' % len(diffmore_lon)
                 for i in range(len(diffmore_lon)):
-                    if diffmore_lon[i] > (min(cluster_lon) - nbins*binscale) and diffmore_lon[i] < (max(cluster_lon) + nbins*binscale) and diffmore_lat[i] > (min(cluster_lat) - nbins*binscale) and diffmore_lat[i] < (max(cluster_lat) + nbins*binscale):
-                        keepThisClus = True
+                    binscale = 0.001
+                    n_tries_bin = 0
+                    while keepThisClus is False:
+                        n_tries_bin += 1
+                        if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
+                            print 'keeping this cluster'
+                            keepThisClus = True
+                            break
+                        else:
+                            binscale += 0.0005
+                            print 'increasing binscale to %.3f' % binscale
+                        if n_tries_bin > 3:
+                            print 'this cluster did not contain a hotspot'
+                            break
+                    if keepThisClus:
                         break
+
 
                 keepClus.append(keepThisClus)
                 if keepThisClus:
