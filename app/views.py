@@ -86,15 +86,22 @@ def results():
 
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
-    time_now = [request.args.get('startTime'), request.args.get('endTime')]
 
     latlng_sw = [float(request.args.get('lat_sw')), float(request.args.get('lng_sw'))]
     latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
 
-    # compare to the day before
-    daysOffset = 1
-    startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
-    endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
+    time_now = [request.args.get('startTime'), request.args.get('endTime')]
+
+    # # compare to the day before
+    # daysOffset = 1
+    # startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
+    # endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
+    # time_then = [startTime_then, endTime_then]
+
+    # compare to the previous X hours
+    hoursOffset = 2
+    startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
+    endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
     time_then = [startTime_then, endTime_then]
 
     # # night life
