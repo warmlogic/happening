@@ -42,3 +42,27 @@ python searchForGeo_twitter.py
 ```
 
 Currently does not write data to disk.
+
+# Running the app
+
+2. **Recommended:** Install virtualenv and fire up a virtual environment.
+
+  ```
+  # Install virtualenv
+  sudo pip install virtualenv
+
+  # Create virtualenv folder `venv`
+  virtualenv venv
+
+  # Activate the virtual environment
+  source venv/bin/activate
+  ```
+
+3. Install Python project dependencies.
+
+  ```
+  pip install -r requirements.txt
+  ```
+
+4. To test your application, run the manage.py file: `python manage.py runserver`, and open your web browser to
+`localhost:5000`.
