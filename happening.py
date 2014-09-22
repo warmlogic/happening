@@ -140,6 +140,8 @@ def cleanTextGetWordFrequency(activity):
     stop.append('w')
     stop.append('im')
     stop.append('')
+    stop.append('san')
+    stop.append('francisco')
 
     for txt in activity['text'].values:
         txt = sd.processTweet(txt)
