@@ -33,10 +33,8 @@ plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 latlong = open("./data/latlong_userdategeo_combined.csv")
 
 print 'Reading locations...'
-# df = pd.read_csv(latlong,header=None,names=['longitude', 'latitude'])
-# df = pd.read_csv(latlong,header=None,names=['tweet_id','datestr', 'longitude','latitude','text'])
-df = pd.read_csv(latlong,header=None,parse_dates=[2],\
-    names=['user_id','tweet_id','datetime','longitude','latitude','text'],index_col='datetime')
+df = pd.read_csv(latlong,header=None,parse_dates=[2],dtype={'url': str},\
+    names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
 print 'Done.'
 latlong.close()
 
@@ -58,10 +56,10 @@ df = df.tz_localize('UTC').tz_convert('US/Pacific')
 
 # choose only coordinates in our bounding box of interest
 
-area_str='attpark'
+# area_str='attpark'
 # area_str='apple_flint_center'
 # area_str='bayarea'
-# area_str='sf'
+area_str='sf'
 # area_str='fishwharf'
 # area_str='embarc'
 # area_str='att48'
@@ -99,8 +97,10 @@ geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 # time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
 
 # giants vs diamondbacks
-time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
-time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+# time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
+# time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+time_now = ['2014-09-09 17:00:00', '2014-09-09 21:00:00']
+time_then = ['2014-09-08 13:00:00', '2014-09-08 17:00:00']
 
 activity_now = geo_activity.ix[time_now[0]:time_now[1]]
 activity_then = geo_activity.ix[time_then[0]:time_then[1]]
@@ -113,7 +113,7 @@ print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_
 ###########
 
 show_plot=True
-savefig = True
+savefig = False
 if show_plot:
     # tweetlocs = df.ix[:, ['longitude','latitude']]
     tweetlocs_now = activity_now.ix[:, ['longitude','latitude']].resample('60min', how='count')
@@ -140,12 +140,18 @@ if show_plot:
 # Plot heat map and difference
 ############
 
-nbins = 50
-show_plot=False
+# nbins_lon = 10
+# nbins_lat = 50
+# 0.003 makes bins about the size of AT&T park
+nbins_lon = int(np.ceil(float(np.diff(this_lon)) / 0.003))
+nbins_lat = int(np.ceil(float(np.diff(this_lat)) / 0.003))
+
+nbins = [nbins_lon, nbins_lat]
+show_plot=True
 savefig = False
 # plt = sd.make_hist(df,nbins,show_plot)
-Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot,savefig,'latlong_now_apple')
-Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot,savefig,'latlong_then_apple')
+Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot,savefig,'latlong_now')
+Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot,savefig,'latlong_then')
 Hdiff = Hnow - Hprev
 
 # Hweight = Hnow ./ Hprev
@@ -154,7 +160,7 @@ if show_plot:
     fig = plt.figure()
     ax = fig.add_subplot(111)
     plt.pcolormesh(xedges,yedges,Hdiff)
-    ax.set_title('Difference in tweets (%d bins)' % nbins)
+    ax.set_title('Difference in tweets (%d bins x %d bins)' % (nbins[0], nbins[1]))
     ax.set_xlabel('Longitude')
     ax.set_ylabel('Latitude')
     ax.get_xaxis().get_major_formatter().set_useOffset(False)
@@ -171,7 +177,9 @@ if show_plot:
 
 # return the top n values, sorted; ascend=biggest first
 n = 5
-diffthresh = int(np.floor(nbins * 0.75))
+# diffthresh = int(np.floor(nbins * 0.75))
+# diffthresh = int(np.floor(np.prod(nbins) / 100))
+diffthresh = 30
 morevals,moreind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='max', return_order='ascend')
 lessvals,lessind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='min', return_order='ascend')
 
@@ -180,10 +188,10 @@ lessvals,lessind = sd.choose_n_sorted(Hdiff, n=n, min_val=diffthresh, srt='min',
 # diffmore_lat = yedges[diffmore[:,1]]
 # diffless_lon = xedges[diffless[:,0]]
 # diffless_lat = yedges[diffless[:,1]]
-diffmore_lon = xedges[moreind[:,0]]
-diffmore_lat = yedges[moreind[:,1]]
-diffless_lon = xedges[lessind[:,0]]
-diffless_lat = yedges[lessind[:,1]]
+diffmore_lon = xedges[moreind[:,1]]
+diffmore_lat = yedges[moreind[:,0]]
+diffless_lon = xedges[lessind[:,1]]
+diffless_lat = yedges[lessind[:,0]]
 print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
 print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
@@ -193,7 +201,11 @@ print 'At threshold %d, found %d "events" that have less activity than previous 
 ############
 
 # return activity with cluster numbers after clustering with DBSCAN
-activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,plotData=True)
+# activity_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,plotData=True)
+eps = 0.025
+min_samples=100
+plotData = True
+activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,eps=eps,min_samples=min_samples,plotData=plotData)
 
 
 ############
