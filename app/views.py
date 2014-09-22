@@ -27,6 +27,18 @@ def happening_page():
 
     # TODO: can include map and form on base.html in {% block body %}
 
+    #############
+    # read the data
+    #############
+
+    # latlong = open("./data/latlong_userdategeo_combined.csv")
+
+    # print 'Reading locations...'
+    # df = pd.read_csv(latlong,header=None,parse_dates=[2],\
+    #     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
+    # print 'Done.'
+    # latlong.close()
+
     events = []
     this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
     # for our loc, just set the average
@@ -56,7 +68,7 @@ def results_procLocation():
     lat_ne = res['geometry']['bounds']['northeast']['lat']
 
     # get the times
-    hoursOffset = 2
+    hoursOffset = 4
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
     startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
     endTime = pd.datetime.isoformat(endTime)
@@ -65,14 +77,15 @@ def results_procLocation():
 
 @app.route("/results_predef",methods=['POST'])
 def results_procPredef():
-    area_str = request.form.get("event_id")
+    event_id = request.form.get("event_id")
+
+    # get the pre-defined time period
+    startTime = [dct["startTime"] for dct in examples if dct["id"] == event_id][0]
+    endTime = [dct["endTime"] for dct in examples if dct["id"] == event_id][0]
+    area_str = [dct["area_str"] for dct in examples if dct["id"] == event_id][0]
 
     # set the bounding box for the requested area
     this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
-
-    # get the pre-defined time period
-    startTime = [dct["startTime"] for dct in examples if dct["id"] == area_str][0]
-    endTime = [dct["endTime"] for dct in examples if dct["id"] == area_str][0]
 
     # get bounding box from this area_str
     return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime, selected=request.form.get("event_id")))
@@ -82,7 +95,7 @@ def results():
     # get the selected event
     selected = request.args.get('selected')
     if selected == None:
-        selected = "apple_flint_center"
+        selected = "1"
 
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
@@ -99,7 +112,7 @@ def results():
     # time_then = [startTime_then, endTime_then]
 
     # compare to the previous X hours
-    hoursOffset = 2
+    hoursOffset = 4
     startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
     endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
     time_then = [startTime_then, endTime_then]
@@ -111,12 +124,17 @@ def results():
 
     tz = 'US/Pacific'
 
-    nbins = 50
+    # 0.003 makes bins about the size of AT&T park
+    nbins_lon = int(np.ceil(float(np.diff(this_lon)) / 0.003))
+    nbins_lat = int(np.ceil(float(np.diff(this_lat)) / 0.003))
+    print 'nbins_lon: %d' % nbins_lon
+    print 'nbins_lat: %d' % nbins_lat
+    # nbins = [100 100]
     nclusters = 5
 
     activity, n_clusters, cluster_centers, user_lon, user_lat, message, success = hap.whatsHappening(\
         this_lon=this_lon,this_lat=this_lat,\
-        nbins=nbins,nclusters=nclusters,\
+        nbins=[nbins_lon,nbins_lat],nclusters=nclusters,\
         time_now=time_now, time_then=time_then, tz=tz)
     print 'message: ' + message
     if success is False:
@@ -124,7 +142,8 @@ def results():
         events = []
         return render_template('no_events.html', results=events, examples=examples,\
             user_lat=user_lat, user_lon=user_lon,\
-            latlng_sw=latlng_sw, latlng_ne=latlng_ne)
+            latlng_sw=latlng_sw, latlng_ne=latlng_ne,\
+            selected=selected)
 
         # return render_template('no_events.html', results=events,\
         #     examples=examples,\
@@ -292,31 +311,14 @@ def contact():
 #     return render_template('500.html'), 500
 
 #############
-# read the data
-#############
-
-# latlong = open("./data/latlong_userdategeo_combined.csv")
-
-# print 'Reading locations...'
-# df = pd.read_csv(latlong,header=None,parse_dates=[2],\
-#     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
-# print 'Done.'
-# latlong.close()
-
-#############
 # set up some examples
 #############
 
 # ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 
-examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09 15:00:00"},
-            {"id": "attpark", "name": "Diamondbacks at Giants - Sep 9, 2014", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09 23:30:00"}
+examples = [{"id": "1", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09T12:00:00"},
+            {"id": "2", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "startTime": "2014-09-09T11:00:00", "endTime": "2014-09-09T15:00:00"},
+            {"id": "3", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09T21:00:00"},
+            {"id": "4", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "startTime": "2014-09-19T17:00:00", "endTime": "2014-09-19T21:00:00"}
             ]
-
-# todo decouple id and area_str
-            # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 10, 2014", "startTime": "2014-09-10T17:00:00", "endTime": "2014-09-10 23:30:00"},
-            # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 11, 2014", "startTime": "2014-09-11T11:00:00", "endTime": "2014-09-11 18:30:00"},
-            # {"id": "attpark", "name": "Dodgers at Giants - Sep 12, 2014", "startTime": "2014-09-12T17:00:00", "endTime": "2014-09-12 23:30:00"},
-            # {"id": "3", "name": "Event 3", "startTime": "", "endTime": ""},
-            # {"id": "4", "name": "Event 4", "startTime": "", "endTime": ""}
