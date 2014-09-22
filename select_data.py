@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
+import re
 import pdb
 
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
@@ -260,13 +261,16 @@ def fullprint(*args, **kwargs):
     numpy.set_printoptions(**opt)
 
 
-def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
+def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,plotData=False):
     X = np.vstack((activity_now.longitude, activity_now.latitude)).T
-    scaler = StandardScaler(copy=True)
-    X_centered = scaler.fit(X).transform(X)
+    if centerData:
+        scaler = StandardScaler(copy=True)
+        X_centered = scaler.fit(X).transform(X)
+        eps = 0.75
+    else:
+        X_centered = X
+        eps = 0.00075
 
-    # eps = 0.00075
-    eps = 0.75
     min_samples = 50
 
     n_clusters_ = 0
@@ -293,36 +297,135 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat):
         core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
         core_samples_mask[db.core_sample_indices_] = True
 
-        # X = scaler.inverse_transform(X_centered)
-
         unique_labels = np.unique(labels)
 
         # go through the found clusters
         keepClus = []
+        cluster_centers = []
         clusterNums = np.repeat(-1,activity_now.shape[0])
         # for k, col in zip(unique_labels, colors):
         for k in unique_labels:
-            class_member_mask = (labels == k)
             if k != -1:
-                # activity_now[class_member_mask]
-                this_lon = X[class_member_mask,0]
-                this_lat = X[class_member_mask,1]
+                # if in a cluster, set a mask for this cluster
+                class_member_mask = (labels == k)
+
+                # get the lat and long for this cluster
+                cluster_lon = X[class_member_mask,0]
+                cluster_lat = X[class_member_mask,1]
+
+                # default setting for keeping the cluster
+                keepThisClus = False
 
                 # keep clusters that contain a hist2d hotspot
                 for i in range(len(diffmore_lon)):
-                    if diffmore_lon[i] > (min(X[class_member_mask,0]) - nbins*binscale) and diffmore_lon[i] < (max(X[class_member_mask,0]) + nbins*binscale) and diffmore_lat[i] > (min(X[class_member_mask,1]) - nbins*binscale) and diffmore_lat[i] < (max(X[class_member_mask,1]) + nbins*binscale):
-                        clusterNums[class_member_mask] = k
-                        keepClus.append(True)
-                    else:
-                        keepClus.append(False)
+                    if diffmore_lon[i] > (min(cluster_lon) - nbins*binscale) and diffmore_lon[i] < (max(cluster_lon) + nbins*binscale) and diffmore_lat[i] > (min(cluster_lat) - nbins*binscale) and diffmore_lat[i] < (max(cluster_lat) + nbins*binscale):
+                        keepThisClus = True
+                        break
+
+                keepClus.append(keepThisClus)
+                if keepThisClus:
+                    # fill in the cluster lable vector
+                    clusterNums[class_member_mask] = k
+
+                    # set the mean latitude and longitude
+                    mean_lon = np.mean(X[core_samples_mask & class_member_mask,0])
+                    mean_lat = np.mean(X[core_samples_mask & class_member_mask,1])
+                    cluster_centers.append([mean_lon,mean_lat,k])
+
             # else:
             #     keepClus.append(False)
             #     # Black used for noise.
             #     # col = 'k'
         activity_now['clusterNum'] = clusterNums
         n_clusters_real = sum(keepClus)
-        return activity_now, n_clusters_real
 
+        if plotData:
+            colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            for k, col in zip(unique_labels, colors):
+                if k == -1:
+                    # Black used for noise.
+                    col = 'k'
+
+                class_member_mask = (labels == k)
+
+                xy = X[class_member_mask & ~core_samples_mask]
+                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+                         markeredgecolor='k', markersize=2)
+
+                xy = X[class_member_mask & core_samples_mask]
+                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+                         markeredgecolor='k', markersize=14)
+
+            ax.get_xaxis().get_major_formatter().set_useOffset(False)
+            ax.get_yaxis().get_major_formatter().set_useOffset(False)
+            plt.title('Estimated number of clusters: %d' % n_clusters_)
+            ax.set_xlabel('Longitude')
+            ax.set_ylabel('Latitude')
+            # plt.show()
+
+            # print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
+            # print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
+            # print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
+            # print("Adjusted Rand Index: %0.3f"
+            #       % metrics.adjusted_rand_score(labels_true, labels))
+            # print("Adjusted Mutual Information: %0.3f"
+            #       % metrics.adjusted_mutual_info_score(labels_true, labels))
+            # print("Silhouette Coefficient: %0.3f"
+            #       % metrics.silhouette_score(X_centered, labels))
+    else:
+        n_clusters_real = 0
+        cluster_centers = []
+
+    return activity_now, n_clusters_real, cluster_centers
+
+# modified from: http://ravikiranj.net/drupal/201205/code/machine-learning/how-build-twitter-sentiment-analyzer
+def processTweet(tweet):
+    # process the tweets
+    
+    #Convert to lower case
+    tweet = tweet.lower()
+    #Convert www.* or https?://* to URL
+    # tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','URL',tweet)
+    tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+))','',tweet)
+    #Convert @username to AT_USER
+    # tweet = re.sub('@[^\s]+','AT_USER',tweet)
+    tweet = re.sub('@[^\s]+','',tweet)
+    #Remove additional white spaces
+    tweet = re.sub('[\s]+', ' ', tweet)
+
+    #Replace #hashtag with hashtag
+    # tweet = re.sub(r'#([^\s]+)', r'\1', tweet)
+
+    # remove single quotes and multiple periods
+    tweet = tweet.replace('\'','').replace('..',' ').strip(' \'"?,.!@$%^&*_+=/<>;:-()|\\')
+    return tweet
+
+def replaceTwoOrMore(s):
+    #look for 2 or more repetitions of character and replace with the character itself
+    # e.g., huuuuuuuungry to hungry
+    pattern = re.compile(r"(.)\1{1,}", re.DOTALL)
+    return pattern.sub(r"\1\1", s)
+
+def getFeatureVector(tweet,stop):
+    featureVector = []
+    #split tweet into words
+    words = tweet.split()
+    for w in words:
+        #replace two or more with two occurrences of a character
+        w = replaceTwoOrMore(w)
+        #strip punctuation
+        w = w.strip('\'"?,.!@$%^&*_+=/<>;:-()|\\')
+        #check if the word stats with an alphabet
+        # val = re.search(r"^[a-zA-Z][a-zA-Z0-9]*$", w)
+        #ignore if it is a stop word
+        # if(w in stop or val is None):
+        if(w in stop):
+            continue
+        else:
+            featureVector.append(w)
+    return featureVector
 
 # if __name__ == '__main__':
 #     import plot_data
