@@ -14,12 +14,15 @@ import twitter_tools
 #     #cur.execute("""DROP TABLE IF EXISTS rawtweets;""")
 #     cur.execute("""
 #         CREATE TABLE IF NOT EXISTS rawtweets(
-#         rawid BIGINT NOT NULL PRIMARY KEY,
+#         userid BIGINT NOT NULL PRIMARY KEY,
+#         username VARCHAR(15),
 #         tweetid BIGINT, 
-#         tweetloc VARCHAR(150),
-#         tweettext TEXT,
-#         tweettime DATETIME,
-#         hasgeo TINYINT(1))
+#         tweettime DATETIME, 
+#         tweettext VARCHAR(140),
+#         tweetlon DECIMAL(9,6),
+#         tweetlat DECIMAL(9,6),
+#         picurl TEXT,
+#         sentiment VARCHAR(20)
 #         """)
 #
 # # note: connection closed, need to reopen for writing
