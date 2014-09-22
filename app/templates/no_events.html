@@ -157,6 +157,12 @@ $("document").ready(function(){
     autocomplete.setBounds(LatLngBounds);
 </script>
 
+<script>
+    $(document).ready(function($) { 
+        $("#predef").val({{ selected|tojson }}); // set dropdown to curr value
+    });
+</script>
+
 {% endblock %}
 <!--=================================================-->
 
