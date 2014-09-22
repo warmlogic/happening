@@ -36,7 +36,7 @@ class struct():
 def whatsHappening(this_lon, this_lat,\
     time_now=['2014-09-09 08:00:00', '2014-09-09 15:00:00'],\
     time_then=['2014-09-08 08:00:00', '2014-09-08 15:00:00'],\
-    nbins=100,nclusters=5,\
+    nbins=[100, 100],nclusters=5,\
     tz='US/Pacific'):
     ############
     # Read the data
@@ -83,18 +83,23 @@ def whatsHappening(this_lon, this_lat,\
                 Hdiff = Hnow - Hprev
 
                 # return the top nclusters values, sorted; ascend=biggest first
-                diffthresh = int(np.floor(nbins * 0.75))
+                # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
+                # diffthresh = int(np.floor(np.prod(nbins) / 100))
+                diffthresh = 30
+                # print 'diffthresh: %d' % diffthresh
                 morevals,moreind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='max', return_order='ascend')
                 lessvals,lessind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='min', return_order='ascend')
 
-                diffmore_lon = xedges[moreind[:,0]]
-                diffmore_lat = yedges[moreind[:,1]]
-                diffless_lon = xedges[lessind[:,0]]
-                diffless_lat = yedges[lessind[:,1]]
+                diffmore_lon = xedges[moreind[:,1]]
+                diffmore_lat = yedges[moreind[:,0]]
+                diffless_lon = xedges[lessind[:,1]]
+                diffless_lat = yedges[lessind[:,0]]
                 print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
                 print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
-                activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat)
+                eps = 0.025
+                min_samples = 100
+                activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,eps=eps,min_samples=min_samples)
                 if len(cluster_centers) > 0:
                     message = 'found clusters, hoooray!'
                     success = True
@@ -135,13 +140,19 @@ def cleanTextGetWordFrequency(activity):
     tokens = []
     # stop.append('AT_USER')
     # stop.append('URL')
+    stop.append('')
     stop.append('unicode_only')
     stop.append('u')
     stop.append('w')
     stop.append('im')
-    stop.append('')
+    stop.append('ca')
     stop.append('san')
     stop.append('francisco')
+    stop.append('sanfrancisco')
+    stop.append('#ca')
+    stop.append('#san')
+    stop.append('#francisco')
+    stop.append('#sanfrancisco')
 
     for txt in activity['text'].values:
         txt = sd.processTweet(txt)
