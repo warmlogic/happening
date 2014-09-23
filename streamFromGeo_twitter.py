@@ -34,6 +34,5 @@ bayArea_bb_me = [-122.53,36.94,-121.8,38.0] # I made this one
 
 # save_file = 'latlong_user_geodate.csv'
 
-print_debug = False
-twitter_tools.TwitStreamGeo(bayArea_bb_me,con,print_debug)
-# twitter_tools.TwitStreamGeo(bayArea_bb_me,save_file,print_debug)
+twitter_tools.TwitStreamGeo(bayArea_bb_me,con)
+# twitter_tools.TwitStreamGeo(bayArea_bb_me,save_file)

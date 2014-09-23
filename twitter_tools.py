@@ -35,6 +35,8 @@ auth.set_access_token(accesstoken, accesstokensecret)
 
 twitAPI = tweepy.API(auth)
 
+print_debug = False
+
 # http://stackoverflow.com/questions/25224692/getting-the-location-using-tweepy
 
 # mongodb: http://stackoverflow.com/questions/17213991/how-can-i-consume-tweets-from-twitters-streaming-api-and-store-them-in-mongodb
@@ -161,11 +163,10 @@ def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
 
 class StreamLogger(tweepy.StreamListener):
     # def __init__(self, fileToWrite):
-    def __init__(self, dbcon, print_debug):
+    def __init__(self, dbcon):
         super(tweepy.StreamListener, self).__init__()
         # self.fileToWrite = fileToWrite
         self.dbcon = dbcon
-        self.print_debug = print_debug
 
     def on_status(self, status):
         if print_debug:
@@ -244,13 +245,13 @@ class StreamLogger(tweepy.StreamListener):
             cur.execute(sql)
         return True
 
-def TwitStreamGeo(boundingBox,dbcon,print_debug=False,creds=auth):
+def TwitStreamGeo(boundingBox,dbcon,creds=auth):
     # def TwitStreamGeo(boundingBox,save_file,creds=auth):
     # append to file where we want to save tweets
     # fileToWrite = open(save_file, 'a')
 
     # get data from streaming api
-    listener = StreamLogger(dbcon,print_debug)
+    listener = StreamLogger(dbcon)
     # listener = StreamLogger(fileToWrite)
     stream = tweepy.streaming.Stream(creds, listener)    
     if print_debug:
