@@ -8,3 +8,4 @@ latlong*.csv
 *.ipynb
 bower_components
 *~
+*.sql
