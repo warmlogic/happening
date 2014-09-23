@@ -159,12 +159,13 @@ def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
         print 'Only one tweet found!'
     return parsedresults
 
-class StreamLogger(tweepy.StreamListener,print_debug=False):
+class StreamLogger(tweepy.StreamListener):
     # def __init__(self, fileToWrite):
-    def __init__(self, dbcon):
+    def __init__(self, dbcon, print_debug):
         super(tweepy.StreamListener, self).__init__()
         # self.fileToWrite = fileToWrite
         self.dbcon = dbcon
+        self.print_debug = print_debug
 
     def on_status(self, status):
         if print_debug:
