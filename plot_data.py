@@ -7,6 +7,9 @@ import select_data as sd
 import happening as hap
 import matplotlib.pyplot as plt
 import numpy as np
+import pymysql as mdb
+from authent import dbauth as authsql
+
 import pdb
 # from sklearn.cluster import DBSCAN
 # from sklearn.preprocessing import StandardScaler
@@ -25,6 +28,39 @@ import pdb
 import matplotlib.pyplot as plt
 from IPython.display import Image
 plt.rcParams['figure.figsize'] = 12, 8 # plotsize
+
+
+
+con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
+cur=con.cursor()
+
+# sql="""SELECT * FROM tweet_table LIMIT 10;"""
+# cur.execute(sql)
+# results = cur.fetchall()
+
+
+# dtf = pd.io.sql.read_sql("SELECT * FROM tweet_table LIMIT 10;", con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
+
+# dtf = pd.io.sql.read_sql("SELECT * FROM tweet_table WHERE tweettime BETWEEN (SELECT STR_TO_DATE('2014-09-09T08:00:00','%Y-%m-%dT%h:%i:%s')) AND (SELECT STR_TO_DATE('2014-09-09T12:00:00','%Y-%m-%dT%h:%i:%s'));", con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
+startTime = '2014-09-09T08:00:00'
+endTime = '2014-09-09T12:00:00'
+this_lon, this_lat = sd.set_get_boundBox(area_str='sf')
+sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (startTime,endTime,this_lon[0],this_lon[1],this_lat[0],this_lat[1])
+
+dtf = pd.io.sql.read_sql(sql, con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
+
+dtf.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
+dtf.replace(to_replace={'url': {'\r': ''}}, inplace=True)
+dtf = dtf.tz_localize('UTC').tz_convert('US/Pacific')
+
+
+
+
+
+
+
+
+
 
 ############
 # Read the data
