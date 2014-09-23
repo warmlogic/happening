@@ -104,27 +104,19 @@
 <script>
 function init_map() {
     
-    var var_location = new google.maps.LatLng({{ cluster_centers[0][1] }}, {{ cluster_centers[0][0] }});
-    // var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
-    var sw = new google.maps.LatLng({{ latlng_sw }});
-    var ne = new google.maps.LatLng({{ latlng_ne }});
-    // var var_bounds = new google.maps.LatLngBounds(sw, ne);
-    var var_bounds = new google.maps.LatLngBounds();
-    
+    // var var_location = new google.maps.LatLng({{ cluster_centers[0][1] }}, {{ cluster_centers[0][0] }});
+    var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
     var var_ourmap = mapIt(var_location);
-    // var var_ourmap = mapIt(var_location,var_bounds)
+
+    // set it to our search area
+    var sw = new google.maps.LatLng({{ latlng_sw[0] }}, {{ latlng_sw[1] }});
+    var ne = new google.maps.LatLng({{ latlng_ne[0] }}, {{ latlng_ne[1] }});
+    var var_bounds = new google.maps.LatLngBounds();
+    var_bounds.extend(sw);
+    var_bounds.extend(ne);
     
     //Build color icons for clusters         
     var iconArray = new Array();
-    // ["gray","orange","yellow","green","blue","purple"]
-    // for (i = 0; i < {{ncluster}}+1 ; i++) {
-    //     iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+clusterColor[i]+"/"}
-    // }
-    // for (i = 0; i < {{ncluster}}+1 ; i++) {
-    //     var col = {{ clusterColor[i] }}
-    //     console.log(col);
-    //     iconArray[i] = { url: "http://www.googlemapsmarkers.com/v1/"+i+"/"+col+"/"}
-    // }
     {% for i in range(ncluster) %}
         // console.log("{{ loop.index }}");
         // console.log("{{ clusterColor[loop.index] }}");
