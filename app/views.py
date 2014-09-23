@@ -126,14 +126,14 @@ def results():
     time_then = [startTime_then_UTC, endTime_then_UTC]
 
     sql_now = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (time_now[0],time_now[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
-    activity_now = pd.io.sql.read_sql(sql_now, con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
+    activity_now = pd.io.sql.read_sql(sql_now, con=con, index_col='tweettime', parse_dates=['tweettime'])
     activity_now.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
     # activity_now.replace(to_replace={'url': {'\r': ''}}, inplace=True)
     activity_now = activity_now.tz_localize('UTC').tz_convert(tz)
     print 'Now: Selected %d entries from now' % (activity_now.shape[0])
 
     sql_then = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (time_then[0],time_then[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
-    activity_then = pd.io.sql.read_sql(sql_then, con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
+    activity_then = pd.io.sql.read_sql(sql_then, con=con, index_col='tweettime', parse_dates=['tweettime'])
     activity_then.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
     # activity_then.replace(to_replace={'url': {'\r': ''}}, inplace=True)
     activity_then = activity_then.tz_localize('UTC').tz_convert(tz)
