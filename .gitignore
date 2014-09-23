@@ -9,3 +9,4 @@ latlong*.csv
 bower_components
 *~
 *.sql
+*.pid
