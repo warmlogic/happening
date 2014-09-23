@@ -9,15 +9,16 @@ import select_data as sd
 import numpy as np
 import pandas as pd
 from authent import instaauth
+from authent import dbauth as authsql
 import pdb
 
+con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
+# cur=con.cursor()
 
 #############
-# Helpers
-#############
-
-
 # ROUTING/VIEW FUNCTIONS
+#############
+
 @app.route('/')
 @app.route('/index')
 def happening_page():
@@ -92,6 +93,8 @@ def results_procPredef():
 
 @app.route("/results",methods=['GET'])
 def results():
+    tz = 'US/Pacific'
+
     # get the selected event
     selected = request.args.get('selected')
     if selected == None:
@@ -100,42 +103,76 @@ def results():
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
 
+    user_lon = np.mean(this_lon)
+    user_lat = np.mean(this_lat)
+
     latlng_sw = [float(request.args.get('lat_sw')), float(request.args.get('lng_sw'))]
     latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
 
-    time_now = [request.args.get('startTime'), request.args.get('endTime')]
+    startTime_now_UTC = pd.to_datetime(request.args.get('startTime')).tz_localize(tz).tz_convert('UTC').isoformat()
+    endTime_now_UTC = pd.to_datetime(request.args.get('endTime')).tz_localize(tz).tz_convert('UTC').isoformat()
+    time_now = [startTime_now_UTC, endTime_now_UTC]
 
     # # compare to the day before
     # daysOffset = 1
-    # startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
-    # endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
-    # time_then = [startTime_then, endTime_then]
+    # startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
+    # endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
+    # time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # compare to the previous X hours
     hoursOffset = 4
-    startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
-    endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
-    time_then = [startTime_then, endTime_then]
+    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
+    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
+    time_then = [startTime_then_UTC, endTime_then_UTC]
 
-    # # night life
-    # area_str='sf_concerts'
-    # time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
-    # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
+    sql_now = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (time_now[0],time_now[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
+    activity_now = pd.io.sql.read_sql(sql_now, con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
+    activity_now.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
+    # activity_now.replace(to_replace={'url': {'\r': ''}}, inplace=True)
+    activity_now = activity_now.tz_localize('UTC').tz_convert(tz)
+    print 'Now: Selected %d entries from now' % (activity_now.shape[0])
 
-    tz = 'US/Pacific'
+    sql_then = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (time_then[0],time_then[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
+    activity_then = pd.io.sql.read_sql(sql_then, con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
+    activity_then.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
+    # activity_then.replace(to_replace={'url': {'\r': ''}}, inplace=True)
+    activity_then = activity_then.tz_localize('UTC').tz_convert(tz)
+    print 'Then: Selected %d entries from then' % (activity_then.shape[0])
 
     # 0.003 makes bins about the size of AT&T park
     nbins_lon = int(np.ceil(float(np.diff(this_lon)) / 0.003))
     nbins_lat = int(np.ceil(float(np.diff(this_lat)) / 0.003))
-    print 'nbins_lon: %d' % nbins_lon
-    print 'nbins_lat: %d' % nbins_lat
-    # nbins = [100 100]
+    # print 'nbins_lon: %d' % nbins_lon
+    # print 'nbins_lat: %d' % nbins_lat
     nclusters = 5
+    diffthresh = 30
+    # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
+    # diffthresh = int(np.floor(np.prod(nbins) / 100))
+    # print 'diffthresh: %d' % diffthresh
+    eps = 0.025
+    min_samples = 100
 
-    activity, n_clusters, cluster_centers, user_lon, user_lat, message, success = hap.whatsHappening(\
-        this_lon=this_lon,this_lat=this_lat,\
-        nbins=[nbins_lon,nbins_lat],nclusters=nclusters,\
-        time_now=time_now, time_then=time_then, tz=tz)
+    if activity_now.shape[0] > 0 and activity_then.shape[0] > 0:
+        activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
+            activity_now=activity_now, activity_then=activity_then,\
+            nbins=[nbins_lon, nbins_lat], nclusters=nclusters, diffthresh=diffthresh,\
+            eps=eps, min_samples=min_samples)
+    elif len(activity_now) > 0 and len(activity_then) == 0:
+        n_clusters = 0
+        cluster_centers = []
+        message = 'Sorry, no activity found during the baseline time!'
+        success = False
+    elif len(activity_now) == 0 and len(activity_then) > 0:
+        n_clusters = 0
+        cluster_centers = []
+        message = 'Sorry, no activity found during this time!'
+        success = False
+    else:
+        n_clusters = 0
+        cluster_centers = []
+        message = 'Sorry, no activity found in this region!'
+        success = False
+
     print 'message: ' + message
     if success is False:
         # TODO: set redirect to failure page
@@ -144,47 +181,6 @@ def results():
             user_lat=user_lat, user_lon=user_lon,\
             latlng_sw=latlng_sw, latlng_ne=latlng_ne,\
             selected=selected)
-
-        # return render_template('no_events.html', results=events,\
-        #     examples=examples,\
-        #     ncluster=n_clusters, clus_centers=clus_centers,\
-        #     user_lat = user_lat, user_lon = user_lon,\
-        #     latlng_sw = latlng_sw, latlng_ne = latlng_ne,\
-        #     heatmap=True,\
-        #     word_array=word_array,\
-        #     message = message,\
-        #     plotdata=plotdata,\
-        #     selected=selected,\
-        #     clusterColor=clusterColor,\
-        #     insta_access_token=insta_access_token,\
-        #     time_now_start=activity.index[0].value // 10**9,\
-        #     time_now_end=activity.index[-1].value // 10**9)
-
-
-    # # for removing punctuation (via translate)
-    # table = string.maketrans("","")
-    # clean_text = []
-    # # for removing stop words
-    # stop = stopwords.words('english')
-    # tokens = []
-    # # stop.append('AT_USER')
-    # # stop.append('URL')
-    # stop.append('unicode_only')
-    # stop.append('w')
-    # stop.append('im')
-    # stop.append('')
-
-    # for txt in activity['text'].values:
-    #     txt = sd.processTweet(txt)
-    #     nopunct = txt.translate(table, string.punctuation)
-    #     #Remove additional white spaces
-    #     # nopunct = re.sub('[\s]+', ' ', nopunct)
-    #     # if nopunct is not '':
-    #     clean_text.append(nopunct)
-    #     # split it and remove stop words
-    #     txt = sd.getFeatureVector(txt,stop)
-    #     tokens.extend([t for t in txt])
-    # freq_dist = FreqDist(tokens)
 
     # do this for each cluster?
     # tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity)
@@ -320,5 +316,6 @@ clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 examples = [{"id": "1", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09T12:00:00"},
             {"id": "2", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "startTime": "2014-09-09T11:00:00", "endTime": "2014-09-09T15:00:00"},
             {"id": "3", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09T21:00:00"},
-            {"id": "4", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "startTime": "2014-09-19T17:00:00", "endTime": "2014-09-19T21:00:00"}
+            {"id": "4", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "startTime": "2014-09-19T17:00:00", "endTime": "2014-09-19T21:00:00"},
+            {"id": "5", "area_str": "mtview_caltrain", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "startTime": "2014-09-21T12:00:00", "endTime": "2014-09-21T08:00:00"}
             ]

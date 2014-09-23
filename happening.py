@@ -33,102 +33,64 @@ class struct():
 
 # def whatsHappening(this_lon, this_lat, area_str='apple_flint_center', tz='US/Pacific'):
 # def whatsHappening(area_str='apple_flint_center',\
-def whatsHappening(this_lon, this_lat,\
-    time_now=['2014-09-09 08:00:00', '2014-09-09 15:00:00'],\
-    time_then=['2014-09-08 08:00:00', '2014-09-08 15:00:00'],\
-    nbins=[100, 100],nclusters=5,\
-    tz='US/Pacific'):
-    ############
-    # Read the data
-    ############
+def whatsHappening(activity_now, activity_then, nbins=[100, 100], nclusters=5, diffthresh=30, eps=0.025, min_samples=100):
 
-    latlong = open("./data/latlong_userdategeo_combined.csv")
+    # ############
+    # # Read the data
+    # ############
 
-    print 'Reading locations...'
-    df = pd.read_csv(latlong,header=None,parse_dates=[2],dtype={'url': str},\
-        names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
-    print 'Done.'
-    latlong.close()
-    # df.fillna('', inplace=True)
+    # latlong = open("./data/latlong_userdategeo_combined.csv")
 
-    # twitter times are in UTC
-    df = df.tz_localize('UTC').tz_convert(tz)
+    # print 'Reading locations...'
+    # df = pd.read_csv(latlong,header=None,parse_dates=[2],dtype={'url': str},\
+    #     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
+    # print 'Done.'
+    # latlong.close()
+    # # df.fillna('', inplace=True)
+
+    # # twitter times are in UTC
+    # df = df.tz_localize('UTC').tz_convert(tz)
 
     # set the bounding box for the requested area
     # this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
 
     # for our loc, just set the average
-    user_lon = np.mean(this_lon)
-    user_lat = np.mean(this_lat)
+    # user_lon = np.mean(this_lon)
+    # user_lat = np.mean(this_lat)
 
-    geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
+    # geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
 
-    if len(geo_activity) > 0:
-        activity_now = geo_activity.ix[time_now[0]:time_now[1]]
-        print 'Now: Selecting %d entries from %s to %s' % (activity_now.shape[0],time_now[0],time_now[1])
-        if len(activity_now) > 0:
-            activity_then = geo_activity.ix[time_then[0]:time_then[1]]
-            print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_then[0],time_then[1])
+    ############
+    # get difference between events
+    ############
 
-            if len(activity_then) > 0:
-                ############
-                # get difference between events
-                ############
+    show_plot=False
+    # plt = sd.make_hist(df,nbins,show_plot)
+    Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
+    Hthen, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot)
 
-                show_plot=False
-                # plt = sd.make_hist(df,nbins,show_plot)
-                Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
-                Hprev, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot)
+    Hdiff = Hnow - Hthen
 
-                Hdiff = Hnow - Hprev
+    # return the top nclusters values, sorted; ascend=biggest first
+    morevals,moreind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='max', return_order='ascend')
+    lessvals,lessind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='min', return_order='ascend')
 
-                # return the top nclusters values, sorted; ascend=biggest first
-                # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
-                # diffthresh = int(np.floor(np.prod(nbins) / 100))
-                diffthresh = 30
-                # print 'diffthresh: %d' % diffthresh
-                morevals,moreind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='max', return_order='ascend')
-                lessvals,lessind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='min', return_order='ascend')
+    diffmore_lon = xedges[moreind[:,1]]
+    diffmore_lat = yedges[moreind[:,0]]
+    diffless_lon = xedges[lessind[:,1]]
+    diffless_lat = yedges[lessind[:,0]]
+    print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
+    print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
-                diffmore_lon = xedges[moreind[:,1]]
-                diffmore_lat = yedges[moreind[:,0]]
-                diffless_lon = xedges[lessind[:,1]]
-                diffless_lat = yedges[lessind[:,0]]
-                print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
-                print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
-
-                eps = 0.025
-                min_samples = 100
-                activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,eps=eps,min_samples=min_samples)
-                if len(cluster_centers) > 0:
-                    message = 'found clusters, hoooray!'
-                    success = True
-                else:
-                    message = 'all clusters rejected!'
-                    success = False
-            else:
-                activity_now_clustered = activity_now
-                n_clusters = 0
-                cluster_centers = []
-                message = 'Sorry, no activity found during the baseline time!'
-                success = False
-
-                # TODO: pick a different baseline
-        else:
-            activity_now_clustered = geo_activity
-            n_clusters = 0
-            cluster_centers = []
-            message = 'Sorry, no activity found during this time!'
-            success = False
+    activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,eps=eps,min_samples=min_samples)
+    if len(cluster_centers) > 0:
+        message = 'found clusters, hoooray!'
+        success = True
     else:
-        activity_now_clustered = geo_activity
-        n_clusters = 0
-        cluster_centers = []
-        message = 'Sorry, no activity found in this region!'
+        message = 'all clusters rejected!'
         success = False
 
-
-    return activity_now_clustered, n_clusters, cluster_centers, user_lon, user_lat, message, success
+    return activity_now_clustered, n_clusters, cluster_centers, message, success
 
 def cleanTextGetWordFrequency(activity):
     # for removing punctuation (via translate)
