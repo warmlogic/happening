@@ -236,7 +236,7 @@ class StreamLogger(tweepy.StreamListener):
         # add single tweet to database with timestamp id
         with self.dbcon:
             cur=self.dbcon.cursor()
-            sql="""INSERT INTO tweet_table(userid, tweetid, tweettime, tweetlon, tweetlat, tweettext, picurl) VALUES(%i,%i,'%s',%.6f,%.6f,'%s','%s');""" % (int(pt['user_id']),int(pt['tweet_id']),pt['tweettime'][:-6],pt['longitude'],pt['latitude'],json.dumps(pt['text']),pic_url)
+            sql="""INSERT INTO tweet_table(userid, tweetid, tweettime, tweetlon, tweetlat, tweettext, picurl) VALUES(%i,%i,'%s',%.6f,%.6f,%s,'%s');""" % (int(pt['user_id']),int(pt['tweet_id']),pt['tweettime'][:-6],pt['longitude'],pt['latitude'],json.dumps(pt['text']),pic_url)
             cur.execute(sql)
         return True
 
