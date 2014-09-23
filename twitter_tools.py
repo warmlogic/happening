@@ -159,7 +159,7 @@ def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
         print 'Only one tweet found!'
     return parsedresults
 
-class StreamLogger(tweepy.StreamListener):
+class StreamLogger(tweepy.StreamListener,print_debug=False):
     # def __init__(self, fileToWrite):
     def __init__(self, dbcon):
         super(tweepy.StreamListener, self).__init__()
@@ -167,11 +167,12 @@ class StreamLogger(tweepy.StreamListener):
         self.dbcon = dbcon
 
     def on_status(self, status):
-        print status.text
-        if status.coordinates:
-            print 'coords:', status.coordinates
-        if status.place:
-            print 'place:', status.place.full_name
+        if print_debug:
+            print status.text
+            if status.coordinates:
+                print 'coords:', status.coordinates
+            if status.place:
+                print 'place:', status.place.full_name
         return True
 
     def on_data(self, data):
@@ -218,11 +219,13 @@ class StreamLogger(tweepy.StreamListener):
         created_at = parser.parse(data['created_at']).isoformat()
         # print created_at + ' ' + data['user']['screen_name'] + ' ' + data['text']
         if len(parsedTweet) > 0:
-            print created_at + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
+            if print_debug:
+                print created_at + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
         else:
             # if we lost everything
-            print created_at + ' ' + data['user']['screen_name'] + ' ' +\
-            '\tAll unicode removed, no text remaining'
+            if print_debug:
+                print created_at + ' ' + data['user']['screen_name'] + ' ' +\
+                '\tAll unicode removed, no text remaining'
             parsedTweet = 'unicode_only'
 
         # parse user info, time, location, text from tweet into dict
@@ -240,13 +243,13 @@ class StreamLogger(tweepy.StreamListener):
             cur.execute(sql)
         return True
 
-def TwitStreamGeo(boundingBox,dbcon,creds=auth):
+def TwitStreamGeo(boundingBox,dbcon,print_debug=False,creds=auth):
     # def TwitStreamGeo(boundingBox,save_file,creds=auth):
     # append to file where we want to save tweets
     # fileToWrite = open(save_file, 'a')
 
     # get data from streaming api
-    listener = StreamLogger(dbcon)
+    listener = StreamLogger(dbcon,print_debug)
     # listener = StreamLogger(fileToWrite)
     stream = tweepy.streaming.Stream(creds, listener)    
     print 'Starting stream, ctrl-c to exit'
