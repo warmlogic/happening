@@ -252,7 +252,8 @@ def TwitStreamGeo(boundingBox,dbcon,print_debug=False,creds=auth):
     listener = StreamLogger(dbcon,print_debug)
     # listener = StreamLogger(fileToWrite)
     stream = tweepy.streaming.Stream(creds, listener)    
-    print 'Starting stream, ctrl-c to exit'
+    if print_debug:
+        print 'Starting stream, ctrl-c to exit'
     stream.filter(locations=boundingBox)
 
 # if __name__ == '__main__':
