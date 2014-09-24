@@ -12,7 +12,11 @@ from authent import instaauth
 from authent import dbauth as authsql
 import pdb
 
-con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
+# bash: aws_tun_sql
+if 'port' in authsql:
+    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
+else:    
+    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
 # cur=con.cursor()
 
 #############
