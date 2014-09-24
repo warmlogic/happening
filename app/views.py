@@ -9,7 +9,7 @@ import select_data as sd
 import numpy as np
 import pandas as pd
 from authent import instaauth
-from authent import dbauth as authsql
+from authent import dbauth_a as authsql
 import pdb
 
 # bash: aws_tun_sql
@@ -129,23 +129,15 @@ def results():
     endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
     time_then = [startTime_then_UTC, endTime_then_UTC]
 
-    sql_now = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (time_now[0],time_now[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
-    activity_now = pd.io.sql.read_sql(sql_now, con=con, index_col='tweettime', parse_dates=['tweettime'])
-    activity_now.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
-    # activity_now.replace(to_replace={'url': {'\r': ''}}, inplace=True)
-    activity_now = activity_now.tz_localize('UTC').tz_convert(tz)
+    activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
     print 'Now: Selected %d entries from now' % (activity_now.shape[0])
-
-    sql_then = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (time_then[0],time_then[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
-    activity_then = pd.io.sql.read_sql(sql_then, con=con, index_col='tweettime', parse_dates=['tweettime'])
-    activity_then.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
-    # activity_then.replace(to_replace={'url': {'\r': ''}}, inplace=True)
-    activity_then = activity_then.tz_localize('UTC').tz_convert(tz)
+    activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
     print 'Then: Selected %d entries from then' % (activity_then.shape[0])
 
     # 0.003 makes bins about the size of AT&T park
-    nbins_lon = int(np.ceil(float(np.diff(this_lon)) / 0.003))
-    nbins_lat = int(np.ceil(float(np.diff(this_lat)) / 0.003))
+    bin_scaler = 0.003
+    nbins_lon = int(np.ceil(float(np.diff(this_lon)) / bin_scaler))
+    nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
     # print 'nbins_lon: %d' % nbins_lon
     # print 'nbins_lat: %d' % nbins_lat
     nclusters = 5
@@ -254,12 +246,14 @@ def results():
     resample_activity_overtime = '15min'
     grouper = pd.TimeGrouper(resample_activity_overtime)
     activity_resamp = activity.groupby(grouper).apply(lambda x: x['clusterNum'].value_counts()).unstack()
+    colNums = np.array(activity_resamp.columns)
+    colNums = colNums[colNums[:] >= 0]
 
     plotdata = [];
     for i in range(activity_resamp.shape[0]):
         thisRow = []
         thisRow.extend([activity_resamp.index[i].isoformat()])
-        for clusNum in range(n_clusters):
+        for clusNum in colNums:
             thisCluster = activity_resamp[clusNum]
             thisCluster.fillna(value=0, inplace=True)
             thisRow.extend([thisCluster[i]])
