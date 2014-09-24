@@ -12,13 +12,6 @@ from authent import instaauth
 from authent import dbauth as authsql
 import pdb
 
-# bash: aws_tun_sql
-if 'port' in authsql:
-    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
-else:    
-    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
-# cur=con.cursor()
-
 #############
 # ROUTING/VIEW FUNCTIONS
 #############
@@ -129,10 +122,20 @@ def results():
     endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
     time_then = [startTime_then_UTC, endTime_then_UTC]
 
+    # open connection to database
+    if 'port' in authsql:
+        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
+    else:    
+        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
+
+    # query the database
     activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
     print 'Now: Selected %d entries from now' % (activity_now.shape[0])
     activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
     print 'Then: Selected %d entries from then' % (activity_then.shape[0])
+
+    # close connection to database
+    con.close()
 
     # 0.003 makes bins about the size of AT&T park
     bin_scaler = 0.003
@@ -318,6 +321,7 @@ def contact():
 #############
 tz = 'US/Pacific'
 hoursOffset = 3
+# hoursOffset = 24
 
 # ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
