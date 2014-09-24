@@ -9,7 +9,7 @@ import select_data as sd
 import numpy as np
 import pandas as pd
 from authent import instaauth
-from authent import dbauth_a as authsql
+from authent import dbauth as authsql
 import pdb
 
 # bash: aws_tun_sql
