@@ -140,19 +140,26 @@ def results():
     nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
     # print 'nbins_lon: %d' % nbins_lon
     # print 'nbins_lat: %d' % nbins_lat
-    nclusters = 3
+    n_top_hotspots = 5
+    min_nclusters = 2
+    max_nclusters = 5
     diffthresh = 15 * nhours
     # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
     # diffthresh = int(np.floor(np.prod(nbins) / 100))
     # print 'diffthresh: %d' % diffthresh
-    eps = 0.02
-    min_samples = 100
+    # eps = 0.1
+    eps = 0.075
+    # eps = 0.025
+    # min_samples = 30 * nhours
+    min_samples = 15 * nhours
 
     if activity_now.shape[0] > 0 and activity_then.shape[0] > 0:
         activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
             activity_now=activity_now, activity_then=activity_then,\
-            nbins=[nbins_lon, nbins_lat], nclusters=nclusters, diffthresh=diffthresh,\
-            eps=eps, min_samples=min_samples)
+            nbins=[nbins_lon, nbins_lat],\
+            min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
+            n_top_hotspots=n_top_hotspots,\
+            diffthresh=diffthresh, eps=eps, min_samples=min_samples)
     elif len(activity_now) > 0 and len(activity_then) == 0:
         n_clusters = 0
         cluster_centers = []

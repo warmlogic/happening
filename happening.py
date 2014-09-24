@@ -31,10 +31,12 @@ import pdb
 class struct():
     pass
 
-# def whatsHappening(this_lon, this_lat, area_str='apple_flint_center', tz='US/Pacific'):
-# def whatsHappening(area_str='apple_flint_center',\
-def whatsHappening(activity_now, activity_then, nbins=[100, 100], nclusters=5, diffthresh=30, eps=0.025, min_samples=100):
-
+def whatsHappening(activity_now, activity_then, nbins=[100, 100],\
+    n_top_hotspots=5, min_nclusters=1, max_nclusters=100,\
+    diffthresh=30, eps=0.025, min_samples=100):
+    '''
+    min_samples is minimum number of samples per hour on average
+    '''
     # ############
     # # Read the data
     # ############
@@ -71,9 +73,9 @@ def whatsHappening(activity_now, activity_then, nbins=[100, 100], nclusters=5, d
 
     Hdiff = Hnow - Hthen
 
-    # return the top nclusters values, sorted; ascend=biggest first
-    morevals,moreind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='max', return_order='ascend')
-    lessvals,lessind = sd.choose_n_sorted(Hdiff, n=nclusters, min_val=diffthresh, srt='min', return_order='ascend')
+    # return n_top_hotspots values, sorted; ascend=biggest first
+    morevals,moreind = sd.choose_n_sorted(Hdiff, n=n_top_hotspots, min_val=diffthresh, srt='max', return_order='ascend')
+    lessvals,lessind = sd.choose_n_sorted(Hdiff, n=n_top_hotspots, min_val=diffthresh, srt='min', return_order='ascend')
 
     diffmore_lon = xedges[moreind[:,1]]
     diffmore_lat = yedges[moreind[:,0]]
@@ -82,7 +84,9 @@ def whatsHappening(activity_now, activity_then, nbins=[100, 100], nclusters=5, d
     print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
     print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
 
-    activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,eps=eps,min_samples=min_samples)
+    activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,\
+        nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,\
+        min_nclusters=min_nclusters,max_nclusters=max_nclusters,eps=eps,min_samples=min_samples)
     if len(cluster_centers) > 0:
         message = 'found clusters, hoooray!'
         success = True

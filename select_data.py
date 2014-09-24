@@ -264,7 +264,10 @@ def fullprint(*args, **kwargs):
     numpy.set_printoptions(**opt)
 
 
-def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,eps=0.025,min_samples=50,plotData=False):
+def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,\
+    min_nclusters,max_nclusters,eps,min_samples,\
+    centerData=True,plotData=False):
+
     X = np.vstack((activity_now.longitude, activity_now.latitude)).T
     if centerData:
         scaler = StandardScaler(copy=True)
@@ -272,24 +275,23 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,ep
     else:
         X_centered = X
 
-    n_clusters_ = 0
+    n_clusters_db = 0
 
     if len(diffmore_lon) > 0:
         n_tries_db = 0
-        min_clusters = 3
-        while n_clusters_ < min_clusters:
+        while n_clusters_db < min_nclusters:
             db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
             # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
             n_tries_db += 1
             print 'try number %d' % n_tries_db
 
             labels = db.labels_
-            n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+            n_clusters_db = len(set(labels)) - (1 if -1 in labels else 0)
             if n_tries_db < 3:
                 eps *= 2.0
                 print 'increasing eps to %.3f' % eps
             else:
-                print 'found %d clusters' % n_clusters_
+                print 'found %d clusters' % n_clusters_db
             if n_tries_db >= 3 and n_tries_db <= 7:
                 if min_samples > 10.0:
                     min_samples = int(np.ceil(min_samples * 0.67))
@@ -302,11 +304,11 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,ep
             elif n_tries_db > 8:
                 break
 
-        print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_,eps,min_samples)
+        print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_db,eps,min_samples)
     else:
         print 'no differences found using %d x %d bins' % (nbins[0], nbins[1])
 
-    if n_clusters_ > 0:
+    if n_clusters_db > 0:
         nbins_combo = int(np.floor(np.prod(nbins) / 100))
         print 'nbins_combo %d' % nbins_combo
         if nbins_combo < 5:
@@ -323,7 +325,7 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,centerData=True,ep
         clusterNums = np.repeat(-1,activity_now.shape[0])
         # for k, col in zip(unique_labels, colors):
         for k in unique_labels:
-            if k != -1:
+            if k != -1 and k < max_nclusters:
                 # if in a cluster, set a mask for this cluster
                 class_member_mask = (labels == k)
 
