@@ -20,6 +20,7 @@
     <!-- Genericons core CSS -->
     <link href="{{ url_for('static', filename='vendor/genericons/genericons/genericons.css') }}" rel="stylesheet">
 
+    <link href="{{ url_for('static', filename='css/typeahead.css') }}" rel="stylesheet">
     <!-- Page specific CSS files -->
     {% block head %}{% endblock %}
 
@@ -65,7 +66,74 @@
     <!-- Wrap content with <div id="wrap"><div>
           when using the footer block to push the footer down. -->
     <div id="wrap">
-      {% block content %}{% endblock %}
+      <div class="container">
+          <!-- <div class="page-header"> -->
+              <span style="color: #ff6600; font-weight:bold; font-size: 39px;">What's happening around you?</span>
+              <p class="lead">Find current social activity that stands out from the background.</p>
+          <!-- </div> -->
+
+          <div class ="col-md-12">
+
+              <div id="map-container" class="col-md-6">
+                  <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places,visualization&sensor=true_or_false">
+                  </script>
+              </div>
+
+              <!-- The location entry field -->
+              <div class ="col-md-6">
+                  <div class="well" style="height:330px;">
+                      <!-- User-input location -->
+                      <div class="thumbnail">
+                        <div class="caption">
+                          <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Where to look?</span>
+                          <p>Type the name of an area to explore</p>
+                              <form action="/results_location" method="POST" class="form-horizontal">
+                                  <div class="form-group">
+                                      <div class="col-md-9">
+                                          <input type="text" name="location" class="form-control" id="whereToLook" placeholder="e.g., SoMa, San Francisco, CA">
+                                      </div>
+                                      <div class="col-md-3">
+                                          <button type="submit_loc" style="background-color: #ff6600; color: white;" name="query" class="btn btn-default">Continue</button>
+                                      </div>
+                                  </div>
+                              </form>
+                      </div>
+                  </div>
+
+                  <!-- Predefined location -->
+                  <div class="thumbnail">
+                    <div class="caption">
+                      <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Examples</span>
+                      <p>Or choose from these examples</p>
+                      <form action="/results_predef" method="POST" class="form-horizontal">
+                          <div class="form-group">
+                              <div class="col-md-9">
+                                  <select class="form-control" name="event_id" id="predef">
+                                  {% for event in examples %}
+                                      <option value="{{ event["id"] }}">{{ event["name"] }}</option>
+                                  {% endfor %}
+                                  </select>
+                              </div>
+                              <div class="col-md-3">
+                                  <button type="submit_predef" style="background-color: #ff6600; color: white;" class="btn btn-default">Continue</button>
+                              </div>
+                          </div>
+                      </form>
+                    </div>
+                  </div>
+
+               <!-- Closing the well -->
+               </div>
+              <!-- Closing the location entry field -->
+          </div>
+
+          <!-- Closing map and location input row -->
+          </div>
+
+          {% block results %}{% endblock %}
+      </div><!-- /.container -->
+
+      <!-- {% block content %}{% endblock %} -->
     </div>
 
     <!-- The footer is placed within its own block to render properly -->
@@ -76,6 +144,29 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="{{ url_for('static', filename='vendor/jquery/jquery-2.1.1.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap-3.2.0-dist/js/bootstrap.min.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/typeahead.min.js') }}"></script>
+    <script>
+    $("document").ready(function(){
+        $("#desintationEntry").typeahead({
+            name : 'dest',
+            hint: false,
+            minLength: 1,
+            prefetch: '/prefetch/prefetch', 
+        });
+    });
+    </script>
+    <script>
+        //autocomplete for whereToLook
+        var input = /** @type {HTMLInputElement} */(
+          document.getElementById('whereToLook'));
+        var autocomplete = new google.maps.places.Autocomplete(input);
+        //restrict to Bay Area
+        var sw = google.maps.LatLng(37.3333, -122.5311);
+        var ne = google.maps.LatLng(37.9736, -121.9000);
+        var LatLngBounds = google.maps.LatLngBounds(sw, ne);
+        autocomplete.setBounds(LatLngBounds);
+    </script>
 
     <!-- Page specific script files -->
     {% block scripts %}{% endblock %}
