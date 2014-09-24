@@ -7,3 +7,7 @@ latlong*.csv
 .ipynb_checkpoints
 *.ipynb
 bower_components
+*~
+*.sql
+*.pid
+*.log

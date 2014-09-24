@@ -9,15 +9,20 @@ import select_data as sd
 import numpy as np
 import pandas as pd
 from authent import instaauth
+from authent import dbauth as authsql
 import pdb
 
+# bash: aws_tun_sql
+if 'port' in authsql:
+    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
+else:    
+    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
+# cur=con.cursor()
 
 #############
-# Helpers
-#############
-
-
 # ROUTING/VIEW FUNCTIONS
+#############
+
 @app.route('/')
 @app.route('/index')
 def happening_page():
@@ -26,6 +31,18 @@ def happening_page():
     # TODO: pass in a page title
 
     # TODO: can include map and form on base.html in {% block body %}
+
+    #############
+    # read the data
+    #############
+
+    # latlong = open("./data/latlong_userdategeo_combined.csv")
+
+    # print 'Reading locations...'
+    # df = pd.read_csv(latlong,header=None,parse_dates=[2],\
+    #     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
+    # print 'Done.'
+    # latlong.close()
 
     events = []
     this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
@@ -56,7 +73,7 @@ def results_procLocation():
     lat_ne = res['geometry']['bounds']['northeast']['lat']
 
     # get the times
-    hoursOffset = 2
+    hoursOffset = 4
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
     startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
     endTime = pd.datetime.isoformat(endTime)
@@ -65,107 +82,101 @@ def results_procLocation():
 
 @app.route("/results_predef",methods=['POST'])
 def results_procPredef():
-    area_str = request.form.get("event_id")
+    event_id = request.form.get("event_id")
+
+    # get the pre-defined time period
+    startTime = [dct["startTime"] for dct in examples if dct["id"] == event_id][0]
+    endTime = [dct["endTime"] for dct in examples if dct["id"] == event_id][0]
+    area_str = [dct["area_str"] for dct in examples if dct["id"] == event_id][0]
 
     # set the bounding box for the requested area
     this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
-
-    # get the pre-defined time period
-    startTime = [dct["startTime"] for dct in examples if dct["id"] == area_str][0]
-    endTime = [dct["endTime"] for dct in examples if dct["id"] == area_str][0]
 
     # get bounding box from this area_str
     return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime, selected=request.form.get("event_id")))
 
 @app.route("/results",methods=['GET'])
 def results():
+    tz = 'US/Pacific'
+
     # get the selected event
     selected = request.args.get('selected')
     if selected == None:
-        selected = "apple_flint_center"
+        selected = "1"
 
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
 
+    user_lon = np.mean(this_lon)
+    user_lat = np.mean(this_lat)
+
     latlng_sw = [float(request.args.get('lat_sw')), float(request.args.get('lng_sw'))]
     latlng_ne = [float(request.args.get('lat_ne')), float(request.args.get('lng_ne'))]
 
-    time_now = [request.args.get('startTime'), request.args.get('endTime')]
+    startTime_now_UTC = pd.to_datetime(request.args.get('startTime')).tz_localize(tz).tz_convert('UTC').isoformat()
+    endTime_now_UTC = pd.to_datetime(request.args.get('endTime')).tz_localize(tz).tz_convert('UTC').isoformat()
+    time_now = [startTime_now_UTC, endTime_now_UTC]
 
     # # compare to the day before
     # daysOffset = 1
-    # startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
-    # endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
-    # time_then = [startTime_then, endTime_then]
+    # startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
+    # endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
+    # time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # compare to the previous X hours
-    hoursOffset = 2
-    startTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
-    endTime_then = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
-    time_then = [startTime_then, endTime_then]
+    hoursOffset = 4
+    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
+    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
+    time_then = [startTime_then_UTC, endTime_then_UTC]
 
-    # # night life
-    # area_str='sf_concerts'
-    # time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
-    # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
+    activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
+    print 'Now: Selected %d entries from now' % (activity_now.shape[0])
+    activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
+    print 'Then: Selected %d entries from then' % (activity_then.shape[0])
 
-    tz = 'US/Pacific'
-
-    nbins = 50
+    # 0.003 makes bins about the size of AT&T park
+    bin_scaler = 0.003
+    nbins_lon = int(np.ceil(float(np.diff(this_lon)) / bin_scaler))
+    nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
+    # print 'nbins_lon: %d' % nbins_lon
+    # print 'nbins_lat: %d' % nbins_lat
     nclusters = 5
+    diffthresh = 30
+    # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
+    # diffthresh = int(np.floor(np.prod(nbins) / 100))
+    # print 'diffthresh: %d' % diffthresh
+    eps = 0.025
+    min_samples = 100
 
-    activity, n_clusters, cluster_centers, user_lon, user_lat, message, success = hap.whatsHappening(\
-        this_lon=this_lon,this_lat=this_lat,\
-        nbins=nbins,nclusters=nclusters,\
-        time_now=time_now, time_then=time_then, tz=tz)
+    if activity_now.shape[0] > 0 and activity_then.shape[0] > 0:
+        activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
+            activity_now=activity_now, activity_then=activity_then,\
+            nbins=[nbins_lon, nbins_lat], nclusters=nclusters, diffthresh=diffthresh,\
+            eps=eps, min_samples=min_samples)
+    elif len(activity_now) > 0 and len(activity_then) == 0:
+        n_clusters = 0
+        cluster_centers = []
+        message = 'Sorry, no activity found during the baseline time!'
+        success = False
+    elif len(activity_now) == 0 and len(activity_then) > 0:
+        n_clusters = 0
+        cluster_centers = []
+        message = 'Sorry, no activity found during this time!'
+        success = False
+    else:
+        n_clusters = 0
+        cluster_centers = []
+        message = 'Sorry, no activity found in this region!'
+        success = False
+
     print 'message: ' + message
     if success is False:
         # TODO: set redirect to failure page
         events = []
         return render_template('no_events.html', results=events, examples=examples,\
             user_lat=user_lat, user_lon=user_lon,\
-            latlng_sw=latlng_sw, latlng_ne=latlng_ne)
-
-        # return render_template('no_events.html', results=events,\
-        #     examples=examples,\
-        #     ncluster=n_clusters, clus_centers=clus_centers,\
-        #     user_lat = user_lat, user_lon = user_lon,\
-        #     latlng_sw = latlng_sw, latlng_ne = latlng_ne,\
-        #     heatmap=True,\
-        #     word_array=word_array,\
-        #     message = message,\
-        #     plotdata=plotdata,\
-        #     selected=selected,\
-        #     clusterColor=clusterColor,\
-        #     insta_access_token=insta_access_token,\
-        #     time_now_start=activity.index[0].value // 10**9,\
-        #     time_now_end=activity.index[-1].value // 10**9)
-
-
-    # # for removing punctuation (via translate)
-    # table = string.maketrans("","")
-    # clean_text = []
-    # # for removing stop words
-    # stop = stopwords.words('english')
-    # tokens = []
-    # # stop.append('AT_USER')
-    # # stop.append('URL')
-    # stop.append('unicode_only')
-    # stop.append('w')
-    # stop.append('im')
-    # stop.append('')
-
-    # for txt in activity['text'].values:
-    #     txt = sd.processTweet(txt)
-    #     nopunct = txt.translate(table, string.punctuation)
-    #     #Remove additional white spaces
-    #     # nopunct = re.sub('[\s]+', ' ', nopunct)
-    #     # if nopunct is not '':
-    #     clean_text.append(nopunct)
-    #     # split it and remove stop words
-    #     txt = sd.getFeatureVector(txt,stop)
-    #     tokens.extend([t for t in txt])
-    # freq_dist = FreqDist(tokens)
+            latlng_sw=latlng_sw, latlng_ne=latlng_ne,\
+            selected=selected)
 
     # do this for each cluster?
     # tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity)
@@ -235,12 +246,14 @@ def results():
     resample_activity_overtime = '15min'
     grouper = pd.TimeGrouper(resample_activity_overtime)
     activity_resamp = activity.groupby(grouper).apply(lambda x: x['clusterNum'].value_counts()).unstack()
+    colNums = np.array(activity_resamp.columns)
+    colNums = colNums[colNums[:] >= 0]
 
     plotdata = [];
     for i in range(activity_resamp.shape[0]):
         thisRow = []
         thisRow.extend([activity_resamp.index[i].isoformat()])
-        for clusNum in range(n_clusters):
+        for clusNum in colNums:
             thisCluster = activity_resamp[clusNum]
             thisCluster.fillna(value=0, inplace=True)
             thisRow.extend([thisCluster[i]])
@@ -292,31 +305,15 @@ def contact():
 #     return render_template('500.html'), 500
 
 #############
-# read the data
-#############
-
-# latlong = open("./data/latlong_userdategeo_combined.csv")
-
-# print 'Reading locations...'
-# df = pd.read_csv(latlong,header=None,parse_dates=[2],\
-#     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
-# print 'Done.'
-# latlong.close()
-
-#############
 # set up some examples
 #############
 
 # ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 
-examples = [{"id": "apple_flint_center", "name": "Apple Keynote - Sep 9, 2014", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09 15:00:00"},
-            {"id": "attpark", "name": "Diamondbacks at Giants - Sep 9, 2014", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09 23:30:00"}
+examples = [{"id": "1", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09T12:00:00"},
+            {"id": "2", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "startTime": "2014-09-09T11:00:00", "endTime": "2014-09-09T15:00:00"},
+            {"id": "3", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09T21:00:00"},
+            {"id": "4", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "startTime": "2014-09-19T17:00:00", "endTime": "2014-09-19T21:00:00"},
+            {"id": "5", "area_str": "mtview_caltrain", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "startTime": "2014-09-21T12:00:00", "endTime": "2014-09-21T08:00:00"}
             ]
-
-# todo decouple id and area_str
-            # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 10, 2014", "startTime": "2014-09-10T17:00:00", "endTime": "2014-09-10 23:30:00"},
-            # {"id": "attpark", "name": "Diamondbacks at Giants - Sep 11, 2014", "startTime": "2014-09-11T11:00:00", "endTime": "2014-09-11 18:30:00"},
-            # {"id": "attpark", "name": "Dodgers at Giants - Sep 12, 2014", "startTime": "2014-09-12T17:00:00", "endTime": "2014-09-12 23:30:00"},
-            # {"id": "3", "name": "Event 3", "startTime": "", "endTime": ""},
-            # {"id": "4", "name": "Event 4", "startTime": "", "endTime": ""}

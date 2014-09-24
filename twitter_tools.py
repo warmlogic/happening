@@ -35,6 +35,8 @@ auth.set_access_token(accesstoken, accesstokensecret)
 
 twitAPI = tweepy.API(auth)
 
+print_debug = False
+
 # http://stackoverflow.com/questions/25224692/getting-the-location-using-tweepy
 
 # mongodb: http://stackoverflow.com/questions/17213991/how-can-i-consume-tweets-from-twitters-streaming-api-and-store-them-in-mongodb
@@ -160,18 +162,19 @@ def TwitSearchGeo(keywords,geo,count,max_tweets,API=twitAPI,searchopts={}):
     return parsedresults
 
 class StreamLogger(tweepy.StreamListener):
-    def __init__(self, fileToWrite):
-        self.fileToWrite = fileToWrite
-        # self.dbcon = dbcon
+    # def __init__(self, fileToWrite):
+    def __init__(self, dbcon):
         super(tweepy.StreamListener, self).__init__()
+        # self.fileToWrite = fileToWrite
+        self.dbcon = dbcon
 
     def on_status(self, status):
-        print status.text
-        if status.coordinates:
-            print 'coords:', status.coordinates
-        if status.place:
-            print 'place:', status.place.full_name
-
+        if print_debug:
+            print status.text
+            if status.coordinates:
+                print 'coords:', status.coordinates
+            if status.place:
+                print 'place:', status.place.full_name
         return True
 
     def on_data(self, data):
@@ -193,8 +196,11 @@ class StreamLogger(tweepy.StreamListener):
             except:
                 pic_url = ''
             # write it to disk
-            self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s,%s\n' %\
-                (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text'],pic_url))
+            # self.fileToWrite.write('%d,%s,%s,%.6f,%.6f,%s,%s\n' %\
+            #     (pt['user_id'],pt['tweet_id'],pt['tweettime'],pt['longitude'],pt['latitude'],pt['text'],pic_url))
+            # write it to database
+            self.putTweet(pt,pic_url)
+
         return True
 
     #on_event = on_status
@@ -215,11 +221,13 @@ class StreamLogger(tweepy.StreamListener):
         created_at = parser.parse(data['created_at']).isoformat()
         # print created_at + ' ' + data['user']['screen_name'] + ' ' + data['text']
         if len(parsedTweet) > 0:
-            print created_at + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
+            if print_debug:
+                print created_at + ' ' + data['user']['screen_name'] + ' ' + parsedTweet
         else:
             # if we lost everything
-            print created_at + ' ' + data['user']['screen_name'] + ' ' +\
-            '\tAll unicode removed, no text remaining'
+            if print_debug:
+                print created_at + ' ' + data['user']['screen_name'] + ' ' +\
+                '\tAll unicode removed, no text remaining'
             parsedTweet = 'unicode_only'
 
         # parse user info, time, location, text from tweet into dict
@@ -229,16 +237,25 @@ class StreamLogger(tweepy.StreamListener):
 
         return pt
 
-# def TwitStreamGeo(boundingBox,dbcon,creds=auth):
-def TwitStreamGeo(boundingBox,save_file,creds=auth):
+    def putTweet(self,pt,pic_url):
+        # add single tweet to database with timestamp id
+        with self.dbcon:
+            cur=self.dbcon.cursor()
+            sql="""INSERT INTO tweet_table(userid, tweetid, tweettime, tweetlon, tweetlat, tweettext, picurl) VALUES(%i,%i,'%s',%.6f,%.6f,%s,'%s');""" % (int(pt['user_id']),int(pt['tweet_id']),pt['tweettime'][:-6],pt['longitude'],pt['latitude'],json.dumps(pt['text']),pic_url)
+            cur.execute(sql)
+        return True
+
+def TwitStreamGeo(boundingBox,dbcon,creds=auth):
+    # def TwitStreamGeo(boundingBox,save_file,creds=auth):
     # append to file where we want to save tweets
-    fileToWrite = open(save_file, 'a')
+    # fileToWrite = open(save_file, 'a')
 
     # get data from streaming api
-    # listener = StreamLogger(dbcon)
-    listener = StreamLogger(fileToWrite)
+    listener = StreamLogger(dbcon)
+    # listener = StreamLogger(fileToWrite)
     stream = tweepy.streaming.Stream(creds, listener)    
-    print 'Starting stream, ctrl-c to exit'
+    if print_debug:
+        print 'Starting stream, ctrl-c to exit'
     stream.filter(locations=boundingBox)
 
 # if __name__ == '__main__':

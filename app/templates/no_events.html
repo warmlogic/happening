@@ -29,7 +29,7 @@
                         <form action="/results_location" method="POST" class="form-horizontal">
                             <div class="form-group">
                                 <div class="col-md-9">
-                                    <input type="text" name="location" class="form-control" id="whereToLook" placeholder="e.g., Mission Street, San Francisco, CA">
+                                    <input type="text" name="location" class="form-control" id="whereToLook" placeholder="e.g., SoMa, San Francisco, CA">
                                 </div>
                                 <div class="col-md-3">
                                     <button type="submit_loc" style="background-color: #ff6600; color: white;" name="query" class="btn btn-default">Continue</button>
@@ -73,7 +73,7 @@
         <div class ="col-md-3">
         </div>
         <div class ="col-md-6">
-            <p>Sorry, nothing out of the ordinary happening in your search area. Search a broader area, or go start an event!</p>
+            <p>Sorry, nothing out of the ordinary is happening in your search area. Search a broader area, or go start an event!</p>
             <p>Here are some resources and tips to organize fun, community-friendly events.</p>
         </div>
         <div class ="col-md-3">
@@ -91,13 +91,17 @@
 function init_map() {
     
     var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
-    var sw = new google.maps.LatLng({{ latlng_sw }});
-    var ne = new google.maps.LatLng({{ latlng_ne }});
-    var var_bounds = new google.maps.LatLngBounds(sw, ne);
+    var var_ourmap = mapIt(var_location)
+
+    // set it to our search area
+    var sw = new google.maps.LatLng({{ latlng_sw[0] }}, {{ latlng_sw[1] }});
+    var ne = new google.maps.LatLng({{ latlng_ne[0] }}, {{ latlng_ne[1] }});
+    var var_bounds = new google.maps.LatLngBounds();
+    var_bounds.extend(sw);
+    var_bounds.extend(ne);
+    var_ourmap.fitBounds(var_bounds);
     
-    var var_ourmap = mapIt(var_location,var_bounds)
-    
-    function mapIt(var_location,var_bounds) {
+    function mapIt(var_location) {
         var var_mapoptions = {
             center: var_location,
             zoom: 9
@@ -106,7 +110,6 @@ function init_map() {
 
         var var_map = new google.maps.Map(document.getElementById("map-container"),
             var_mapoptions);
-        var_map.panToBounds(var_bounds)
             
         // var var_marker = new google.maps.Marker({
         //     position: var_location,
@@ -155,6 +158,12 @@ $("document").ready(function(){
     var ne = google.maps.LatLng(37.9736, -121.9000);
     var LatLngBounds = google.maps.LatLngBounds(sw, ne);
     autocomplete.setBounds(LatLngBounds);
+</script>
+
+<script>
+    $(document).ready(function($) { 
+        $("#predef").val({{ selected|tojson }}); // set dropdown to curr value
+    });
 </script>
 
 {% endblock %}
