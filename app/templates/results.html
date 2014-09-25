@@ -1,100 +1,33 @@
 {% extends "layout/base.html" %}
 
 {% block head %}
-<link href="{{ url_for('static', filename='css/typeahead.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/jqcloud.css') }}" rel="stylesheet">
 {% endblock %}
 
-{% block content %}
-<div class="container">
-    <!-- <div class="page-header"> -->
-        <span style="color: #ff6600; font-weight:bold; font-size: 39px;">What's happening around you?</span>
-        <p class="lead">Find current social activity that stands out from the background.</p>
-    <!-- </div> -->
+{% block results %}
 
-    <div class ="col-md-12">
+<div class ="col-md-12">
+<!-- Activity over time -->
+<div class ="col-md-6">
+    <!-- <div id="chart_div" style="width: 900px; height: 500px;"></div> -->
+    <div id="chart_div"></div>
+</div>
 
-        <div id="map-container" class="col-md-6">
-            <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places,visualization&sensor=true_or_false">
-            </script>
-        </div>
+<!-- Word cloud -->
+<div class ="col-md-6">
+    <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby topics</span> -->
+    <!-- <h3>Nearby topics</h3> -->
+    <div id="wordcloud" style="width: 450px; height: 320px;"></div>
+</div>
+</div>
 
-        <!-- The location entry field -->
-        <div class ="col-md-6">
-            <div class="well" style="height:330px;">
-                <!-- User-input location -->
-                <div class="thumbnail">
-                  <div class="caption">
-                    <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Where to look?</span>
-                    <p>Type the name of an area to explore</p>
-                        <form action="/results_location" method="POST" class="form-horizontal">
-                            <div class="form-group">
-                                <div class="col-md-9">
-                                    <input type="text" name="location" class="form-control" id="whereToLook" placeholder="e.g., SoMa, San Francisco, CA">
-                                </div>
-                                <div class="col-md-3">
-                                    <button type="submit_loc" style="background-color: #ff6600; color: white;" name="query" class="btn btn-default">Continue</button>
-                                </div>
-                            </div>
-                        </form>
-                </div>
-            </div>
-
-            <!-- Predefined location -->
-            <div class="thumbnail">
-              <div class="caption">
-                <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Examples</span>
-                <p>Or choose from these examples</p>
-                <form action="/results_predef" method="POST" class="form-horizontal">
-                    <div class="form-group">
-                        <div class="col-md-9">
-                            <select class="form-control" name="event_id" id="predef">
-                            {% for event in examples %}
-                                <option value="{{ event["id"] }}">{{ event["name"] }}</option>
-                            {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit_predef" style="background-color: #ff6600; color: white;" class="btn btn-default">Continue</button>
-                        </div>
-                    </div>
-                </form>
-              </div>
-            </div>
-
-         <!-- Closing the well -->
-         </div>
-
-
-        <!-- Closing the location entry field -->
-    </div>
-
-    <!-- Closing map and location input row -->
-    </div>
-
-    <div class ="col-md-12">
-    <!-- Activity over time -->
-    <div class ="col-md-6">
-        <!-- <div id="chart_div" style="width: 900px; height: 500px;"></div> -->
-        <div id="chart_div"></div>
-    </div>
-    <!-- Word cloud -->
-    <div class ="col-md-6">
-        <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby topics</span> -->
-        <!-- <h3>Nearby topics</h3> -->
-        <div id="example" style="width: 450px; height: 320px;"></div>
-    </div>
-    </div>
-
-    <div class ="col-md-12">
-    <!-- Instagram photos -->
-        <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby photos</span> -->
-        <!-- <h3>Nearby photos</h3> -->
-        <div id="instafeed"></div>
-        <!-- <button id="load-more" style="background-color: #ff6600; color: white;" class="btn btn-default">More!</button> -->
-    </div>
-
-</div><!-- /.container -->
+<div class ="col-md-12">
+<!-- Instagram photos -->
+    <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby photos</span> -->
+    <!-- <h3>Nearby photos</h3> -->
+    <div id="instafeed"></div>
+    <!-- <button id="load-more" style="background-color: #ff6600; color: white;" class="btn btn-default">More!</button> -->
+</div>
 
 {% endblock %}
 
@@ -102,9 +35,14 @@
 {% block scripts %}
 
 <script>
+    $(document).ready(function($) { 
+        $("#predef").val({{ selected|tojson }}); // set dropdown to curr value
+    });
+</script>
+
+<script>
 function init_map() {
     
-    // var var_location = new google.maps.LatLng({{ cluster_centers[0][1] }}, {{ cluster_centers[0][0] }});
     var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
     var var_ourmap = mapIt(var_location);
 
@@ -169,14 +107,6 @@ function init_map() {
 
         var var_map = new google.maps.Map(document.getElementById("map-container"),
             var_mapoptions);
-        // var_map.panToBounds(var_bounds)
-            
-        // var var_marker = new google.maps.Marker({
-        //     position: var_location,
-        //     map: var_map,
-        //     title:"You"});
-
-        // // var_marker.setMap(var_map);
         
         return var_map
     }
@@ -226,7 +156,6 @@ function init_map() {
 
         // this_marker.setMap(this_map);
     }
-    
 }
 
 google.maps.event.addDomListener(window, 'load', init_map);
@@ -235,32 +164,6 @@ google.maps.event.addDomListener(window, 'load', init_map);
 <!-- source for visualization (google visualization library) -->
 <script type="text/javascript" src="https://www.google.com/jsapi"></script> 
 <script>
-// var showImages = function(urls) {
-//   if (urls.length < 3) {
-//     console.log('not enough urls');
-//     return;
-//   }
-  
-//   // If image source hasn't chnaged, don't do anything.
-//   var firstImgURL = $('#first-img').attr('src');
-//   if (firstImgURL == urls[0]['static']) {
-//     return;
-//   }
-  
-
-//   // Hide images
-//   $('.flickr-image').css('opacity', 0);
-//   $('#first-img').attr('src', urls[0]['static']);
-//   $('#first-link').attr('href', urls[0]['flickr']);
-//   $('#second-img').attr('src', urls[1]['static']);
-//   $('#second-link').attr('href', urls[1]['flickr']);
-//   $('#third-img').attr('src', urls[2]['static']);
-//   $('#third-link').attr('href', urls[2]['flickr']);
-// }
-
-// lineColors = clusterColor.slice(1)
-// var lineColors = {{ "clusterColor[1:]" }};
-
 var lineColors = []
 {% for i in range(ncluster) %}
     if ({{ loop.index }} > 0) {
@@ -302,7 +205,7 @@ function drawChart() { //javascript
      'colors': lineColors,
      'width':500,
      'height':300,
-     'backgroundColor': '#f4f7f2',
+     'backgroundColor': '#FAFBF8',
      'chartArea': {
        'left': 65,
        'top': 20,
@@ -331,55 +234,26 @@ function drawChart() { //javascript
 }
 </script>
 
-
-
-
-<script src="{{ url_for('static', filename='js/typeahead.min.js') }}"></script>
-<script>
-$("document").ready(function(){
-    $("#desintationEntry").typeahead({
-        name : 'dest',
-        hint: false,
-        minLength: 1,
-        prefetch: '/prefetch/prefetch', 
-    });
-});
-</script>
-<script>    
-    //autocomplete for whereToLook
-    var input = /** @type {HTMLInputElement} */(
-      document.getElementById('whereToLook'));
-    var autocomplete = new google.maps.places.Autocomplete(input);
-    //restrict to Bay Area
-    var sw = google.maps.LatLng(37.3333, -122.5311);
-    var ne = google.maps.LatLng(37.9736, -121.9000);
-    var LatLngBounds = google.maps.LatLngBounds(sw, ne);
-    autocomplete.setBounds(LatLngBounds);
-</script>
-
 <script src="{{ url_for('static', filename='js/jqcloud-1.0.4.min.js') }}"></script>
 <script type="text/javascript">
     var word_list = [];
     {% for cluster in word_array %}
+    // var ind = {{loop.index}}
         {% for words in cluster %}
             word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}});
         {% endfor %}
     {% endfor %}
     $(function() {
-        $("#example").jQCloud(word_list);
+        $("#wordcloud").jQCloud(word_list);
     });
     </script>
-
-<script>
-    $(document).ready(function($) { 
-        $("#predef").val({{ selected|tojson }}); // set dropdown to curr value
-    });
-</script>
 
 <script src="{{ url_for('static', filename='js/instafeed.js') }}"></script>
 <script type="text/javascript">
     var feed = new Instafeed({
         get: 'search_happening',
+        target: 'instafeed',
+        sortBy: 'most-liked',
         limit: 14,
         lat: {{ cluster_centers[0][1] }},
         lng: {{ cluster_centers[0][0] }},
@@ -390,29 +264,6 @@ $("document").ready(function(){
     });
     feed.run();
 </script>
-
-<!--
-<script type="text/javascript">
-var loadButton = document.getElementById('load-more');
-var feed = new Instafeed({
-  // every time we load more, run this function
-  after: function() {
-    // disable button if no more results to load
-    if (!this.hasNext()) {
-      loadButton.setAttribute('disabled', 'disabled');
-    }
-  },
-});
-
-// bind the load more button
-loadButton.addEventListener('click', function() {
-  feed.next();
-});
-
-// run our feed!
-feed.run();
-</script>
--->
 
 <!--=================================================-->
 {% endblock %}

@@ -12,13 +12,6 @@ from authent import instaauth
 from authent import dbauth as authsql
 import pdb
 
-# bash: aws_tun_sql
-if 'port' in authsql:
-    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
-else:    
-    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
-# cur=con.cursor()
-
 #############
 # ROUTING/VIEW FUNCTIONS
 #############
@@ -73,7 +66,6 @@ def results_procLocation():
     lat_ne = res['geometry']['bounds']['northeast']['lat']
 
     # get the times
-    hoursOffset = 4
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
     startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
     endTime = pd.datetime.isoformat(endTime)
@@ -85,8 +77,9 @@ def results_procPredef():
     event_id = request.form.get("event_id")
 
     # get the pre-defined time period
-    startTime = [dct["startTime"] for dct in examples if dct["id"] == event_id][0]
     endTime = [dct["endTime"] for dct in examples if dct["id"] == event_id][0]
+    startTime = pd.datetime.isoformat(pd.to_datetime(endTime) - pd.tseries.offsets.Hour(hoursOffset))
+
     area_str = [dct["area_str"] for dct in examples if dct["id"] == event_id][0]
 
     # set the bounding box for the requested area
@@ -97,7 +90,6 @@ def results_procPredef():
 
 @app.route("/results",methods=['GET'])
 def results():
-    tz = 'US/Pacific'
 
     # get the selected event
     selected = request.args.get('selected')
@@ -117,6 +109,8 @@ def results():
     endTime_now_UTC = pd.to_datetime(request.args.get('endTime')).tz_localize(tz).tz_convert('UTC').isoformat()
     time_now = [startTime_now_UTC, endTime_now_UTC]
 
+    nhours = np.round((pd.datetools.parse(time_now[1]) - pd.datetools.parse(time_now[0])).seconds / 60.0 / 60.0)
+
     # # compare to the day before
     # daysOffset = 1
     # startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Day(daysOffset))
@@ -124,15 +118,24 @@ def results():
     # time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # compare to the previous X hours
-    hoursOffset = 4
     startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
     endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
     time_then = [startTime_then_UTC, endTime_then_UTC]
 
+    # open connection to database
+    if 'port' in authsql:
+        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
+    else:    
+        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
+
+    # query the database
     activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
     print 'Now: Selected %d entries from now' % (activity_now.shape[0])
     activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
     print 'Then: Selected %d entries from then' % (activity_then.shape[0])
+
+    # close connection to database
+    con.close()
 
     # 0.003 makes bins about the size of AT&T park
     bin_scaler = 0.003
@@ -140,19 +143,26 @@ def results():
     nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
     # print 'nbins_lon: %d' % nbins_lon
     # print 'nbins_lat: %d' % nbins_lat
-    nclusters = 5
-    diffthresh = 30
+    n_top_hotspots = 5
+    min_nclusters = 2
+    max_nclusters = 5
+    diffthresh = 15 * nhours
     # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
     # diffthresh = int(np.floor(np.prod(nbins) / 100))
     # print 'diffthresh: %d' % diffthresh
-    eps = 0.025
-    min_samples = 100
+    # eps = 0.1
+    eps = 0.075
+    # eps = 0.025
+    # min_samples = 30 * nhours
+    min_samples = 15 * nhours
 
     if activity_now.shape[0] > 0 and activity_then.shape[0] > 0:
         activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
             activity_now=activity_now, activity_then=activity_then,\
-            nbins=[nbins_lon, nbins_lat], nclusters=nclusters, diffthresh=diffthresh,\
-            eps=eps, min_samples=min_samples)
+            nbins=[nbins_lon, nbins_lat],\
+            min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
+            n_top_hotspots=n_top_hotspots,\
+            diffthresh=diffthresh, eps=eps, min_samples=min_samples)
     elif len(activity_now) > 0 and len(activity_then) == 0:
         n_clusters = 0
         cluster_centers = []
@@ -170,6 +180,7 @@ def results():
         success = False
 
     print 'message: ' + message
+
     if success is False:
         # TODO: set redirect to failure page
         events = []
@@ -304,16 +315,31 @@ def contact():
 # def internal_error(error):
 #     return render_template('500.html'), 500
 
+
+#############
+# set up some info that we'll use
+#############
+tz = 'US/Pacific'
+hoursOffset = 3
+# hoursOffset = 24
+
+# ["gray","orange","yellow","green","blue","purple"]
+clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
+# FFFF66 # yellow
+# CC0099 # purple
+# E78AC3 # pink
+# 8DA0CB # purplish
+
+# ["gray","turquoise","orangy","purplish","pink","limey"]
+# clusterColor = ["D1D1E0","66C2A5","FC8D62","8DA0CB","E78AC3","A6D854"]
+
 #############
 # set up some examples
 #############
 
-# ["gray","orange","yellow","green","blue","purple"]
-clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
-
-examples = [{"id": "1", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "startTime": "2014-09-09T08:00:00", "endTime": "2014-09-09T12:00:00"},
-            {"id": "2", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "startTime": "2014-09-09T11:00:00", "endTime": "2014-09-09T15:00:00"},
-            {"id": "3", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "startTime": "2014-09-09T17:00:00", "endTime": "2014-09-09T21:00:00"},
-            {"id": "4", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "startTime": "2014-09-19T17:00:00", "endTime": "2014-09-19T21:00:00"},
-            {"id": "5", "area_str": "mtview_caltrain", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "startTime": "2014-09-21T12:00:00", "endTime": "2014-09-21T08:00:00"}
+examples = [{"id": "1", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "endTime": "2014-09-09T12:00:00"},
+            {"id": "2", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "endTime": "2014-09-09T15:00:00"},
+            {"id": "3", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "endTime": "2014-09-09T21:00:00"},
+            {"id": "4", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "endTime": "2014-09-19T21:00:00"},
+            {"id": "5", "area_str": "mtview_caltrain", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "endTime": "2014-09-21T08:00:00"}
             ]
