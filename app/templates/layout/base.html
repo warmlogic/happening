@@ -4,14 +4,15 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <meta name="description" content="Discover social activity around you">
+    <meta name="author" content="Matt Mollison">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon_static/favicon.ico') }}" type="image/x-icon">
+    <!-- <link rel="icon" href="{{ url_for('static', filename='images/favicon_animated/favicon.ico') }}" type="image/x-icon"> -->
 
     {% if title %}
       <title>{{ title }}</title>
     {% else %}
-      <title>This is happening | Find social activity around you</title>
+      <title>This is Happening | Discover social activity around you</title>
     {% endif %}
 
     <!-- Bootstrap core CSS -->
@@ -62,7 +63,7 @@
       <div class="container">
           <!-- <div class="page-header"> -->
               <span style="color: #ff6600; font-weight:bold; font-size: 39px;">What's happening around you?</span>
-              <p class="lead">Find current social activity that stands out from the background.</p>
+              <p class="lead">Discover current social activity that stands out from the background.</p>
           <!-- </div> -->
 
           <div class ="col-md-12">
