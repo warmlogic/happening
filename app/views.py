@@ -304,7 +304,7 @@ def results():
 @app.route('/author')
 def contact():
     # Renders author.html.
-    return render_template('author.html')
+    return render_template('author.html', selected="0")
 
 # @app.route('/slides')
 # def about():
