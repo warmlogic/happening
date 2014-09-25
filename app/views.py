@@ -49,9 +49,11 @@ def happening_page():
     latlng_ne = [this_lat[0], this_lon[0]]
     # pdb.set_trace()
 
+    selected = "1"
     return render_template('index.html', results=events, examples=examples,\
         user_lat=user_lat, user_lon=user_lon,\
-        latlng_sw=latlng_sw, latlng_ne=latlng_ne)
+        latlng_sw=latlng_sw, latlng_ne=latlng_ne,\
+        selected=selected)
 
 @app.route("/results_location",methods=['POST'])
 def results_procLocation():
@@ -60,14 +62,14 @@ def results_procLocation():
 
     # set the bounding box for the requested area
     res = data['results'][0]
-    lng_sw = res['geometry']['bounds']['southwest']['lng']
-    lng_ne = res['geometry']['bounds']['northeast']['lng']
-    lat_sw = res['geometry']['bounds']['southwest']['lat']
-    lat_ne = res['geometry']['bounds']['northeast']['lat']
+    lng_sw = res['geometry']['viewport']['southwest']['lng']
+    lng_ne = res['geometry']['viewport']['northeast']['lng']
+    lat_sw = res['geometry']['viewport']['southwest']['lat']
+    lat_ne = res['geometry']['viewport']['northeast']['lat']
 
     # get the times
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
-    startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
+    startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(timeWindow_hours))
     endTime = pd.datetime.isoformat(endTime)
 
     return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime))
@@ -78,7 +80,7 @@ def results_procPredef():
 
     # get the pre-defined time period
     endTime = [dct["endTime"] for dct in examples if dct["id"] == event_id][0]
-    startTime = pd.datetime.isoformat(pd.to_datetime(endTime) - pd.tseries.offsets.Hour(hoursOffset))
+    startTime = pd.datetime.isoformat(pd.to_datetime(endTime) - pd.tseries.offsets.Hour(timeWindow_hours))
 
     area_str = [dct["area_str"] for dct in examples if dct["id"] == event_id][0]
 
@@ -118,8 +120,8 @@ def results():
     # time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # compare to the previous X hours
-    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
-    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
+    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
+    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
     time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # open connection to database
@@ -146,7 +148,8 @@ def results():
     n_top_hotspots = 5
     min_nclusters = 2
     max_nclusters = 5
-    diffthresh = 15 * nhours
+    # diffthresh = 15 * nhours
+    diffthresh = 10 * nhours
     # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
     # diffthresh = int(np.floor(np.prod(nbins) / 100))
     # print 'diffthresh: %d' % diffthresh
@@ -155,7 +158,7 @@ def results():
     # eps = 0.05
     # eps = 0.025
     # min_samples = 30 * nhours
-    min_samples = 15 * nhours
+    min_samples = 20 * nhours
 
     if activity_now.shape[0] > 0 and activity_then.shape[0] > 0:
         activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
@@ -321,8 +324,9 @@ def contact():
 # set up some info that we'll use
 #############
 tz = 'US/Pacific'
-hoursOffset = 3
-# hoursOffset = 24
+timeWindow_hours = 3
+nowThenOffset_hours = 3
+# nowThenOffset_hours = 24
 
 # ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
@@ -340,7 +344,11 @@ clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 
 examples = [{"id": "1", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "endTime": "2014-09-09T12:00:00"},
             {"id": "2", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "endTime": "2014-09-09T15:00:00"},
-            {"id": "3", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "endTime": "2014-09-09T21:00:00"},
-            {"id": "4", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "endTime": "2014-09-19T21:00:00"},
-            {"id": "5", "area_str": "mtview_caltrain", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "endTime": "2014-09-21T08:00:00"}
+            {"id": "3", "area_str": "mission", "name": "Tue Sep 9, 2014, 7 PM - Mission", "endTime": "2014-09-09T19:00:00"},
+            {"id": "4", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "endTime": "2014-09-09T21:00:00"},
+            {"id": "5", "area_str": "sf", "name": "Fri Sep 19, 2014, 7 PM - SF", "endTime": "2014-09-19T19:00:00"},
+            {"id": "6", "area_str": "mission", "name": "Fri Sep 19, 2014, 7 PM - Mission", "endTime": "2014-09-19T19:00:00"},
+            {"id": "7", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "endTime": "2014-09-19T21:00:00"},
+            {"id": "8", "area_str": "mission", "name": "Sat Sep 20, 2014, 12 PM - Mission", "endTime": "2014-09-20T12:00:00"},
+            {"id": "9", "area_str": "mtview_caltrain", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "endTime": "2014-09-21T08:00:00"}
             ]

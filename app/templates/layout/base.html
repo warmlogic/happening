@@ -145,6 +145,12 @@
     <script src="{{ url_for('static', filename='vendor/jquery/jquery-2.1.1.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap-3.2.0-dist/js/bootstrap.min.js') }}"></script>
 
+    <script>
+        $(document).ready(function($) { 
+            $("#predef").val({{ selected|tojson }}); // set dropdown to curr value
+        });
+    </script>
+
     <!-- Page specific script files -->
     {% block scripts %}{% endblock %}
 

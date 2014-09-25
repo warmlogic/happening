@@ -279,6 +279,7 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,\
 
     if len(diffmore_lon) > 0:
         n_tries_db = 0
+        orig_eps = eps
         while n_clusters_db < min_nclusters:
             db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
             # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
@@ -288,18 +289,18 @@ def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,\
             labels = db.labels_
             n_clusters_db = len(set(labels)) - (1 if -1 in labels else 0)
             if n_tries_db < 3:
-                eps *= 2.0
+                eps += orig_eps
                 print 'increasing eps to %.3f' % eps
             else:
                 print 'found %d clusters' % n_clusters_db
             if n_tries_db >= 3 and n_tries_db <= 7:
-                if min_samples > 10.0:
+                if min_samples > 15.0:
                     min_samples = int(np.ceil(min_samples * 0.67))
                     print 'decreasing min_samples to %d' % min_samples
                 else:
                     break
             elif n_tries_db > 7 and n_tries_db <= 8:
-                eps *= 2.0
+                eps += orig_eps
                 print 'increasing eps to %.3f' % eps
             elif n_tries_db > 8:
                 break
