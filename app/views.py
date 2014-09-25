@@ -67,7 +67,7 @@ def results_procLocation():
 
     # get the times
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
-    startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(hoursOffset))
+    startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(timeWindow_hours))
     endTime = pd.datetime.isoformat(endTime)
 
     return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime))
@@ -78,7 +78,7 @@ def results_procPredef():
 
     # get the pre-defined time period
     endTime = [dct["endTime"] for dct in examples if dct["id"] == event_id][0]
-    startTime = pd.datetime.isoformat(pd.to_datetime(endTime) - pd.tseries.offsets.Hour(hoursOffset))
+    startTime = pd.datetime.isoformat(pd.to_datetime(endTime) - pd.tseries.offsets.Hour(timeWindow_hours))
 
     area_str = [dct["area_str"] for dct in examples if dct["id"] == event_id][0]
 
@@ -118,8 +118,8 @@ def results():
     # time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # compare to the previous X hours
-    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(hoursOffset))
-    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(hoursOffset))
+    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
+    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
     time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # open connection to database
@@ -321,8 +321,9 @@ def contact():
 # set up some info that we'll use
 #############
 tz = 'US/Pacific'
-hoursOffset = 3
-# hoursOffset = 24
+timeWindow_hours = 3
+nowThenOffset_hours = 3
+# nowThenOffset_hours = 24
 
 # ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
