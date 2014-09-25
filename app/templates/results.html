@@ -238,7 +238,7 @@ function drawChart() { //javascript
 <script type="text/javascript">
     var word_list = [];
     {% for cluster in word_array %}
-    var ind = {{loop.index}}
+    // var ind = {{loop.index}}
         {% for words in cluster %}
             word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}});
         {% endfor %}
