@@ -252,6 +252,8 @@ function drawChart() { //javascript
 <script type="text/javascript">
     var feed = new Instafeed({
         get: 'search_happening',
+        target: 'instafeed',
+        sortBy: 'most-liked',
         limit: 14,
         lat: {{ cluster_centers[0][1] }},
         lng: {{ cluster_centers[0][0] }},
