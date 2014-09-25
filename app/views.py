@@ -60,10 +60,10 @@ def results_procLocation():
 
     # set the bounding box for the requested area
     res = data['results'][0]
-    lng_sw = res['geometry']['bounds']['southwest']['lng']
-    lng_ne = res['geometry']['bounds']['northeast']['lng']
-    lat_sw = res['geometry']['bounds']['southwest']['lat']
-    lat_ne = res['geometry']['bounds']['northeast']['lat']
+    lng_sw = res['geometry']['viewport']['southwest']['lng']
+    lng_ne = res['geometry']['viewport']['northeast']['lng']
+    lat_sw = res['geometry']['viewport']['southwest']['lat']
+    lat_ne = res['geometry']['viewport']['northeast']['lat']
 
     # get the times
     endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
