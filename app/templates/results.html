@@ -40,12 +40,6 @@
 {% block scripts %}
 
 <script>
-    $(document).ready(function($) { 
-        $("#predef").val({{ selected|tojson }}); // set dropdown to curr value
-    });
-</script>
-
-<script>
 function init_map() {
     
     var var_location = new google.maps.LatLng({{ user_lat }}, {{ user_lon }});
