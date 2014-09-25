@@ -152,6 +152,7 @@ def results():
     # print 'diffthresh: %d' % diffthresh
     # eps = 0.1
     eps = 0.075
+    # eps = 0.05
     # eps = 0.025
     # min_samples = 30 * nhours
     min_samples = 15 * nhours
