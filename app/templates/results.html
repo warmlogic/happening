@@ -5,30 +5,35 @@
 {% endblock %}
 
 {% block results %}
+{% for i in range(ncluster) %}
+    <div class="row">
+        <div class ="col-md-12">
+            <!-- Word cloud -->
+            <div class ="col-md-3">
+                <span style="color: #{{clusterColor[loop.index]}}; font-weight:bold; font-size: 20px;">Event {{loop.index}}</span>
+                <!-- <h3>Event {{loop.index}}</h3> -->
+                <div id="wordcloud{{loop.index}}" style="width: 250px; height: 220px;"></div>
+            </div>
+
+            <div class ="col-md-9">
+            <!-- Instagram photos -->
+                <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby photos</span> -->
+                <!-- <h3>Nearby photos</h3> -->
+                <div id="instafeed{{loop.index}}"></div>
+                <!-- <button id="load-more" style="background-color: #ff6600; color: white;" class="btn btn-default">More!</button> -->
+            </div>
+        </div>
+        </div>
+    <br><br>
+{% endfor %}
 
 <div class ="col-md-12">
-<!-- Activity over time -->
-<div class ="col-md-6">
-    <!-- <div id="chart_div" style="width: 900px; height: 500px;"></div> -->
-    <div id="chart_div"></div>
+    <!-- Activity over time -->
+    <div class ="col-md-6">
+        <!-- <div id="chart_div" style="width: 900px; height: 500px;"></div> -->
+        <div id="chart_div"></div>
+    </div>
 </div>
-
-<!-- Word cloud -->
-<div class ="col-md-6">
-    <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby topics</span> -->
-    <!-- <h3>Nearby topics</h3> -->
-    <div id="wordcloud" style="width: 450px; height: 320px;"></div>
-</div>
-</div>
-
-<div class ="col-md-12">
-<!-- Instagram photos -->
-    <!-- <span style="color: #ff6600; font-weight:bold; font-size: 20px;">Nearby photos</span> -->
-    <!-- <h3>Nearby photos</h3> -->
-    <div id="instafeed"></div>
-    <!-- <button id="load-more" style="background-color: #ff6600; color: white;" class="btn btn-default">More!</button> -->
-</div>
-
 {% endblock %}
 
 <!--==============================================================-->
@@ -236,33 +241,34 @@ function drawChart() { //javascript
 
 <script src="{{ url_for('static', filename='js/jqcloud-1.0.4.min.js') }}"></script>
 <script type="text/javascript">
-    var word_list = [];
     {% for cluster in word_array %}
-    // var ind = {{loop.index}}
+        var word_list = [];
         {% for words in cluster %}
             word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}});
         {% endfor %}
+        // $(function() {
+            $("#wordcloud{{loop.index}}").jQCloud(word_list);
+        // });
     {% endfor %}
-    $(function() {
-        $("#wordcloud").jQCloud(word_list);
-    });
-    </script>
+</script>
 
 <script src="{{ url_for('static', filename='js/instafeed.js') }}"></script>
 <script type="text/javascript">
+    {% for i in range(ncluster) %}
     var feed = new Instafeed({
         get: 'search_happening',
-        target: 'instafeed',
+        target: 'instafeed{{loop.index}}',
         sortBy: 'most-liked',
-        limit: 14,
-        lat: {{ cluster_centers[0][1] }},
-        lng: {{ cluster_centers[0][0] }},
+        limit: 10,
+        lat: {{ cluster_centers[loop.index - 1][1] }},
+        lng: {{ cluster_centers[loop.index - 1][0] }},
         distance: 140,
         min_timestamp: {{ time_now_start }},
         max_timestamp: {{ time_now_end }},
         accessToken: "{{ insta_access_token }}"
     });
     feed.run();
+    {% endfor %}
 </script>
 
 <!--=================================================-->
