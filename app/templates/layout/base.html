@@ -20,21 +20,14 @@
     <!-- Genericons core CSS -->
     <link href="{{ url_for('static', filename='vendor/genericons/genericons/genericons.css') }}" rel="stylesheet">
 
-    <link href="{{ url_for('static', filename='css/typeahead.css') }}" rel="stylesheet">
-    <!-- Page specific CSS files -->
-    {% block head %}{% endblock %}
-
     <!-- Your custom styles -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
-    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
-
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/vendors/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/vendors/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <link href="{{ url_for('static', filename='css/typeahead.css') }}" rel="stylesheet">
     
+    <!-- Page specific CSS files -->
+    {% block head %}{% endblock %}
+
     <style>
       #map-container { height: 330px }
     </style>
@@ -137,7 +130,7 @@
     </div>
 
     <!-- The footer is placed within its own block to render properly -->
-    <!-- {#{% block footer %}{% endblock %}#} -->
+    {% block footer %}{% endblock %}
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
