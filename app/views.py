@@ -127,27 +127,6 @@ def results():
     # endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
     # time_then = [startTime_then_UTC, endTime_then_UTC]
 
-    # open connection to database
-    if 'port' in authsql:
-        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
-    else:    
-        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
-
-    # query the database
-    activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
-    print 'Now: Selected %d entries from now' % (activity_now.shape[0])
-
-    # compare to the previous X hours
-    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
-    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
-    time_then = [startTime_then_UTC, endTime_then_UTC]
-
-    activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
-    print 'Then: Selected %d entries from then' % (activity_then.shape[0])
-
-    # close connection to database
-    con.close()
-
     # 0.003 makes bins about the size of AT&T park
     bin_scaler = 0.006
     nbins_lon = int(np.ceil(float(np.diff(this_lon)) / bin_scaler))
@@ -169,17 +148,53 @@ def results():
     # min_samples = 30 * nhours
     min_samples = 20 * nhours
 
-    if activity_now.shape[0] > 0 and activity_then.shape[0] > 0:
-        diffmore_lon, diffmore_lat = hap.findHotspots(\
-            activity_now=activity_now, activity_then=activity_then,\
-            nbins=[nbins_lon, nbins_lat], n_top_hotspots=n_top_hotspots,\
-            diffthresh=diffthresh)
+    # open connection to database
+    if 'port' in authsql:
+        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
+    else:    
+        con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
 
-        activity, n_clusters, cluster_centers, message, success = hap.clusterActivity(\
-            activity_now=activity_now, activity_then=activity_then,\
-            diffmore_lon=diffmore_lon, diffmore_lat=diffmore_lat, nbins=[nbins_lon, nbins_lat],\
-            min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
-            eps=eps, min_samples=min_samples)
+    # query the database
+    activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
+    print 'Now: Selected %d entries' % (activity_now.shape[0])
+
+    if activity_now.shape[0] > 0:
+        offsetType = None
+        foundHotspot = False
+        for i,offset in enumerate(nowThenOffset_hours):
+            # compare to the previous X hours
+            startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(offset))
+            endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(offset))
+            time_then = [startTime_then_UTC, endTime_then_UTC]
+
+            activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
+            print 'Then: Selected %d entries from %s' % (activity_then.shape[0],offsetTypes[i])
+
+            if activity_then.shape[0] > 0:
+                diffmore_lon, diffmore_lat = hap.findHotspots(\
+                    activity_now=activity_now, activity_then=activity_then,\
+                    nbins=[nbins_lon, nbins_lat], n_top_hotspots=n_top_hotspots,\
+                    diffthresh=diffthresh)
+                if len(diffmore_lon) > 0:
+                    print 'found activity found compared to ' + offsetTypes[i]
+                    foundHotspot = True
+                    offsetType = offsetTypes[i]
+                    break
+            else:
+                print 'no activity found compared to ' + offsetTypes[i]
+                continue
+
+        if foundHotspot:
+            activity, n_clusters, cluster_centers, message, success = hap.clusterActivity(\
+                activity_now=activity_now, activity_then=activity_then,\
+                diffmore_lon=diffmore_lon, diffmore_lat=diffmore_lat, nbins=[nbins_lon, nbins_lat],\
+                min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
+                eps=eps, min_samples=min_samples)
+        else:
+            n_clusters = 0
+            cluster_centers = []
+            message = 'Sorry, no activity found during any baseline times!'
+            success = False
 
         # activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
         #     activity_now=activity_now, activity_then=activity_then,\
@@ -187,16 +202,16 @@ def results():
         #     min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
         #     n_top_hotspots=n_top_hotspots,\
         #     diffthresh=diffthresh, eps=eps, min_samples=min_samples)
-    elif len(activity_now) > 0 and len(activity_then) == 0:
-        n_clusters = 0
-        cluster_centers = []
-        message = 'Sorry, no activity found during the baseline time!'
-        success = False
-    elif len(activity_now) == 0 and len(activity_then) > 0:
-        n_clusters = 0
-        cluster_centers = []
-        message = 'Sorry, no activity found during this time!'
-        success = False
+    # elif len(activity_now) > 0 and len(activity_then) == 0:
+    #     n_clusters = 0
+    #     cluster_centers = []
+    #     message = 'Sorry, no activity found during the baseline time!'
+    #     success = False
+    # elif len(activity_now) == 0 and len(activity_then) > 0:
+    #     n_clusters = 0
+    #     cluster_centers = []
+    #     message = 'Sorry, no activity found during this time!'
+    #     success = False
     else:
         n_clusters = 0
         cluster_centers = []
@@ -204,6 +219,9 @@ def results():
         success = False
 
     print 'message: ' + message
+
+    # close connection to database
+    con.close()
 
     if success is False:
         # TODO: set redirect to failure page
@@ -316,6 +334,7 @@ def results():
         heatmap=True,\
         word_array=word_array,\
         message = message,\
+        offsetType = offsetType,\
         plotdata=plotdata,\
         selected=selected,\
         clusterColor=clusterColor,\
@@ -350,9 +369,10 @@ def contact():
 #############
 tz = 'US/Pacific'
 timeWindow_hours = 3
-nowThenOffset_hours = 3
+# nowThenOffset_hours = 3
 # nowThenOffset_hours = 24
-# nowThenOffset_hours = [3, 24, 168]
+nowThenOffset_hours = [3, 24, 168]
+offsetTypes = ['earlier today', 'yesterday', 'the same day last week']
 
 # ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
