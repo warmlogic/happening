@@ -1,26 +1,16 @@
 {% extends "layout/base.html" %}
 
-{% block head %}
-{% endblock %}
+{% block head %}{% endblock %}
 
-{% block results %}
+{% block activity %}
 <div class ="col-md-12">
-    <div class ="col-md-3">
-    </div>
-    <div class ="col-md-6">
-        <p>Sorry, nothing out of the ordinary is happening in your search area. Search a broader area, or go start an event!</p>
-        <p>Here are some resources and tips to organize fun, community-friendly events.</p>
-    </div>
-    <div class ="col-md-3">
-    </div>
+    <p>Sorry, nothing out of the ordinary is happening in your search area. Search a broader area, or go start an event!</p>
+    <p>Here are some resources and tips to organize fun, community-friendly events.</p>
 </div>
 {% endblock %}
 
-
-
 <!--==============================================================-->
 {% block scripts %}
-
 <script>
 function init_map() {
     
@@ -69,7 +59,6 @@ function init_map() {
 
 google.maps.event.addDomListener(window, 'load', init_map);
 </script>
-
 {% endblock %}
 <!--=================================================-->
 

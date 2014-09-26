@@ -30,7 +30,8 @@
     {% block head %}{% endblock %}
 
     <style>
-      #map-container { height: 330px }
+      /*#map-container { height: 330px }*/
+      #map-container { height: 600px }
     </style>
   </head>
 
@@ -118,13 +119,14 @@
 
                <!-- Closing the well -->
                </div>
+              {% block activity %}{% endblock %}
               <!-- Closing the location entry field -->
           </div>
 
           <!-- Closing map and location input row -->
           </div>
 
-          {% block results %}{% endblock %}
+          {% block clusters %}{% endblock %}
       </div><!-- /.container -->
 
       <!-- {% block content %}{% endblock %} -->
