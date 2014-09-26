@@ -28,40 +28,14 @@ import string
 
 import pdb
 
-class struct():
-    pass
+# class struct():
+#     pass
 
-def whatsHappening(activity_now, activity_then, nbins=[100, 100],\
-    n_top_hotspots=5, min_nclusters=1, max_nclusters=100,\
-    diffthresh=30, eps=0.025, min_samples=100):
+def findHotspots(activity_now, activity_then, nbins=[100, 100],\
+    n_top_hotspots=5, diffthresh=30):
+    '''Compare now vs then
     '''
-    min_samples is minimum number of samples per hour on average
-    '''
-    # ############
-    # # Read the data
-    # ############
-
-    # latlong = open("./data/latlong_userdategeo_combined.csv")
-
-    # print 'Reading locations...'
-    # df = pd.read_csv(latlong,header=None,parse_dates=[2],dtype={'url': str},\
-    #     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
-    # print 'Done.'
-    # latlong.close()
-    # # df.fillna('', inplace=True)
-
-    # # twitter times are in UTC
-    # df = df.tz_localize('UTC').tz_convert(tz)
-
-    # set the bounding box for the requested area
-    # this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
-
-    # for our loc, just set the average
-    # user_lon = np.mean(this_lon)
-    # user_lat = np.mean(this_lat)
-
-    # geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
-
+    
     ############
     # get difference between events
     ############
@@ -83,6 +57,17 @@ def whatsHappening(activity_now, activity_then, nbins=[100, 100],\
     diffless_lat = yedges[lessind[:,0]]
     print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
     print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
+    pdb.set_trace()
+    return diffmore_lon, diffmore_lat
+
+def clusterActivity(activity_now, activity_then, diffmore_lon, diffmore_lat,\
+    nbins=[100, 100], min_nclusters=1, max_nclusters=100, eps=0.025, min_samples=100):
+    '''min_samples is minimum number of samples per hour on average
+    '''
+
+    ############
+    # Find cluster shapes
+    ############
 
     activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,\
         nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,\
@@ -187,11 +172,3 @@ def classifySentiment(words, happy_log_probs, sad_log_probs):
 #             happy_probs.append(prob_happy)
 #         cluster_happy_sentiment.append(sum(np.array(happy_probs) > .5) / float(len(happy_probs)))
 #     return cluster_happy_sentiment
-
-def main():
-    print 'not ready yet'
-    return
-
-if __name__ == '__main__':
-    main()
-

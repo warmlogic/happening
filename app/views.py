@@ -149,7 +149,7 @@ def results():
     con.close()
 
     # 0.003 makes bins about the size of AT&T park
-    bin_scaler = 0.003
+    bin_scaler = 0.006
     nbins_lon = int(np.ceil(float(np.diff(this_lon)) / bin_scaler))
     nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
     # print 'nbins_lon: %d' % nbins_lon
@@ -170,12 +170,23 @@ def results():
     min_samples = 20 * nhours
 
     if activity_now.shape[0] > 0 and activity_then.shape[0] > 0:
-        activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
+        diffmore_lon, diffmore_lat = hap.findHotspots(\
             activity_now=activity_now, activity_then=activity_then,\
-            nbins=[nbins_lon, nbins_lat],\
+            nbins=[nbins_lon, nbins_lat], n_top_hotspots=n_top_hotspots,\
+            diffthresh=diffthresh)
+
+        activity, n_clusters, cluster_centers, message, success = hap.clusterActivity(\
+            activity_now=activity_now, activity_then=activity_then,\
+            diffmore_lon=diffmore_lon, diffmore_lat=diffmore_lat, nbins=[nbins_lon, nbins_lat],\
             min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
-            n_top_hotspots=n_top_hotspots,\
-            diffthresh=diffthresh, eps=eps, min_samples=min_samples)
+            eps=eps, min_samples=min_samples)
+
+        # activity, n_clusters, cluster_centers, message, success = hap.whatsHappening(\
+        #     activity_now=activity_now, activity_then=activity_then,\
+        #     nbins=[nbins_lon, nbins_lat],\
+        #     min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
+        #     n_top_hotspots=n_top_hotspots,\
+        #     diffthresh=diffthresh, eps=eps, min_samples=min_samples)
     elif len(activity_now) > 0 and len(activity_then) == 0:
         n_clusters = 0
         cluster_centers = []
