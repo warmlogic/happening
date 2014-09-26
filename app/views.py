@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from authent import instaauth
 from authent import dbauth as authsql
+import urllib
 import pdb
 
 #############
@@ -72,7 +73,7 @@ def results_procLocation():
     startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(timeWindow_hours))
     endTime = pd.datetime.isoformat(endTime)
 
-    return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime))
+    return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime, city=full_add))
 
 @app.route("/results_predef",methods=['POST'])
 def results_procPredef():
@@ -87,8 +88,9 @@ def results_procPredef():
     # set the bounding box for the requested area
     this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
 
+    city = [dct["city"] for dct in examples if dct["id"] == event_id][0]
     # get bounding box from this area_str
-    return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime, selected=request.form.get("event_id")))
+    return redirect(url_for('.results', lng_sw=this_lon[0], lng_ne=this_lon[1], lat_sw=this_lat[0], lat_ne=this_lat[1], startTime=startTime, endTime=endTime, city=city, selected=request.form.get("event_id")))
 
 @app.route("/results",methods=['GET'])
 def results():
@@ -97,6 +99,12 @@ def results():
     selected = request.args.get('selected')
     if selected == None:
         selected = "1"
+
+    # get the city/neighborhood
+    city = request.args.get('city')
+    if city == None:
+        city = "San Francisco, CA"
+    city = city.replace(', USA','')
 
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
     this_lat = [float(request.args.get('lat_sw')), float(request.args.get('lat_ne'))]
@@ -119,11 +127,6 @@ def results():
     # endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Day(daysOffset))
     # time_then = [startTime_then_UTC, endTime_then_UTC]
 
-    # compare to the previous X hours
-    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
-    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
-    time_then = [startTime_then_UTC, endTime_then_UTC]
-
     # open connection to database
     if 'port' in authsql:
         con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
@@ -133,6 +136,12 @@ def results():
     # query the database
     activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
     print 'Now: Selected %d entries from now' % (activity_now.shape[0])
+
+    # compare to the previous X hours
+    startTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[0]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
+    endTime_then_UTC = pd.datetime.isoformat(pd.datetools.parse(time_now[1]) - pd.tseries.offsets.Hour(nowThenOffset_hours))
+    time_then = [startTime_then_UTC, endTime_then_UTC]
+
     activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
     print 'Then: Selected %d entries from then' % (activity_then.shape[0])
 
@@ -249,11 +258,16 @@ def results():
     clus_centers = []
     word_array = []
     top_nWords = 20
+    base_url = "https://twitter.com/search?f=realtime&q={}"
+    dist_str = '2mi'
+    twit_search_end = pd.to_datetime(request.args.get('endTime')).date().isoformat()
+    twit_search_start = (pd.to_datetime(request.args.get('endTime')) - pd.tseries.offsets.Day(1)).date().isoformat()
     for i, clus in enumerate(cluster_centers):
         clus_centers.append(dict(lat=clus[1], long=clus[0], clusterid=int(clus[2])))
         this_array = []
         for word in word_freq[i].most_common(top_nWords):
-            this_array.append({'text': word[0], 'weight': word[1]})
+            query = base_url.format( urllib.quote('%s near:"%s" within:%s since:%s until:%s' % (word[0],city,dist_str,twit_search_start,twit_search_end)) )
+            this_array.append({'text': word[0], 'weight': word[1], 'link': query})
             # this_array.append({'text': word[0], 'weight': word[1], 'style': 'color:' + clusterColor[i] + ';'})
             # this_array.append({'text': word[0], 'weight': word[1], 'class': str(i)})
         word_array.append(this_array)
@@ -304,7 +318,7 @@ def results():
 @app.route('/author')
 def contact():
     # Renders author.html.
-    return render_template('author.html', selected="0")
+    return render_template('author.html')
 
 # @app.route('/slides')
 # def about():
@@ -327,6 +341,7 @@ tz = 'US/Pacific'
 timeWindow_hours = 3
 nowThenOffset_hours = 3
 # nowThenOffset_hours = 24
+# nowThenOffset_hours = [3, 24, 168]
 
 # ["gray","orange","yellow","green","blue","purple"]
 clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
@@ -342,13 +357,13 @@ clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 # set up some examples
 #############
 
-examples = [{"id": "1", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "endTime": "2014-09-09T12:00:00"},
-            {"id": "2", "area_str": "apple_flint_center", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "endTime": "2014-09-09T15:00:00"},
-            {"id": "3", "area_str": "mission", "name": "Tue Sep 9, 2014, 7 PM - Mission", "endTime": "2014-09-09T19:00:00"},
-            {"id": "4", "area_str": "sf", "name": "Tue Sep 9, 2014, 9 PM - SF", "endTime": "2014-09-09T21:00:00"},
-            {"id": "5", "area_str": "sf", "name": "Fri Sep 19, 2014, 7 PM - SF", "endTime": "2014-09-19T19:00:00"},
-            {"id": "6", "area_str": "mission", "name": "Fri Sep 19, 2014, 7 PM - Mission", "endTime": "2014-09-19T19:00:00"},
-            {"id": "7", "area_str": "sf", "name": "Fri Sep 19, 2014, 9 PM - SF", "endTime": "2014-09-19T21:00:00"},
-            {"id": "8", "area_str": "mission", "name": "Sat Sep 20, 2014, 12 PM - Mission", "endTime": "2014-09-20T12:00:00"},
-            {"id": "9", "area_str": "mtview_caltrain", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "endTime": "2014-09-21T08:00:00"}
+examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "area_str": "apple_flint_center", "city": "Cupertino, CA"},
+            {"id": "2", "endTime": "2014-09-09T15:00:00", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "area_str": "apple_flint_center", "city": "Cupertino, CA"},
+            {"id": "3", "endTime": "2014-09-09T19:00:00", "name": "Tue Sep 9, 2014, 7 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
+            {"id": "4", "endTime": "2014-09-09T21:00:00", "name": "Tue Sep 9, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "5", "endTime": "2014-09-19T19:00:00", "name": "Fri Sep 19, 2014, 7 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "6", "endTime": "2014-09-19T19:00:00", "name": "Fri Sep 19, 2014, 7 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
+            {"id": "7", "endTime": "2014-09-19T21:00:00", "name": "Fri Sep 19, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "8", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
+            {"id": "9", "endTime": "2014-09-21T08:00:00", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "area_str": "mtview_caltrain", "city": "Mountain View, CA"}
             ]
