@@ -243,10 +243,12 @@ function drawChart() { //javascript
     {% for cluster in word_array %}
         var word_list = [];
         {% for words in cluster %}
-            word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}});
+            var this_link = "{{ words['link'] }}".replace(/&amp;/g, '&')
+            // var this_link = this_link
+            word_list.push({text: "{{ words['text'] }}", weight: {{ words['weight'] }}, link: this_link });
         {% endfor %}
         // $(function() {
-            $("#wordcloud{{loop.index}}").jQCloud(word_list);
+            $("#wordcloud{{loop.index}}").jQCloud(word_list, {encodeURI: false});
         // });
     {% endfor %}
 </script>
