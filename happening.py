@@ -113,6 +113,8 @@ def cleanTextGetWordFrequency(activity):
     stop.append('im')
     stop.append('amp')
     stop.append('ca')
+    stop.append('sf')
+    stop.append('#sf')
     stop.append('san')
     stop.append('francisco')
     stop.append('sanfrancisco')
