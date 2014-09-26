@@ -4,7 +4,7 @@
 <link href="{{ url_for('static', filename='css/jqcloud.css') }}" rel="stylesheet">
 {% endblock %}
 
-{% block results %}
+{% block clusters %}
 {% for i in range(ncluster) %}
     <div class="row">
         <div class ="col-md-12">
@@ -23,17 +23,22 @@
                 <!-- <button id="load-more" style="background-color: #ff6600; color: white;" class="btn btn-default">More!</button> -->
             </div>
         </div>
-        </div>
+    </div>
     <br><br>
 {% endfor %}
+{% endblock %}
 
+{% block activity %}
+<div class="row row-centered">
 <div class ="col-md-12">
     <!-- Activity over time -->
-    <div class ="col-md-6">
+    <!-- <div class ="col-md-6"> -->
         <!-- <div id="chart_div" style="width: 900px; height: 500px;"></div> -->
         <div id="chart_div"></div>
-    </div>
+    <!-- </div> -->
 </div>
+</div>
+<br><br>
 {% endblock %}
 
 <!--==============================================================-->
@@ -203,7 +208,7 @@ function drawChart() { //javascript
      'curveType': 'function',
      'colors': lineColors,
      'width':500,
-     'height':300,
+     'height':250,
      'backgroundColor': '#FAFBF8',
      'chartArea': {
        'left': 65,
@@ -213,7 +218,7 @@ function drawChart() { //javascript
       },
       'vAxis':  {
        'viewWindowMode': 'maximized',
-       'title': 'Activity',
+       'title': 'Number of tweets',
        'gridlines': {
          'color': '#e3e3e3'
        }
