@@ -57,7 +57,6 @@ def findHotspots(activity_now, activity_then, nbins=[100, 100],\
     diffless_lat = yedges[lessind[:,0]]
     print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
     print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
-    pdb.set_trace()
     return diffmore_lon, diffmore_lat
 
 def clusterActivity(activity_now, activity_then, diffmore_lon, diffmore_lat,\
