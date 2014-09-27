@@ -117,6 +117,18 @@ def results():
     city = request.args.get('city')
     if city == None:
         city = "San Francisco, CA"
+    elif city == "Embarcadero, San Francisco, CA, USA":
+        city = "The Embarcadero, San Francisco"
+    elif city == "South of Market, San Francisco, CA, USA":
+        city = "SoMa, San Francisco"
+    elif city == "Mission District, San Francisco, CA, USA":
+        city = "Mission, San Francisco"
+    elif city == "Nob Hill, San Francisco, CA, USA":
+        city = city = city.replace(', CA','')
+    elif city == "Dogpatch, San Francisco, CA, USA":
+        city = city = city.replace(', CA','')
+    elif city == "Golden Gate Park, San Francisco, CA, USA":
+        city = city = city.replace(', CA','')
     city = city.replace(', USA','')
 
     this_lon = [float(request.args.get('lng_sw')), float(request.args.get('lng_ne'))]
@@ -412,12 +424,14 @@ clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 #############
 
 examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 2014, 12 PM - Cupertino", "area_str": "apple_flint_center", "city": "Cupertino, CA"},
-            {"id": "2", "endTime": "2014-09-09T15:00:00", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "area_str": "apple_flint_center", "city": "Cupertino, CA"},
-            {"id": "3", "endTime": "2014-09-09T19:00:00", "name": "Tue Sep 9, 2014, 7 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
+            {"id": "2", "endTime": "2014-09-09T13:00:00", "name": "Tue Sep 9, 2014, 1 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "3", "endTime": "2014-09-09T15:00:00", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "area_str": "apple_flint_center", "city": "Cupertino, CA"},
             {"id": "4", "endTime": "2014-09-09T21:00:00", "name": "Tue Sep 9, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "5", "endTime": "2014-09-19T19:00:00", "name": "Fri Sep 19, 2014, 7 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "6", "endTime": "2014-09-19T19:00:00", "name": "Fri Sep 19, 2014, 7 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
-            {"id": "7", "endTime": "2014-09-19T21:00:00", "name": "Fri Sep 19, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "8", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
-            {"id": "9", "endTime": "2014-09-21T08:00:00", "name": "Sun Sep 21, 2014, 12 PM - MtnView", "area_str": "mtview_caltrain", "city": "Mountain View, CA"}
+            {"id": "5", "endTime": "2014-09-13T00:00:00", "name": "Sat Sep 13, 2014, 12 AM - SoMa", "area_str": "sf_concerts", "city": "SoMa, San Francisco"},
+            {"id": "6", "endTime": "2014-09-13T12:00:00", "name": "Sat Sep 13, 2014, 12 PM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"},
+            {"id": "7", "endTime": "2014-09-19T19:00:00", "name": "Fri Sep 19, 2014, 7 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "8", "endTime": "2014-09-19T21:00:00", "name": "Fri Sep 19, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "9", "endTime": "2014-09-19T23:00:00", "name": "Fri Sep 19, 2014, 11 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "10", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
+            {"id": "11", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"}
             ]
