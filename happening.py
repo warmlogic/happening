@@ -151,8 +151,8 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
                             keepThisClus = True
                             break
                         else:
-                            binscale += 0.0005
-                            print 'increasing binscale to %.3f' % binscale
+                            binscale += 0.001
+                            print 'increasing binscale to %.4f' % binscale
                         if n_tries_bin > 3:
                             print 'this cluster did not contain a hotspot'
                             break

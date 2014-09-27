@@ -6,6 +6,7 @@ from secrets import get_API_key
 from gmap_encoder import decode
 import itertools
 import numpy as np
+# import pdb
 
 def geocode(search_term):
   API_KEY = get_API_key()
