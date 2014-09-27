@@ -385,6 +385,11 @@ def contact():
     # Renders author.html.
     return render_template('author.html')
 
+@app.route('/slides')
+def slides():
+    # Renders slides_wide.html.
+    return render_template('slides_wide.html')
+
 # @app.route('/slides')
 # def about():
 #     # Renders slides.html.
