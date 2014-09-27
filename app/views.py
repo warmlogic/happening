@@ -44,11 +44,8 @@ def happening_page():
     user_lon = np.mean(this_lon)
     user_lat = np.mean(this_lat)
 
-    # latlng_sw = [this_lat[0], this_lon[0]]
-    # latlng_ne = [this_lat[1], this_lon[1]]
     latlng_sw = [this_lat[1], this_lon[1]]
     latlng_ne = [this_lat[0], this_lon[0]]
-    # pdb.set_trace()
 
     selected = "1"
     return render_template('index.html', results=events, examples=examples,\
@@ -134,7 +131,6 @@ def results():
     nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
     print 'nbins_lon: %d' % nbins_lon
     print 'nbins_lat: %d' % nbins_lat
-    pdb.set_trace()
     n_top_hotspots = 5
     min_nclusters = 2
     max_nclusters = 5
