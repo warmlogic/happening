@@ -128,11 +128,13 @@ def results():
     # time_then = [startTime_then_UTC, endTime_then_UTC]
 
     # 0.003 makes bins about the size of AT&T park
-    bin_scaler = 0.006
+    # bin_scaler = 0.006
+    bin_scaler = 0.009
     nbins_lon = int(np.ceil(float(np.diff(this_lon)) / bin_scaler))
     nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
-    # print 'nbins_lon: %d' % nbins_lon
-    # print 'nbins_lat: %d' % nbins_lat
+    print 'nbins_lon: %d' % nbins_lon
+    print 'nbins_lat: %d' % nbins_lat
+    pdb.set_trace()
     n_top_hotspots = 5
     min_nclusters = 2
     max_nclusters = 5
@@ -186,8 +188,8 @@ def results():
 
         if foundHotspot:
             activity, n_clusters, cluster_centers, message, success = hap.clusterActivity(\
-                activity_now=activity_now, activity_then=activity_then,\
-                diffmore_lon=diffmore_lon, diffmore_lat=diffmore_lat, nbins=[nbins_lon, nbins_lat],\
+                activity_now=activity_now, diffmore_lon=diffmore_lon, diffmore_lat=diffmore_lat,\
+                nbins=[nbins_lon, nbins_lat],\
                 min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
                 eps=eps, min_samples=min_samples)
         else:
