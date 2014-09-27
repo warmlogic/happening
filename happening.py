@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 import select_data as sd
 # import jsonOpen, figSetup
 # from collections import defaultdict
-# from sklearn.cluster import DBSCAN
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
 # from sklearn import metrics
-# from sklearn.preprocessing import StandardScaler
 # import rauth
 # import urllib2
 # import configparser
@@ -59,8 +59,9 @@ def findHotspots(activity_now, activity_then, nbins=[100, 100],\
     print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
     return diffmore_lon, diffmore_lat
 
-def clusterActivity(activity_now, activity_then, diffmore_lon, diffmore_lat,\
-    nbins=[100, 100], min_nclusters=1, max_nclusters=100, eps=0.025, min_samples=100):
+def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
+    min_nclusters=1, max_nclusters=100, eps=0.025, min_samples=100,\
+    centerData=True, plotData=False):
     '''min_samples is minimum number of samples per hour on average
     '''
 
@@ -68,9 +69,152 @@ def clusterActivity(activity_now, activity_then, diffmore_lon, diffmore_lat,\
     # Find cluster shapes
     ############
 
-    activity_now_clustered, n_clusters, cluster_centers =  sd.clusterThose(activity_now=activity_now,\
-        nbins=nbins,diffmore_lon=diffmore_lon,diffmore_lat=diffmore_lat,\
-        min_nclusters=min_nclusters,max_nclusters=max_nclusters,eps=eps,min_samples=min_samples)
+    X = np.vstack((activity_now.longitude, activity_now.latitude)).T
+    if centerData:
+        scaler = StandardScaler(copy=True)
+        X_centered = scaler.fit(X).transform(X)
+    else:
+        X_centered = X
+
+    n_clusters_db = 0
+
+    if len(diffmore_lon) > 0:
+        n_tries_db = 0
+        orig_eps = eps
+        while n_clusters_db < min_nclusters:
+            db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
+            # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+            n_tries_db += 1
+            print 'try number %d' % n_tries_db
+
+            labels = db.labels_
+            n_clusters_db = len(set(labels)) - (1 if -1 in labels else 0)
+            if n_tries_db < 3:
+                eps += orig_eps
+                print 'increasing eps to %.3f' % eps
+            else:
+                print 'found %d clusters' % n_clusters_db
+            if n_tries_db >= 3 and n_tries_db <= 7:
+                if min_samples > 15.0:
+                    min_samples = int(np.ceil(min_samples * 0.67))
+                    print 'decreasing min_samples to %d' % min_samples
+                else:
+                    break
+            elif n_tries_db > 7 and n_tries_db <= 8:
+                eps += orig_eps
+                print 'increasing eps to %.3f' % eps
+            elif n_tries_db > 8:
+                break
+
+        print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_db,eps,min_samples)
+    else:
+        print 'no differences found using %d x %d bins' % (nbins[0], nbins[1])
+
+    if n_clusters_db > 0:
+        nbins_combo = int(np.floor(np.prod(nbins) / 100))
+        print 'real nbins_combo %d' % nbins_combo
+        if nbins_combo < 5:
+            nbins_combo = 5
+            print 'modified nbins_combo %d' % nbins_combo
+        core_samples = db.core_sample_indices_
+        core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+        core_samples_mask[db.core_sample_indices_] = True
+
+        unique_labels = np.unique(labels)
+
+        # go through the found clusters
+        keepClus = []
+        cluster_centers = []
+        clusterNums = np.repeat(-1,activity_now.shape[0])
+        # for k, col in zip(unique_labels, colors):
+        for k in unique_labels:
+            if k != -1 and k < max_nclusters:
+                # if in a cluster, set a mask for this cluster
+                class_member_mask = (labels == k)
+
+                # get the lat and long for this cluster
+                cluster_lon = X[class_member_mask,0]
+                cluster_lat = X[class_member_mask,1]
+
+                # default setting for keeping the cluster
+                keepThisClus = False
+
+                # keep clusters that contain a hist2d hotspot
+                # print 'len diffmore_lon: %d' % len(diffmore_lon)
+                for i in range(len(diffmore_lon)):
+                    binscale = 0.001
+                    n_tries_bin = 0
+                    while keepThisClus is False:
+                        n_tries_bin += 1
+                        if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
+                            print 'keeping this cluster'
+                            keepThisClus = True
+                            break
+                        else:
+                            binscale += 0.0005
+                            print 'increasing binscale to %.3f' % binscale
+                        if n_tries_bin > 3:
+                            print 'this cluster did not contain a hotspot'
+                            break
+                    if keepThisClus:
+                        break
+
+                keepClus.append(keepThisClus)
+                if keepThisClus:
+                    # fill in the cluster lable vector
+                    clusterNums[class_member_mask] = k
+
+                    # set the mean latitude and longitude
+                    mean_lon = np.mean(X[core_samples_mask & class_member_mask,0])
+                    mean_lat = np.mean(X[core_samples_mask & class_member_mask,1])
+                    cluster_centers.append([mean_lon,mean_lat,int(k)])
+
+            # else:
+            #     keepClus.append(False)
+            #     # Black used for noise.
+            #     # col = 'k'
+        activity_now['clusterNum'] = clusterNums
+        n_clusters_real = sum(keepClus)
+
+        if plotData:
+            colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            for k, col in zip(unique_labels, colors):
+                if k == -1:
+                    # Black used for noise.
+                    col = 'k'
+
+                class_member_mask = (labels == k)
+
+                xy = X[class_member_mask & ~core_samples_mask]
+                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+                         markeredgecolor='k', markersize=2)
+
+                xy = X[class_member_mask & core_samples_mask]
+                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+                         markeredgecolor='k', markersize=14)
+
+            ax.get_xaxis().get_major_formatter().set_useOffset(False)
+            ax.get_yaxis().get_major_formatter().set_useOffset(False)
+            plt.title('Estimated number of clusters: %d' % n_clusters_)
+            ax.set_xlabel('Longitude')
+            ax.set_ylabel('Latitude')
+            # plt.show()
+
+            # print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
+            # print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
+            # print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
+            # print("Adjusted Rand Index: %0.3f"
+            #       % metrics.adjusted_rand_score(labels_true, labels))
+            # print("Adjusted Mutual Information: %0.3f"
+            #       % metrics.adjusted_mutual_info_score(labels_true, labels))
+            # print("Silhouette Coefficient: %0.3f"
+            #       % metrics.silhouette_score(X_centered, labels))
+    else:
+        n_clusters_real = 0
+        cluster_centers = []
+
     if len(cluster_centers) > 0:
         message = 'found clusters, hoooray!'
         success = True
@@ -78,7 +222,7 @@ def clusterActivity(activity_now, activity_then, diffmore_lon, diffmore_lat,\
         message = 'all clusters rejected!'
         success = False
 
-    return activity_now_clustered, n_clusters, cluster_centers, message, success
+    return activity_now, n_clusters_real, cluster_centers, message, success
 
 def cleanTextGetWordFrequency(activity):
     # for removing punctuation (via translate)
