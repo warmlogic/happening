@@ -56,6 +56,9 @@ def happening_page():
 @app.route("/results_location",methods=['POST'])
 def results_procLocation():
     user_location = request.form.get("location")
+    if user_location == '':
+        user_location = 'San Francisco, CA, United States'
+
     lat,lon,full_add,data = maps.geocode(user_location)
 
     # set the bounding box for the requested area
@@ -65,12 +68,25 @@ def results_procLocation():
     lat_sw = res['geometry']['viewport']['southwest']['lat']
     lat_ne = res['geometry']['viewport']['northeast']['lat']
 
-    # get the times
-    endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
-    startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(timeWindow_hours))
-    endTime = pd.datetime.isoformat(endTime)
+    if lat_sw >= 36.94 and lat_ne <= 38.0 and lng_ne >= -122.53 and lng_sw <= -121.8:
+        # get the times
+        endTime = pd.datetime.replace(pd.datetime.now(), microsecond=0)
+        startTime = pd.datetime.isoformat(endTime - pd.tseries.offsets.Hour(timeWindow_hours))
+        endTime = pd.datetime.isoformat(endTime)
 
-    return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime, city=full_add))
+        return redirect(url_for('.results', lng_sw=lng_sw, lng_ne=lng_ne, lat_sw=lat_sw, lat_ne=lat_ne, startTime=startTime, endTime=endTime, city=full_add))
+    else:
+        this_lon, this_lat = sd.set_get_boundBox(area_str='bayarea')
+        # for our loc, just set the average
+        user_lon = np.mean(this_lon)
+        user_lat = np.mean(this_lat)
+        latlng_sw = [this_lat[1], this_lon[1]]
+        latlng_ne = [this_lat[0], this_lon[0]]
+        selected = "1"
+        return render_template('out_of_bounds.html', examples=examples,\
+            user_lat=user_lat, user_lon=user_lon,\
+            latlng_sw=latlng_sw, latlng_ne=latlng_ne,\
+            selected=selected)
 
 @app.route("/results_predef",methods=['POST'])
 def results_procPredef():
@@ -375,7 +391,7 @@ def contact():
 # set up some info that we'll use
 #############
 tz = 'US/Pacific'
-timeWindow_hours = 2
+timeWindow_hours = 3
 # nowThenOffset_hours = 3
 # nowThenOffset_hours = 24
 nowThenOffset_hours = [timeWindow_hours, 24, 168]
