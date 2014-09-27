@@ -7,8 +7,6 @@ also plots density
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
 import re
 import pdb
 
@@ -255,166 +253,13 @@ def set_get_boundBox(area_str='sf'):
 
     return this_lon, this_lat
 
-def fullprint(*args, **kwargs):
-    from pprint import pprint
-    import numpy
-    opt = numpy.get_printoptions()
-    numpy.set_printoptions(threshold='nan')
-    pprint(*args, **kwargs)
-    numpy.set_printoptions(**opt)
-
-
-def clusterThose(activity_now,nbins,diffmore_lon,diffmore_lat,\
-    min_nclusters,max_nclusters,eps,min_samples,\
-    centerData=True,plotData=False):
-
-    X = np.vstack((activity_now.longitude, activity_now.latitude)).T
-    if centerData:
-        scaler = StandardScaler(copy=True)
-        X_centered = scaler.fit(X).transform(X)
-    else:
-        X_centered = X
-
-    n_clusters_db = 0
-
-    if len(diffmore_lon) > 0:
-        n_tries_db = 0
-        orig_eps = eps
-        while n_clusters_db < min_nclusters:
-            db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
-            # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
-            n_tries_db += 1
-            print 'try number %d' % n_tries_db
-
-            labels = db.labels_
-            n_clusters_db = len(set(labels)) - (1 if -1 in labels else 0)
-            if n_tries_db < 3:
-                eps += orig_eps
-                print 'increasing eps to %.3f' % eps
-            else:
-                print 'found %d clusters' % n_clusters_db
-            if n_tries_db >= 3 and n_tries_db <= 7:
-                if min_samples > 15.0:
-                    min_samples = int(np.ceil(min_samples * 0.67))
-                    print 'decreasing min_samples to %d' % min_samples
-                else:
-                    break
-            elif n_tries_db > 7 and n_tries_db <= 8:
-                eps += orig_eps
-                print 'increasing eps to %.3f' % eps
-            elif n_tries_db > 8:
-                break
-
-        print 'Estimated number of clusters: %d (eps=%f, min_samples=%d)' % (n_clusters_db,eps,min_samples)
-    else:
-        print 'no differences found using %d x %d bins' % (nbins[0], nbins[1])
-
-    if n_clusters_db > 0:
-        nbins_combo = int(np.floor(np.prod(nbins) / 100))
-        print 'nbins_combo %d' % nbins_combo
-        if nbins_combo < 5:
-            nbins_combo = 5
-        core_samples = db.core_sample_indices_
-        core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-        core_samples_mask[db.core_sample_indices_] = True
-
-        unique_labels = np.unique(labels)
-
-        # go through the found clusters
-        keepClus = []
-        cluster_centers = []
-        clusterNums = np.repeat(-1,activity_now.shape[0])
-        # for k, col in zip(unique_labels, colors):
-        for k in unique_labels:
-            if k != -1 and k < max_nclusters:
-                # if in a cluster, set a mask for this cluster
-                class_member_mask = (labels == k)
-
-                # get the lat and long for this cluster
-                cluster_lon = X[class_member_mask,0]
-                cluster_lat = X[class_member_mask,1]
-
-                # default setting for keeping the cluster
-                keepThisClus = False
-
-                # keep clusters that contain a hist2d hotspot
-                # print 'len diffmore_lon: %d' % len(diffmore_lon)
-                for i in range(len(diffmore_lon)):
-                    binscale = 0.001
-                    n_tries_bin = 0
-                    while keepThisClus is False:
-                        n_tries_bin += 1
-                        if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
-                            print 'keeping this cluster'
-                            keepThisClus = True
-                            break
-                        else:
-                            binscale += 0.0005
-                            print 'increasing binscale to %.3f' % binscale
-                        if n_tries_bin > 3:
-                            print 'this cluster did not contain a hotspot'
-                            break
-                    if keepThisClus:
-                        break
-
-
-                keepClus.append(keepThisClus)
-                if keepThisClus:
-                    # fill in the cluster lable vector
-                    clusterNums[class_member_mask] = k
-
-                    # set the mean latitude and longitude
-                    mean_lon = np.mean(X[core_samples_mask & class_member_mask,0])
-                    mean_lat = np.mean(X[core_samples_mask & class_member_mask,1])
-                    cluster_centers.append([mean_lon,mean_lat,k])
-
-            # else:
-            #     keepClus.append(False)
-            #     # Black used for noise.
-            #     # col = 'k'
-        activity_now['clusterNum'] = clusterNums
-        n_clusters_real = sum(keepClus)
-
-        if plotData:
-            colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            for k, col in zip(unique_labels, colors):
-                if k == -1:
-                    # Black used for noise.
-                    col = 'k'
-
-                class_member_mask = (labels == k)
-
-                xy = X[class_member_mask & ~core_samples_mask]
-                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
-                         markeredgecolor='k', markersize=2)
-
-                xy = X[class_member_mask & core_samples_mask]
-                plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
-                         markeredgecolor='k', markersize=14)
-
-            ax.get_xaxis().get_major_formatter().set_useOffset(False)
-            ax.get_yaxis().get_major_formatter().set_useOffset(False)
-            plt.title('Estimated number of clusters: %d' % n_clusters_)
-            ax.set_xlabel('Longitude')
-            ax.set_ylabel('Latitude')
-            # plt.show()
-
-            # print("Homogeneity: %0.3f" % metrics.homogeneity_score(labels_true, labels))
-            # print("Completeness: %0.3f" % metrics.completeness_score(labels_true, labels))
-            # print("V-measure: %0.3f" % metrics.v_measure_score(labels_true, labels))
-            # print("Adjusted Rand Index: %0.3f"
-            #       % metrics.adjusted_rand_score(labels_true, labels))
-            # print("Adjusted Mutual Information: %0.3f"
-            #       % metrics.adjusted_mutual_info_score(labels_true, labels))
-            # print("Silhouette Coefficient: %0.3f"
-            #       % metrics.silhouette_score(X_centered, labels))
-    else:
-        n_clusters_real = 0
-        cluster_centers = []
-
-    return activity_now, n_clusters_real, cluster_centers
+# def fullprint(*args, **kwargs):
+#     from pprint import pprint
+#     import numpy
+#     opt = numpy.get_printoptions()
+#     numpy.set_printoptions(threshold='nan')
+#     pprint(*args, **kwargs)
+#     numpy.set_printoptions(**opt)
 
 # modified from: http://ravikiranj.net/drupal/201205/code/machine-learning/how-build-twitter-sentiment-analyzer
 def processTweet(tweet):
@@ -464,14 +309,16 @@ def getFeatureVector(tweet,stop):
     return featureVector
 
 def selectFromSQL(con,this_time,this_lon,this_lat,tz=None):
-    sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (this_time[0],this_time[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
-    activity = pd.io.sql.read_sql(sql, con=con, index_col='tweettime', parse_dates=['tweettime'])
-    activity.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat': 'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
-    activity.replace(to_replace={'url': {'\r': ''}}, inplace=True)
-    if tz is not None:
-        activity = activity.tz_localize('UTC').tz_convert(tz)
-    return activity
-
+    try:
+        sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (this_time[0],this_time[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
+        activity = pd.io.sql.read_sql(sql, con=con, index_col='tweettime', parse_dates=['tweettime'])
+        activity.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat': 'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
+        activity.replace(to_replace={'url': {'\r': ''}}, inplace=True)
+        if tz is not None:
+            activity = activity.tz_localize('UTC').tz_convert(tz)
+        return activity
+    except:
+        return []
 
 # if __name__ == '__main__':
 #     import plot_data
