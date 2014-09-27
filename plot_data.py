@@ -29,120 +29,115 @@ import matplotlib.pyplot as plt
 from IPython.display import Image
 plt.rcParams['figure.figsize'] = 12, 8 # plotsize
 
-
-
-con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
-cur=con.cursor()
-
-# sql="""SELECT * FROM tweet_table LIMIT 10;"""
-# cur.execute(sql)
-# results = cur.fetchall()
-
-
-# dtf = pd.io.sql.read_sql("SELECT * FROM tweet_table LIMIT 10;", con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
-
-# dtf = pd.io.sql.read_sql("SELECT * FROM tweet_table WHERE tweettime BETWEEN (SELECT STR_TO_DATE('2014-09-09T08:00:00','%Y-%m-%dT%h:%i:%s')) AND (SELECT STR_TO_DATE('2014-09-09T12:00:00','%Y-%m-%dT%h:%i:%s'));", con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
-startTime = '2014-09-09T08:00:00'
-endTime = '2014-09-09T12:00:00'
+tz = 'US/Pacific'
 this_lon, this_lat = sd.set_get_boundBox(area_str='sf')
-sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f);""" % (startTime,endTime,this_lon[0],this_lon[1],this_lat[0],this_lat[1])
 
-dtf = pd.io.sql.read_sql(sql, con=con, flavor='mysql', index_col='tweettime', parse_dates=['tweettime'])
-
-dtf.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat':'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
-dtf.replace(to_replace={'url': {'\r': ''}}, inplace=True)
-dtf = dtf.tz_localize('UTC').tz_convert('US/Pacific')
-
-
-
-
-
-
-
-
-
-
-############
-# Read the data
-############
-
-latlong = open("./data/latlong_userdategeo_combined.csv")
-
-print 'Reading locations...'
-df = pd.read_csv(latlong,header=None,parse_dates=[2],dtype={'url': str},\
-    names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
-print 'Done.'
-latlong.close()
-
-# twitter times are in UTC
-# df.datetime = df.datetime.apply(lambda x: x.tz_localize('UTC'), convert_dtype=False)
-df = df.tz_localize('UTC').tz_convert('US/Pacific')
-
-# df['point'] = df.apply(lambda row: pd.Point(df['latitude'], df['longitude']))
-
-############
-# User
-############
-
-# df = sd.selectUser(df,rmnull=True)
-
-############
-# Space
-############
-
-# choose only coordinates in our bounding box of interest
-
-# area_str='attpark'
-# area_str='apple_flint_center'
-# area_str='bayarea'
-area_str='sf'
-# area_str='fishwharf'
-# area_str='embarc'
-# area_str='att48'
-# area_str='pier48'
-# area_str='mission'
-# area_str='sf_concerts'
-# area_str='nobhill'
-# area_str='mtview_caltrain'
-# area_str='levisstadium'
-
-this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
-
-geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
-
-############
-# Time
-############
-
-# # set the start and end datetimes
-
-# sinceDatetime = '2014-09-05 09:00:00'
-# untilDatetime = '2014-09-05 17:00:00'
-# sinceDatetime = ''
-# untilDatetime = ''
-
-# tz = 'US/Pacific'
-# geo_activity = sd.selectTime(geo_activity,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
-
-# # night life
-# time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
-# time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
-
-# # apple keynote
-# time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
-# time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
-
-# giants vs diamondbacks
-# time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
-# time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+# # # giants diamondbacks
 time_now = ['2014-09-09 17:00:00', '2014-09-09 21:00:00']
 time_then = ['2014-09-08 13:00:00', '2014-09-08 17:00:00']
 
-activity_now = geo_activity.ix[time_now[0]:time_now[1]]
-activity_then = geo_activity.ix[time_then[0]:time_then[1]]
+# # # night life
+# # time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
+# # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
+
+# # # apple keynote
+# # time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
+# # time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
+
+if 'port' in authsql:
+    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
+else:    
+    con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'])
+
+activity_now = sd.selectFromSQL(con,time_now,this_lon,this_lat,tz)
+activity_then = sd.selectFromSQL(con,time_then,this_lon,this_lat,tz)
+
+con.close()
 
 print 'Now: Selecting %d entries from %s to %s' % (activity_now.shape[0],time_now[0],time_now[1])
 print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_then[0],time_then[1])
+
+# ############
+# # Read the data
+# ############
+
+# # latlong = open("./data/latlong_userdategeo_combined.csv")
+
+# # print 'Reading locations...'
+# # df = pd.read_csv(latlong,header=None,parse_dates=[2],dtype={'url': str},\
+# #     names=['user_id','tweet_id','datetime','longitude','latitude','text','url'],index_col='datetime')
+# # print 'Done.'
+# # latlong.close()
+
+# # # twitter times are in UTC
+# # # df.datetime = df.datetime.apply(lambda x: x.tz_localize('UTC'), convert_dtype=False)
+# # df = df.tz_localize('UTC').tz_convert('US/Pacific')
+
+# # df['point'] = df.apply(lambda row: pd.Point(df['latitude'], df['longitude']))
+
+# ############
+# # User
+# ############
+
+# # df = sd.selectUser(df,rmnull=True)
+
+# ############
+# # Space
+# ############
+
+# # choose only coordinates in our bounding box of interest
+
+# # area_str='attpark'
+# # area_str='apple_flint_center'
+# # area_str='bayarea'
+# area_str='sf'
+# # area_str='fishwharf'
+# # area_str='embarc'
+# # area_str='att48'
+# # area_str='pier48'
+# # area_str='mission'
+# # area_str='sf_concerts'
+# # area_str='nobhill'
+# # area_str='mtview_caltrain'
+# # area_str='levisstadium'
+
+# this_lon, this_lat = sd.set_get_boundBox(area_str=area_str)
+
+# geo_activity = sd.selectSpaceBB(df,this_lon,this_lat)
+
+# ############
+# # Time
+# ############
+
+# # # set the start and end datetimes
+
+# # sinceDatetime = '2014-09-05 09:00:00'
+# # untilDatetime = '2014-09-05 17:00:00'
+# # sinceDatetime = ''
+# # untilDatetime = ''
+
+# # tz = 'US/Pacific'
+# # geo_activity = sd.selectTime(geo_activity,tz=tz,sinceDatetime=sinceDatetime,untilDatetime=untilDatetime)
+
+# # # night life
+# # time_now = ['2014-09-05 17:00:00', '2014-09-06 05:00:00']
+# # time_then = ['2014-09-08 17:00:00', '2014-09-09 05:00:00']
+
+# # # apple keynote
+# # time_now = ['2014-09-09 08:00:00', '2014-09-09 15:00:00']
+# # time_then = ['2014-09-08 08:00:00', '2014-09-08 15:00:00']
+
+# # giants vs diamondbacks
+# # time_now = ['2014-09-09 17:00:00', '2014-09-09 23:30:00']
+# # time_then = ['2014-09-08 17:00:00', '2014-09-08 23:30:00']
+# time_now = ['2014-09-09 17:00:00', '2014-09-09 21:00:00']
+# time_then = ['2014-09-08 13:00:00', '2014-09-08 17:00:00']
+
+# activity_now = geo_activity.ix[time_now[0]:time_now[1]]
+# activity_then = geo_activity.ix[time_then[0]:time_then[1]]
+
+# print 'Now: Selecting %d entries from %s to %s' % (activity_now.shape[0],time_now[0],time_now[1])
+# print 'Then: Selecting %d entries from %s to %s' % (activity_then.shape[0],time_then[0],time_then[1])
 
 ###########
 # plot over time
@@ -176,11 +171,14 @@ if show_plot:
 # Plot heat map and difference
 ############
 
-# nbins_lon = 10
-# nbins_lat = 50
 # 0.003 makes bins about the size of AT&T park
-nbins_lon = int(np.ceil(float(np.diff(this_lon)) / 0.003))
-nbins_lat = int(np.ceil(float(np.diff(this_lat)) / 0.003))
+bin_scaler = 0.009
+nbins_lon = int(np.floor(float(np.diff(this_lon)) / bin_scaler))
+nbins_lat = int(np.floor(float(np.diff(this_lat)) / bin_scaler))
+if nbins_lon == 0:
+    nbins_lon = 1
+if nbins_lat == 0:
+    nbins_lat = 1
 
 nbins = [nbins_lon, nbins_lat]
 show_plot=True
