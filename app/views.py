@@ -127,8 +127,17 @@ def results():
     # 0.003 makes bins about the size of AT&T park
     # bin_scaler = 0.006
     bin_scaler = 0.009
-    nbins_lon = int(np.ceil(float(np.diff(this_lon)) / bin_scaler))
-    nbins_lat = int(np.ceil(float(np.diff(this_lat)) / bin_scaler))
+    nbins_lon = int(np.floor(float(np.diff(this_lon)) / bin_scaler))
+    nbins_lat = int(np.floor(float(np.diff(this_lat)) / bin_scaler))
+    binDiffThresh = 5
+    if nbins_lon > binDiffThresh and nbins_lat < binDiffThresh:
+        nbins_lon = int(np.floor(nbins_lon / 2))
+    if nbins_lat > binDiffThresh and nbins_lon < binDiffThresh:
+        nbins_lat = int(np.floor(nbins_lat / 2))
+    if nbins_lon <= 3:
+        nbins_lon = 1
+    if nbins_lat <= 3:
+        nbins_lat = 1
     print 'nbins_lon: %d' % nbins_lon
     print 'nbins_lat: %d' % nbins_lat
     n_top_hotspots = 5
@@ -366,10 +375,10 @@ def contact():
 # set up some info that we'll use
 #############
 tz = 'US/Pacific'
-timeWindow_hours = 3
+timeWindow_hours = 2
 # nowThenOffset_hours = 3
 # nowThenOffset_hours = 24
-nowThenOffset_hours = [3, 24, 168]
+nowThenOffset_hours = [timeWindow_hours, 24, 168]
 offsetTypes = ['earlier today', 'yesterday', 'the same day last week']
 
 # ["gray","orange","yellow","green","blue","purple"]
