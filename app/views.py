@@ -171,19 +171,27 @@ def results():
     n_top_hotspots = 5
     min_nclusters = 2
     max_nclusters = 5
-    # diffthresh = 15 * nhours
-    diffthresh = 10 * nhours
-    # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
-    # diffthresh = int(np.floor(np.prod(nbins) / 100))
-    # print 'diffthresh: %d' % diffthresh
+
     # eps = 0.1
     eps = 0.075
     # eps = 0.05
     # eps = 0.025
     # min_samples = 30 * nhours
-    min_samples = 20 * nhours
 
+    onlyUnique = True
+
+    if onlyUnique:
+        diffthresh = 5 * nhours
+        min_samples = 10 * nhours
+    else:
+        diffthresh = 10 * nhours
+        min_samples = 20 * nhours
+    # diffthresh = 15 * nhours
+    # diffthresh = int(np.floor((nbins[0] * nbins[1] / 100) * 0.75))
+    # diffthresh = int(np.floor(np.prod(nbins) / 100))
+    # print 'diffthresh: %d' % diffthresh
     # open connection to database
+
     if 'port' in authsql:
         con=mdb.connect(host=authsql['host'],user=authsql['user'],passwd=authsql['word'],database=authsql['database'],port=authsql['port'])
     else:    
@@ -209,7 +217,7 @@ def results():
                 diffmore_lon, diffmore_lat = hap.findHotspots(\
                     activity_now=activity_now, activity_then=activity_then,\
                     nbins=[nbins_lon, nbins_lat], n_top_hotspots=n_top_hotspots,\
-                    diffthresh=diffthresh)
+                    diffthresh=diffthresh, onlyUnique=onlyUnique)
                 if len(diffmore_lon) > 0:
                     print 'found activity found compared to ' + offsetTypes[i]
                     foundHotspot = True
