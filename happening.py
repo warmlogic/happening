@@ -32,7 +32,7 @@ import pdb
 #     pass
 
 def findHotspots(activity_now, activity_then, nbins=[100, 100],\
-    n_top_hotspots=5, diffthresh=30):
+    n_top_hotspots=5, diffthresh=30, onlyUnique=False):
     '''Compare now vs then
     '''
     
@@ -45,7 +45,24 @@ def findHotspots(activity_now, activity_then, nbins=[100, 100],\
     Hnow, xedges, yedges = sd.make_hist(activity_now,nbins,show_plot)
     Hthen, xedges, yedges = sd.make_hist(activity_then,nbins,show_plot)
 
-    Hdiff = Hnow - Hthen
+    Hdiff = (Hnow - Hthen)
+
+    if onlyUnique:
+        # nUnique_now = len(pd.unique(activity_now.user_id.ravel()))
+        # nUnique_then = len(pd.unique(activity_then.user_id.ravel()))
+
+        # http://stackoverflow.com/questions/19718531/selecting-unique-observations-in-a-pandas-data-frame
+        unique_now = activity_now.drop_duplicates(cols = 'user_id')
+        unique_then = activity_then.drop_duplicates(cols = 'user_id')
+
+        Hnow_unique, xedges_unique, yedges_unique = sd.make_hist(unique_now,nbins,show_plot)
+        Hthen_unique, xedges_unique, yedges_unique = sd.make_hist(unique_then,nbins,show_plot)
+
+        # Hdiff = (Hnow - Hthen) * (float(nUnique_now) / float(activity_now.shape[0]))
+        bin_weight = (Hnow_unique - Hthen_unique) / (Hnow - Hthen)
+
+        bin_weight = np.nan_to_num(bin_weight)
+        Hdiff = Hdiff * bin_weight
 
     # return n_top_hotspots values, sorted; ascend=biggest first
     morevals,moreind = sd.choose_n_sorted(Hdiff, n=n_top_hotspots, min_val=diffthresh, srt='max', return_order='ascend')
