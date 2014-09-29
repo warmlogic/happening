@@ -181,8 +181,8 @@ def results():
     onlyUnique = True
 
     if onlyUnique:
-        diffthresh = 5 * nhours
-        min_samples = 10 * nhours
+        diffthresh = 10 * nhours
+        min_samples = 12 * nhours
     else:
         diffthresh = 10 * nhours
         min_samples = 20 * nhours
