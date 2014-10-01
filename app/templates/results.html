@@ -10,7 +10,7 @@
         <div class ="col-md-12">
             <!-- Word cloud -->
             <div class ="col-md-3">
-                <span style="color: #{{clusterColor[loop.index]}}; font-weight:bold; font-size: 20px;">Event {{loop.index}} (now vs. {{offsetType}})</span>
+                <span style="color: #{{clusterColor[loop.index-1]}}; font-weight:bold; font-size: 20px;">Event {{loop.index}} (now vs. {{offsetType}})</span>
                 <!-- <h3>Event {{loop.index}}</h3> -->
                 <div id="wordcloud{{loop.index}}" style="width: 250px; height: 220px;"></div>
             </div>
@@ -59,10 +59,10 @@ function init_map() {
     
     //Build color icons for clusters         
     var iconArray = new Array();
-    {% for i in range(ncluster) %}
+    {% for col in clusterColor %}
         // console.log("{{ loop.index }}");
         // console.log("{{ clusterColor[loop.index] }}");
-        iconArray[{{ loop.index }}] = { url: "http://www.googlemapsmarkers.com/v1/"+"{{ loop.index }}"+"/"+"{{ clusterColor[loop.index] }}"+"/"};
+        iconArray.push({ url: "http://www.googlemapsmarkers.com/v1/"+"{{ loop.index }}"+"/"+"{{ col }}"+"/"});
     {% endfor %}
 
     {% if heatmap %}
@@ -84,7 +84,8 @@ function init_map() {
             clus_lat_lng = new google.maps.LatLng({{ clus['lat'] }}, {{ clus['long'] }})
             var_bounds.extend(clus_lat_lng)
             // addCentroidMarker(var_ourmap, clus_lat_lng, {{ clus['clusterid'] }})
-            addPinMarker(var_ourmap, clus_lat_lng, {{ clus['clusterid'] }})
+            addPinMarker(var_ourmap, clus_lat_lng, {{ loop.index-1 }})
+            // addPinMarker(var_ourmap, clus_lat_lng, {{ clus['clusterid'] }})
             // addPinMarkerWithInfo(var_ourmap, clus_lat_lng, {{ clus['clusterid'] }})
         {% endfor %}
         if ({{ ncluster }} > 1) {
@@ -121,7 +122,7 @@ function init_map() {
         var this_marker = new google.maps.Marker({
             position: clus_lat_lng,
             map: this_map,
-            icon: getMakerImage(thisID+1)
+            icon: getMakerImage(thisID)
             })
 
         // this_marker.setMap(this_map);
@@ -134,7 +135,7 @@ function init_map() {
         var this_marker = new google.maps.Marker({
             position: clus_lat_lng,
             map: this_map,
-            icon: getMakerImage(thisID+1)
+            icon: getMakerImage(thisID)
             })
 
         var infoWindow = new google.maps.InfoWindow();
@@ -171,7 +172,7 @@ google.maps.event.addDomListener(window, 'load', init_map);
 var lineColors = []
 {% for i in range(ncluster) %}
     if ({{ loop.index }} > 0) {
-        lineColors.push("{{ clusterColor[loop.index] }}")
+        lineColors.push("{{ clusterColor[i] }}")
     }
 {% endfor %}
 
