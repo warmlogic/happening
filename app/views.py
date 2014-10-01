@@ -228,7 +228,7 @@ def results():
                 continue
 
         if foundHotspot:
-            activity, n_clusters, cluster_centers, message, success = hap.clusterActivity(\
+            activity, n_clusters, keepClus, cluster_centers, message, success = hap.clusterActivity(\
                 activity_now=activity_now, diffmore_lon=diffmore_lon, diffmore_lat=diffmore_lat,\
                 nbins=[nbins_lon, nbins_lat],\
                 min_nclusters=min_nclusters, max_nclusters=max_nclusters,\
@@ -285,10 +285,24 @@ def results():
     # top_nWords = 20
     # top_words = []
     # cluster_happy_sentiment = []
-    for clusNum in range(n_clusters):
-        activity_thisclus = activity.loc[activity['clusterNum'] == clusNum]
-        tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_thisclus)
-        word_freq.append(freq_dist)
+    # for clusNum in range(n_clusters):
+    for clusNum in range(len(keepClus)):
+        print 'clusNum %d' % clusNum
+        print 'keepClus[clusNum]'
+        print keepClus[clusNum]
+        if keepClus[clusNum] == True:
+            print 'keeping'
+            activity_thisclus = activity.loc[activity['clusterNum'] == clusNum]
+            print 'len activity %d' % activity_thisclus.shape[0]
+            if activity_thisclus.shape[0] > 0:
+                tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_thisclus)
+                word_freq.append(freq_dist)
+            else:
+                print 'keeping but len=0'
+                pdb.set_trace()
+                keepClus[clusNum] = False
+        else:
+            print 'not keeping'
 
         # top_words.append(freq_dist.most_common(top_nWords))
         # top_w = sorted(freq_dist, key=freq_dist.get, reverse=True)
@@ -423,7 +437,8 @@ nowThenOffset_hours = [timeWindow_hours, 24, 168]
 offsetTypes = ['earlier today', 'yesterday', 'the same day last week']
 
 # ["gray","orange","yellow","green","blue","purple"]
-clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
+# clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
+clusterColor = ["FF9933","FFFF66","00CC00","0066FF","CC0099"]
 # FFFF66 # yellow
 # CC0099 # purple
 # E78AC3 # pink

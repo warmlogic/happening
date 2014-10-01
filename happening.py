@@ -177,7 +177,7 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
                         break
 
                 keepClus.append(keepThisClus)
-                if keepThisClus:
+                if keepThisClus == True:
                     # fill in the cluster lable vector
                     clusterNums[class_member_mask] = k
 
@@ -239,7 +239,7 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
         message = 'all clusters rejected!'
         success = False
 
-    return activity_now, n_clusters_real, cluster_centers, message, success
+    return activity_now, n_clusters_real, keepClus, cluster_centers, message, success
 
 def cleanTextGetWordFrequency(activity):
     # for removing punctuation (via translate)
