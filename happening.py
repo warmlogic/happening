@@ -74,6 +74,7 @@ def findHotspots(activity_now, activity_then, nbins=[100, 100],\
     diffless_lat = yedges[lessind[:,0]]
     print 'At threshold %d, found %d "events" that have more activity than previous time' % (diffthresh,len(morevals))
     print 'At threshold %d, found %d "events" that have less activity than previous time' % (diffthresh,len(lessvals))
+
     return diffmore_lon, diffmore_lat
 
 def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
@@ -99,6 +100,7 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
         n_tries_db = 0
         orig_eps = eps
         while n_clusters_db < min_nclusters:
+            # TODO: set a confidence level based on number of while loops
             db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
             # db = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
             n_tries_db += 1
@@ -162,8 +164,12 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
                     binscale = 0.001
                     n_tries_bin = 0
                     while keepThisClus is False:
+                        # TODO: set a confidence level based on number of while loops
                         n_tries_bin += 1
-                        if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
+                        if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and\
+                        diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and\
+                        diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and\
+                        diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
                             print 'keeping this cluster'
                             keepThisClus = True
                             break
