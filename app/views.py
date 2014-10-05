@@ -345,7 +345,7 @@ def results():
     word_array = []
     top_nWords = 20
     base_url = "https://twitter.com/search?f=realtime&q={}"
-    dist_str = '2mi'
+    dist_str = '5mi'
     twit_search_end = pd.to_datetime(request.args.get('endTime')).date().isoformat()
     twit_search_start = (pd.to_datetime(request.args.get('endTime')) - pd.tseries.offsets.Day(1)).date().isoformat()
     for i, clus in enumerate(cluster_centers):
