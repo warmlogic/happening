@@ -461,5 +461,9 @@ examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 20
             {"id": "8", "endTime": "2014-09-19T21:00:00", "name": "Fri Sep 19, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "9", "endTime": "2014-09-19T23:00:00", "name": "Fri Sep 19, 2014, 11 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "10", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
-            {"id": "11", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"}
+            {"id": "11", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"},
+            {"id": "12", "endTime": "2014-09-27T14:00:00", "name": "Sat Sep 27, 2014, 2 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "13", "endTime": "2014-09-30T22:00:00", "name": "Tue Sep 30, 2014, 10 PM - SoMa", "area_str": "sf_concerts", "city": "SoMa, San Francisco"},
+            {"id": "14", "endTime": "2014-10-04T15:30:00", "name": "Sat Oct 4, 2014, 3:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "15", "endTime": "2014-10-05T10:00:00", "name": "Sun Oct 5, 2014, 10 AM - Embarcadero", "area_str": "embarc", "city": "San Francisco, CA"}
             ]
