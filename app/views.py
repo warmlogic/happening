@@ -173,7 +173,9 @@ def results():
     max_nclusters = 5
 
     # eps = 0.1
-    eps = 0.075
+    eps = 0.15
+    # eps = 0.09
+    # eps = 0.075 # good
     # eps = 0.05
     # eps = 0.025
     # min_samples = 30 * nhours
@@ -182,6 +184,7 @@ def results():
 
     if onlyUnique:
         diffthresh = 10 * nhours
+        # diffthresh = 1 * nhours
         min_samples = 12 * nhours
     else:
         diffthresh = 10 * nhours
@@ -436,6 +439,9 @@ timeWindow_hours = 3
 nowThenOffset_hours = [timeWindow_hours, 24, 168]
 offsetTypes = ['earlier today', 'yesterday', 'the same day last week']
 
+# nowThenOffset_hours = [6]
+# offsetTypes = ['earlier today']
+
 # ["gray","orange","yellow","green","blue","purple"]
 # clusterColor = ["D1D1E0","FF9933","FFFF66","00CC00","0066FF","CC0099"]
 clusterColor = ["FF9933","FFFF66","00CC00","0066FF","CC0099"]
@@ -455,7 +461,7 @@ examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 20
             {"id": "2", "endTime": "2014-09-09T13:00:00", "name": "Tue Sep 9, 2014, 1 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "3", "endTime": "2014-09-09T15:00:00", "name": "Tue Sep 9, 2014, 3 PM - Cupertino", "area_str": "apple_flint_center", "city": "Cupertino, CA"},
             {"id": "4", "endTime": "2014-09-09T21:00:00", "name": "Tue Sep 9, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "5", "endTime": "2014-09-13T00:00:00", "name": "Sat Sep 13, 2014, 12 AM - SoMa", "area_str": "sf_concerts", "city": "SoMa, San Francisco"},
+            {"id": "5", "endTime": "2014-09-13T00:00:00", "name": "Sat Sep 13, 2014, 12 AM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "6", "endTime": "2014-09-13T12:00:00", "name": "Sat Sep 13, 2014, 12 PM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"},
             {"id": "7", "endTime": "2014-09-19T19:00:00", "name": "Fri Sep 19, 2014, 7 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "8", "endTime": "2014-09-19T21:00:00", "name": "Fri Sep 19, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
@@ -463,7 +469,46 @@ examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 20
             {"id": "10", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Mission", "area_str": "mission", "city": "Mission, San Francisco"},
             {"id": "11", "endTime": "2014-09-20T12:00:00", "name": "Sat Sep 20, 2014, 12 PM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"},
             {"id": "12", "endTime": "2014-09-27T14:00:00", "name": "Sat Sep 27, 2014, 2 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "13", "endTime": "2014-09-30T22:00:00", "name": "Tue Sep 30, 2014, 10 PM - SoMa", "area_str": "sf_concerts", "city": "SoMa, San Francisco"},
+            {"id": "13", "endTime": "2014-09-30T22:00:00", "name": "Tue Sep 30, 2014, 10 PM - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
             {"id": "14", "endTime": "2014-10-04T15:30:00", "name": "Sat Oct 4, 2014, 3:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "15", "endTime": "2014-10-05T10:00:00", "name": "Sun Oct 5, 2014, 10 AM - Embarcadero", "area_str": "embarc", "city": "San Francisco, CA"}
             ]
+
+            # {"id": "16", "endTime": "2014-09-10T00:15:00", "name": "Tue 9/9 Post Giants v Diamondbacks (7:15pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "17", "endTime": "2014-09-11T00:15:00", "name": "Wed 9/10 Post Giants v Diamondbacks (7:15pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "18", "endTime": "2014-09-11T17:45:00", "name": "Thr 9/11 Post Giants v Diamondbacks (12:25pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "19", "endTime": "2014-09-13T00:15:00", "name": "Fri 9/12 Post Giants v Dodgers (7:15pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "20", "endTime": "2014-09-13T23:05:00", "name": "Sat 9/13 Post Giants v Dodgers (6:05pm, L; no tweets?) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "21", "endTime": "2014-09-14T17:05:00", "name": "Sun 9/14 Post Giants v Dodgers (1:05pm, L) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "22", "endTime": "2014-09-26T00:15:00", "name": "Thr 9/25 Post Giants v Padres (7:15pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "23", "endTime": "2014-09-27T00:15:00", "name": "Fri 9/26 Post Giants v Padres (7:15pm, L) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "24", "endTime": "2014-09-27T17:05:00", "name": "Sat 9/27 Post Giants v Padres (1:05pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "25", "endTime": "2014-09-28T17:05:00", "name": "Sun 9/28 Post Giants v Padres (1:05pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "26", "endTime": "2014-10-06T19:07:00", "name": "Mon 10/6 Post Giants v Nationals (2:07pm, L) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
+            # {"id": "27", "endTime": "2014-10-07T23:07:00", "name": "Tue 10/7 Post Giants v Nationals (6:07pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"}
+
+            # {"id": "16", "endTime": "2014-09-10T00:15:00", "name": "Tue 9/9 Post Giants v Diamondbacks (7:15pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "17", "endTime": "2014-09-11T00:15:00", "name": "Wed 9/10 Post Giants v Diamondbacks (7:15pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "18", "endTime": "2014-09-11T17:45:00", "name": "Thr 9/11 Post Giants v Diamondbacks (12:25pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "19", "endTime": "2014-09-13T00:15:00", "name": "Fri 9/12 Post Giants v Dodgers (7:15pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "20", "endTime": "2014-09-13T23:05:00", "name": "Sat 9/13 Post Giants v Dodgers (6:05pm, L; no tweets?) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "21", "endTime": "2014-09-14T17:05:00", "name": "Sun 9/14 Post Giants v Dodgers (1:05pm, L) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "22", "endTime": "2014-09-26T00:15:00", "name": "Thr 9/25 Post Giants v Padres (7:15pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "23", "endTime": "2014-09-27T00:15:00", "name": "Fri 9/26 Post Giants v Padres (7:15pm, L) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "24", "endTime": "2014-09-27T17:05:00", "name": "Sat 9/27 Post Giants v Padres (1:05pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "25", "endTime": "2014-09-28T17:05:00", "name": "Sun 9/28 Post Giants v Padres (1:05pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "26", "endTime": "2014-10-06T19:07:00", "name": "Mon 10/6 Post Giants v Nationals (2:07pm, L) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
+            # {"id": "27", "endTime": "2014-10-07T23:07:00", "name": "Tue 10/7 Post Giants v Nationals (6:07pm, W) - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"}
+
+            # {"id": "16", "endTime": "2014-09-10T00:15:00", "name": "Tue 9/9 Post Giants v Diamondbacks (7:15pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "17", "endTime": "2014-09-11T00:15:00", "name": "Wed 9/10 Post Giants v Diamondbacks (7:15pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "18", "endTime": "2014-09-11T17:45:00", "name": "Thr 9/11 Post Giants v Diamondbacks (12:25pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "19", "endTime": "2014-09-13T00:15:00", "name": "Fri 9/12 Post Giants v Dodgers (7:15pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "20", "endTime": "2014-09-13T23:05:00", "name": "Sat 9/13 Post Giants v Dodgers (6:05pm, L; no tweets?) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "21", "endTime": "2014-09-14T17:05:00", "name": "Sun 9/14 Post Giants v Dodgers (1:05pm, L) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "22", "endTime": "2014-09-26T00:15:00", "name": "Thr 9/25 Post Giants v Padres (7:15pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "23", "endTime": "2014-09-27T00:15:00", "name": "Fri 9/26 Post Giants v Padres (7:15pm, L) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "24", "endTime": "2014-09-27T17:05:00", "name": "Sat 9/27 Post Giants v Padres (1:05pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "25", "endTime": "2014-09-28T17:05:00", "name": "Sun 9/28 Post Giants v Padres (1:05pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "26", "endTime": "2014-10-06T19:07:00", "name": "Mon 10/6 Post Giants v Nationals (2:07pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            # {"id": "27", "endTime": "2014-10-07T23:07:00", "name": "Tue 10/7 Post Giants v Nationals (6:07pm, W) - SF", "area_str": "sf", "city": "San Francisco, CA"}
