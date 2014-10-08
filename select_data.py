@@ -224,8 +224,15 @@ def set_get_boundBox(area_str='sf'):
     boundBox['pier48_lon'] = [-122.3977,-122.3838]
     boundBox['pier48_lat'] = [37.7706,37.7765]
 
-    boundBox['attpark_lon'] = [-122.3977,-122.3802]
-    boundBox['attpark_lat'] = [37.7765,37.7840]
+    # boundBox['attpark_lon'] = [-122.3977,-122.3802]
+    # boundBox['attpark_lat'] = [37.7765,37.7840]
+
+    # # bigger
+    # boundBox['attpark_lon'] = [-122.4071,-122.3842]
+    # boundBox['attpark_lat'] = [37.7747,37.7895]
+
+    boundBox['attpark_lon'] = [-122.4034,-122.3860]
+    boundBox['attpark_lat'] = [37.7753,37.7867]
 
     boundBox['levisstadium_lon'] = [-122.9914,-122.9465]
     boundBox['levisstadium_lat'] = [37.3777,37.4173]
@@ -235,6 +242,12 @@ def set_get_boundBox(area_str='sf'):
 
     boundBox['sf_concerts_lon'] = [-122.4258,-122.4000]
     boundBox['sf_concerts_lat'] = [37.7693,37.7926]
+
+    boundBox['soma_lon'] = [-122.4162,-122.3872]
+    boundBox['soma_lat'] = [37.7693,37.7905]
+
+    boundBox['soma_lon'] = [-122.4162,-122.3872]
+    boundBox['soma_lat'] = [37.7693,37.7905]
 
     boundBox['nobhill_lon'] = [-122.4322,-122.3976]
     boundBox['nobhill_lat'] = [37.7845,37.8042]
