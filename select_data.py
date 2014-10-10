@@ -328,10 +328,19 @@ def selectFromSQL(con,this_time,this_lon,this_lat,tz=None,checkGL=True):
             # twitter must be assigning tweets to this location; exclude those
             geary_leavenworth_lon = [-122.41505, -122.41484]
             geary_leavenworth_lat = [37.78666, 37.78681]
-            sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f)\
-            AND (tweetlat BETWEEN %.6f AND %.6f) AND (tweetlon NOT BETWEEN %.6f AND %.6f) AND (tweetlat NOT BETWEEN %.6f AND %.6f);"""\
-            % (this_time[0],this_time[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1],\
-                geary_leavenworth_lon[0],geary_leavenworth_lon[1],geary_leavenworth_lat[0],geary_leavenworth_lat[1])
+            # there seems to always be a hotspot that shows up where the 101 crosses over market;
+            # twitter must be assigning tweets to this location; exclude those
+            mkt_101_lon = [-122.41966, -122.41931]
+            mkt_101_lat = [37.77457, 37.77485]
+            sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s')\
+            AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f)\
+            AND (tweetlon NOT BETWEEN %.6f AND %.6f) AND (tweetlat NOT BETWEEN %.6f AND %.6f)\
+            AND (tweetlon NOT BETWEEN %.6f AND %.6f) AND (tweetlat NOT BETWEEN %.6f AND %.6f)\
+            ;"""\
+            % (this_time[0],this_time[1],\
+                this_lon[0],this_lon[1],this_lat[0],this_lat[1],\
+                geary_leavenworth_lon[0],geary_leavenworth_lon[1],geary_leavenworth_lat[0],geary_leavenworth_lat[1],\
+                mkt_101_lon[0],mkt_101_lon[1],mkt_101_lat[0],mkt_101_lat[1])
         else:
             sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f)
             AND (tweetlat BETWEEN %.6f AND %.6f);"""\
