@@ -173,8 +173,8 @@ def results():
     max_nclusters = 5
 
     # eps = 0.1
-    eps = 0.15
-    # eps = 0.09
+    # eps = 0.15
+    eps = 0.08
     # eps = 0.075 # good
     # eps = 0.05
     # eps = 0.025
@@ -291,12 +291,11 @@ def results():
     # for clusNum in range(n_clusters):
     for clusNum in range(len(keepClus)):
         print 'clusNum %d' % clusNum
-        print 'keepClus[clusNum]'
+        # print 'keepClus[clusNum]'
         print keepClus[clusNum]
         if keepClus[clusNum] == True:
-            print 'keeping'
             activity_thisclus = activity.loc[activity['clusterNum'] == clusNum]
-            print 'len activity %d' % activity_thisclus.shape[0]
+            print 'keeping: len activity %d' % activity_thisclus.shape[0]
             if activity_thisclus.shape[0] > 0:
                 tokens, freq_dist, clean_text = hap.cleanTextGetWordFrequency(activity_thisclus)
                 word_freq.append(freq_dist)

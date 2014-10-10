@@ -78,7 +78,7 @@ def findHotspots(activity_now, activity_then, nbins=[100, 100],\
     return diffmore_lon, diffmore_lat
 
 def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
-    min_nclusters=1, max_nclusters=100, eps=0.025, min_samples=100,\
+    min_nclusters=1, max_nclusters=100, eps=0.075, min_samples=100,\
     centerData=True, plotData=False):
     '''min_samples is minimum number of samples per hour on average
     '''
@@ -98,7 +98,7 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
 
     if len(diffmore_lon) > 0:
         n_tries_db = 0
-        orig_eps = eps
+        eps_step = eps / 2
         while n_clusters_db < min_nclusters:
             # TODO: set a confidence level based on number of while loops
             db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_centered)
@@ -108,19 +108,16 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
 
             labels = db.labels_
             n_clusters_db = len(set(labels)) - (1 if -1 in labels else 0)
+            print 'found %d clusters' % n_clusters_db
             if n_tries_db < 3:
-                eps += orig_eps
+                eps += (eps_step * n_tries_db)
                 print 'increasing eps to %.3f' % eps
-            else:
-                print 'found %d clusters' % n_clusters_db
-            if n_tries_db >= 3 and n_tries_db <= 7:
+            elif n_tries_db >= 3 and n_tries_db <= 7:
                 if min_samples > 15.0:
                     min_samples = int(np.ceil(min_samples * 0.67))
                     print 'decreasing min_samples to %d' % min_samples
-                else:
-                    break
             elif n_tries_db > 7 and n_tries_db <= 8:
-                eps += orig_eps
+                eps += eps_step
                 print 'increasing eps to %.3f' % eps
             elif n_tries_db > 8:
                 break
@@ -237,6 +234,7 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
     else:
         n_clusters_real = 0
         cluster_centers = []
+        keepClus = []
 
     if len(cluster_centers) > 0:
         message = 'found clusters, hoooray!'
