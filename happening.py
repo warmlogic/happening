@@ -109,6 +109,8 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
             labels = db.labels_
             n_clusters_db = len(set(labels)) - (1 if -1 in labels else 0)
             print 'found %d clusters' % n_clusters_db
+            if n_clusters_db >= min_nclusters:
+                break
             if n_tries_db < 3:
                 eps += (eps_step * n_tries_db)
                 print 'increasing eps to %.3f' % eps
@@ -158,26 +160,34 @@ def clusterActivity(activity_now, diffmore_lon, diffmore_lat, nbins=[100, 100],\
                 # keep clusters that contain a hist2d hotspot
                 # print 'len diffmore_lon: %d' % len(diffmore_lon)
                 for i in range(len(diffmore_lon)):
-                    binscale = 0.001
-                    n_tries_bin = 0
-                    while keepThisClus is False:
-                        # TODO: set a confidence level based on number of while loops
-                        n_tries_bin += 1
-                        if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and\
-                        diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and\
-                        diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and\
-                        diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
-                            print 'keeping this cluster'
-                            keepThisClus = True
-                            break
-                        else:
-                            binscale += 0.001
-                            print 'increasing binscale to %.4f' % binscale
-                        if n_tries_bin > 3:
-                            print 'this cluster did not contain a hotspot'
-                            break
-                    if keepThisClus:
-                        break
+                    binscale = 0.003
+                    if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and\
+                    diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and\
+                    diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and\
+                    diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
+                        print 'keeping this cluster'
+                        keepThisClus = True
+
+                    # # TODO: set a confidence level based on number of while loops
+                    # binscale = 0.001
+                    # n_tries_bin = 0
+                    # while keepThisClus is False:
+                    #     n_tries_bin += 1
+                    #     if diffmore_lon[i] > (min(cluster_lon) - nbins_combo*binscale) and\
+                    #     diffmore_lon[i] < (max(cluster_lon) + nbins_combo*binscale) and\
+                    #     diffmore_lat[i] > (min(cluster_lat) - nbins_combo*binscale) and\
+                    #     diffmore_lat[i] < (max(cluster_lat) + nbins_combo*binscale):
+                    #         print 'keeping this cluster'
+                    #         keepThisClus = True
+                    #         break
+                    #     else:
+                    #         binscale += 0.001
+                    #         print 'increasing binscale to %.4f' % binscale
+                    #     if n_tries_bin > 3:
+                    #         print 'this cluster did not contain a hotspot'
+                    #         break
+                    # if keepThisClus:
+                    #     break
 
                 keepClus.append(keepThisClus)
                 if keepThisClus == True:
