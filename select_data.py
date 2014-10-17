@@ -321,9 +321,9 @@ def getFeatureVector(tweet,stop):
             featureVector.append(w)
     return featureVector
 
-def selectFromSQL(con,this_time,this_lon,this_lat,tz=None,checkGL=True):
+def selectFromSQL(con,this_time,this_lon,this_lat,tz=None,checkTweetDumps=True):
     try:
-        if checkGL:
+        if checkTweetDumps:
             # there seems to always be a hotspot that shows up at geary and leavenworth;
             # twitter must be assigning tweets to this location; exclude those
             geary_leavenworth_lon = [-122.41505, -122.41484]
