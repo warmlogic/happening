@@ -470,7 +470,8 @@ examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 20
             {"id": "12", "endTime": "2014-09-27T14:00:00", "name": "Sat Sep 27, 2014, 2 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "13", "endTime": "2014-09-30T22:00:00", "name": "Tue Sep 30, 2014, 10 PM - SoMa", "area_str": "soma", "city": "SoMa, San Francisco"},
             {"id": "14", "endTime": "2014-10-04T15:30:00", "name": "Sat Oct 4, 2014, 3:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "15", "endTime": "2014-10-05T10:00:00", "name": "Sun Oct 5, 2014, 10 AM - Embarcadero", "area_str": "embarc", "city": "San Francisco, CA"}
+            {"id": "15", "endTime": "2014-10-05T10:00:00", "name": "Sun Oct 5, 2014, 10 AM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"},
+            {"id": "16", "endTime": "2014-10-19T12:00:00", "name": "Sun Oct 19, 2014, 12 PM - SF", "area_str": "sf", "city": "San Francisco, CA"}
             ]
 
             # {"id": "16", "endTime": "2014-09-10T00:15:00", "name": "Tue 9/9 Post Giants v Diamondbacks (7:15pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
