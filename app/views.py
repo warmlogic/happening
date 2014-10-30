@@ -12,6 +12,20 @@ from authent import instaauth
 from authent import dbauth as authsql
 import urllib
 import pdb
+# import time
+
+def tic():
+    #Homemade version of matlab tic and toc functions
+    import time
+    global startTime_for_tictoc
+    startTime_for_tictoc = time.time()
+
+def toc():
+    import time
+    if 'startTime_for_tictoc' in globals():
+        print "Elapsed time is " + str(time.time() - startTime_for_tictoc) + " seconds."
+    else:
+        print "Toc: start time not set"
 
 #############
 # ROUTING/VIEW FUNCTIONS
