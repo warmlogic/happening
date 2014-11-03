@@ -478,7 +478,7 @@ examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 20
             {"id": "17", "endTime": "2014-10-25T19:30:00", "name": "Sat Oct 25, 2014, 7:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "18", "endTime": "2014-10-26T18:30:00", "name": "Sun Oct 26, 2014, 6:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "19", "endTime": "2014-10-29T21:00:00", "name": "Wed Oct 29, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "20", "endTime": "2014-10-31T11:00:00", "name": "Fri Oct 31, 2014, 11 AM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "20", "endTime": "2014-10-31T14:00:00", "name": "Fri Oct 31, 2014, 2 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "21", "endTime": "2014-10-31T22:30:00", "name": "Fri Oct 31, 2014, 10:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"}
             ]
 
