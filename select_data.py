@@ -359,7 +359,10 @@ def selectFromSQL(con,this_time,this_lon,this_lat,tz=None,checkTweetDumps=True):
             WHERE (tweetlon BETWEEN %.6f AND %.6f)
             AND (tweetlat BETWEEN %.6f AND %.6f);"""\
             % (this_time[0],this_time[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
+        print 'read sql with pandas'
+        tic()
         activity = pd.io.sql.read_sql(sql, con=con, index_col='tweettime', parse_dates=['tweettime'])
+        toc()
         activity.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat': 'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
         activity.replace(to_replace={'url': {'\r': ''}}, inplace=True)
         if tz is not None:

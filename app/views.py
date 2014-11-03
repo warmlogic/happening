@@ -476,7 +476,10 @@ examples = [{"id": "1", "endTime": "2014-09-09T12:00:00", "name": "Tue Sep 9, 20
             {"id": "15", "endTime": "2014-10-05T10:00:00", "name": "Sun Oct 5, 2014, 10 AM - Embarcadero", "area_str": "embarc", "city": "The Embarcadero, San Francisco"},
             {"id": "16", "endTime": "2014-10-19T12:00:00", "name": "Sun Oct 19, 2014, 12 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
             {"id": "17", "endTime": "2014-10-25T19:30:00", "name": "Sat Oct 25, 2014, 7:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
-            {"id": "18", "endTime": "2014-10-26T18:30:00", "name": "Sun Oct 26, 2014, 6:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"}
+            {"id": "18", "endTime": "2014-10-26T18:30:00", "name": "Sun Oct 26, 2014, 6:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "19", "endTime": "2014-10-29T21:00:00", "name": "Wed Oct 29, 2014, 9 PM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "20", "endTime": "2014-10-31T11:00:00", "name": "Fri Oct 31, 2014, 11 AM - SF", "area_str": "sf", "city": "San Francisco, CA"},
+            {"id": "21", "endTime": "2014-10-31T22:30:00", "name": "Fri Oct 31, 2014, 10:30 PM - SF", "area_str": "sf", "city": "San Francisco, CA"}
             ]
 
             # {"id": "16", "endTime": "2014-09-10T00:15:00", "name": "Tue 9/9 Post Giants v Diamondbacks (7:15pm, W) - ATTPark", "area_str": "attpark", "city": "SoMa, San Francisco"},
