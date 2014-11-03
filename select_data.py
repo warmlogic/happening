@@ -10,6 +10,19 @@ import matplotlib.pyplot as plt
 import re
 import pdb
 
+def tic():
+    #Homemade version of matlab tic and toc functions
+    import time
+    global startTime_for_tictoc
+    startTime_for_tictoc = time.time()
+
+def toc():
+    import time
+    if 'startTime_for_tictoc' in globals():
+        print "Elapsed time is " + str(time.time() - startTime_for_tictoc) + " seconds."
+    else:
+        print "Toc: start time not set"
+
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
     if unit == 'meters':
         R_earth = 6378137.0 # meters
@@ -332,8 +345,8 @@ def selectFromSQL(con,this_time,this_lon,this_lat,tz=None,checkTweetDumps=True):
             # twitter must be assigning tweets to this location; exclude those
             mkt_101_lon = [-122.41966, -122.41931]
             mkt_101_lat = [37.77457, 37.77485]
-            sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s')\
-            AND (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f)\
+            sql = """SELECT * FROM (SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s')) AS tweets_thistime\
+            WHERE (tweetlon BETWEEN %.6f AND %.6f) AND (tweetlat BETWEEN %.6f AND %.6f)\
             AND (tweetlon NOT BETWEEN %.6f AND %.6f) AND (tweetlat NOT BETWEEN %.6f AND %.6f)\
             AND (tweetlon NOT BETWEEN %.6f AND %.6f) AND (tweetlat NOT BETWEEN %.6f AND %.6f)\
             ;"""\
@@ -342,10 +355,10 @@ def selectFromSQL(con,this_time,this_lon,this_lat,tz=None,checkTweetDumps=True):
                 geary_leavenworth_lon[0],geary_leavenworth_lon[1],geary_leavenworth_lat[0],geary_leavenworth_lat[1],\
                 mkt_101_lon[0],mkt_101_lon[1],mkt_101_lat[0],mkt_101_lat[1])
         else:
-            sql = """SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s') AND (tweetlon BETWEEN %.6f AND %.6f)
+            sql = """SELECT * FROM (SELECT * FROM tweet_table WHERE (tweettime BETWEEN '%s' AND '%s')) AS tweets_thistime\
+            WHERE (tweetlon BETWEEN %.6f AND %.6f)
             AND (tweetlat BETWEEN %.6f AND %.6f);"""\
             % (this_time[0],this_time[1],this_lon[0],this_lon[1],this_lat[0],this_lat[1])
-
         activity = pd.io.sql.read_sql(sql, con=con, index_col='tweettime', parse_dates=['tweettime'])
         activity.rename(columns={'userid': 'user_id', 'tweetid': 'tweet_id', 'tweettime': 'datetime', 'tweetlon': 'longitude', 'tweetlat': 'latitude', 'tweettext': 'text', 'picurl': 'url'}, inplace=True)
         activity.replace(to_replace={'url': {'\r': ''}}, inplace=True)
