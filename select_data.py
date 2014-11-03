@@ -10,6 +10,19 @@ import matplotlib.pyplot as plt
 import re
 import pdb
 
+def tic():
+    #Homemade version of matlab tic and toc functions
+    import time
+    global startTime_for_tictoc
+    startTime_for_tictoc = time.time()
+
+def toc():
+    import time
+    if 'startTime_for_tictoc' in globals():
+        print "Elapsed time is " + str(time.time() - startTime_for_tictoc) + " seconds."
+    else:
+        print "Toc: start time not set"
+
 def compute_distance_from_point(lon1, lat1, lon2, lat2, unit='meters'):
     if unit == 'meters':
         R_earth = 6378137.0 # meters
