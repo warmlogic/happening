@@ -1,12 +1,13 @@
 # happening README
 
-## Purpose
+## Description
 
-Aggregate streaming social activity to find events that you might not otherwise stumble upon!
+*This Is Happening* was a web application developed over three weeks during the fall of 2014 when I was a fellow at [Insight Data Science](http://insightdatascience.com). See [this PDF](happening_overview.pdf) for a quick overview.
 
-Not just a real-time social media mapper, find anomalous events that stand out above typical background activity!
-
-That is to say: Locate trending social activity in meatspace!
+Purpose:
+- Aggregate streaming social activity to find events that you might not otherwise stumble upon!
+- Not just a real-time social media mapper, find anomalous events that stand out above typical background activity!
+- That is to say: Locate trending social activity in meatspace!
 
 ## Getting Started
 
