@@ -3,7 +3,7 @@ Flask-Script==2.0.5
 Jinja2==2.7.3
 MarkupSafe==0.23
 Werkzeug==0.9.6
-gunicorn==18.0
+gunicorn==19.5.0
 itsdangerous==0.24
 simplejson==3.5.2
 wsgiref==0.1.2
